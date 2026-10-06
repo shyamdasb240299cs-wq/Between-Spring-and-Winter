@@ -1,0 +1,14 @@
+{
+  "source": "../final-polish/panda-run-polished.png",
+  "common_scale": 0.93,
+  "cell_resize": [
+    238,
+    238
+  ],
+  "offset": [
+    9,
+    15
+  ],
+  "feet_baseline": 220,
+  "processing": "Common technical resampling of the established run frames to match the new encounter silhouette; no repainting."
+}

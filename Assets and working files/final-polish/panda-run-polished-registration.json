@@ -1,0 +1,237 @@
+{
+  "source_size": [
+    1774,
+    887
+  ],
+  "output_size": [
+    1024,
+    512
+  ],
+  "cell_size": 256,
+  "columns": 4,
+  "rows": 2,
+  "frames": 8,
+  "frame_order": "left to right, top row then bottom row",
+  "shared_scale": 0.4668141592920354,
+  "feet_baseline": 220,
+  "alpha": "source alpha preserved through Lanczos resampling and lossless WebP",
+  "reference_max_width": 211,
+  "records": [
+    {
+      "frame": 0,
+      "source_component_bbox": [
+        8,
+        186,
+        459,
+        426
+      ],
+      "source_crop_bbox": [
+        5,
+        183,
+        462,
+        429
+      ],
+      "registered_bbox_alpha_gt_16": [
+        23,
+        108,
+        234,
+        220
+      ],
+      "silhouette_size": [
+        211,
+        112
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    },
+    {
+      "frame": 1,
+      "source_component_bbox": [
+        480,
+        186,
+        886,
+        426
+      ],
+      "source_crop_bbox": [
+        477,
+        183,
+        889,
+        429
+      ],
+      "registered_bbox_alpha_gt_16": [
+        33,
+        108,
+        223,
+        220
+      ],
+      "silhouette_size": [
+        190,
+        112
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    },
+    {
+      "frame": 2,
+      "source_component_bbox": [
+        942,
+        191,
+        1319,
+        429
+      ],
+      "source_crop_bbox": [
+        939,
+        188,
+        1322,
+        432
+      ],
+      "registered_bbox_alpha_gt_16": [
+        39,
+        109,
+        216,
+        220
+      ],
+      "silhouette_size": [
+        177,
+        111
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    },
+    {
+      "frame": 3,
+      "source_component_bbox": [
+        1379,
+        188,
+        1755,
+        429
+      ],
+      "source_crop_bbox": [
+        1376,
+        185,
+        1758,
+        432
+      ],
+      "registered_bbox_alpha_gt_16": [
+        40,
+        107,
+        216,
+        220
+      ],
+      "silhouette_size": [
+        176,
+        113
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    },
+    {
+      "frame": 4,
+      "source_component_bbox": [
+        44,
+        520,
+        409,
+        782
+      ],
+      "source_crop_bbox": [
+        41,
+        517,
+        412,
+        785
+      ],
+      "registered_bbox_alpha_gt_16": [
+        43,
+        98,
+        213,
+        220
+      ],
+      "silhouette_size": [
+        170,
+        122
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    },
+    {
+      "frame": 5,
+      "source_component_bbox": [
+        436,
+        533,
+        861,
+        779
+      ],
+      "source_crop_bbox": [
+        433,
+        530,
+        864,
+        782
+      ],
+      "registered_bbox_alpha_gt_16": [
+        29,
+        105,
+        228,
+        220
+      ],
+      "silhouette_size": [
+        199,
+        115
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    },
+    {
+      "frame": 6,
+      "source_component_bbox": [
+        872,
+        529,
+        1324,
+        726
+      ],
+      "source_crop_bbox": [
+        869,
+        526,
+        1327,
+        729
+      ],
+      "registered_bbox_alpha_gt_16": [
+        22,
+        105,
+        234,
+        197
+      ],
+      "silhouette_size": [
+        212,
+        92
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 23
+    },
+    {
+      "frame": 7,
+      "source_component_bbox": [
+        1324,
+        536,
+        1755,
+        778
+      ],
+      "source_crop_bbox": [
+        1321,
+        533,
+        1758,
+        781
+      ],
+      "registered_bbox_alpha_gt_16": [
+        27,
+        106,
+        229,
+        220
+      ],
+      "silhouette_size": [
+        202,
+        114
+      ],
+      "ground_baseline": 220,
+      "vertical_lift": 0
+    }
+  ]
+}

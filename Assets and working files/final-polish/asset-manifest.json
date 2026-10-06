@@ -1,0 +1,43 @@
+{
+  "mode": "built-in imagegen",
+  "runtime_assets": {
+    "rabbit-polished.webp": {
+      "path": "Website/public/scene/layers/rabbit-polished.webp",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "grid": [
+        4,
+        3
+      ],
+      "cell": [
+        256,
+        256
+      ],
+      "baseline": 220,
+      "source": "rabbit-polished-source.png",
+      "exact_prompt": "rabbit-polished-prompt.txt",
+      "prompt": "Use case: precise-object-edit\nAsset type: transparent animation sprite atlas for a small rabbit in a richly painted forest website scene.\nInput images: Image 1 is the existing rabbit sprite atlas, a reference for the small cream-white rabbit identity only. Image 2 is the forest scene, a reference for the painted realism, warm sunlight, and dark forest reflected lighting only. Do not copy the old atlas's hard, white edges or studio illumination.\nPrimary request: Replace the rabbit atlas with exactly 12 coherent animation frames arranged in a strict 4-column by 3-row grid of equal square cells, read left-to-right, then top-to-bottom. Make the same one small cream/white rabbit throughout, with believable realistic storybook anatomy and finely painted fur. All 12 cells contain one full-body rabbit, isolated on true transparent alpha.\nComposition/framing: One fixed camera at rabbit ground height, three-quarter view, rabbit body pointing slightly toward the right while its face can turn toward the viewer. Fixed same body scale, identical rump position, identical front and rear paw placements and exact common feet baseline throughout. Rabbit in a grounded compact crouch, weight resting on its paws. Each full body stays within its own square cell with generous transparent padding around ears and feet. No overlapping cells. For a nominal 256px cell, paws contact y=220 and the body is centered near x=128. The rabbit occupies about 65 percent of cell width and at most 75 percent of cell height. No grid lines or labels.\nAnimation sequence: Frames 0,1,2,3,4,5,6,7 show a slow continuous grazing action with the head lowered close to the ground, tiny incremental muzzle and chewing movements only, and subtle ear response. These are eight genuinely different consecutive moments, not eight copies. Frames 8,9,10 slowly and naturally raise the head from the same crouched body, with all paws and rump staying planted. Frame 11 ends with a steady, calm curious look toward the viewer. The upper body must stay compact and grounded when the head rises. Keep facial identity, ear length, bone structure, fur texture, and body volume consistent across all frames. No body morphing, rotation jumps, hopping, sitting suddenly upright, or camera changes.\nLighting/mood: Warm amber sunset rim light from upper left on upper ear and back edges only, gentle amber highlights on fur. Main fur is shaded ivory, cream, warm taupe, with restrained cool green-gray forest reflected fill in the underside and right side. Much darker shaded body than the old studio-white rabbit. Soft irregular natural fur edge, no hard cutout outline, no black stroke, no white glow, no spotlight, no yellow fringing. Match the rich painted realism and low warm forest light in Image 2. Eyes small natural dark brown, inner ears subdued rose-brown.\nTransparency: All outside areas must be genuine fully transparent alpha. No opaque background, no checkerboard baked into pixels, no cast shadow plane, no grass carpet, no ground patch. A tiny naturally dark paw contact edge is acceptable. No text, watermark, frame numbers, borders, decorations, props, extra creatures, or cropped ears or feet.\n"
+    },
+    "panda-run-polished.webp": {
+      "path": "Website/public/scene/layers/panda-run-polished.webp",
+      "dimensions": [
+        1024,
+        512
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cell": [
+        256,
+        256
+      ],
+      "baseline": 220,
+      "source": "panda-run-polished-source.png",
+      "exact_prompt": "panda-run-polished-prompt.txt",
+      "prompt": "Use case: stylized-concept\nAsset type: transparent eight-frame sprite sheet for a website character animation.\nPrimary request: Create a new, polished running animation sheet of the SAME cute black-and-white giant panda from reference image 1. Exactly 8 successive frames, laid out as 4 columns by 2 rows, read left-to-right on the top row and then left-to-right on the bottom row. One panda per cell.\nInput images: Image 1 (panda-sheet-source.png) is the character identity, fur/rendering style, black-and-white pattern, and warm-light reference. The existing bottom row shows the required side-view body proportions. Image 2 (forest-foreground-source.png) is lighting and rendering-style reference only; do not include any of its environment.\nScene/backdrop: True transparent alpha background. No scenery, ground plane, horizon, grass, objects, honey, honeycomb, labels, borders, numbers, checkerboard, or backdrop.\nSubject: One fluffy, rounded, young giant panda with the reference's round black ears, cream-white face and torso, black eye patches, glossy dark eyes, little black nose, dark shoulders and legs, short tail, and friendly alert expression. Four anatomically consistent legs. It runs naturally on all fours, body horizontal, facing and moving to the RIGHT in every frame. This is a quadrupedal bear gallop/lope, never bipedal or standing upright.\nStyle/medium: Match the reference's detailed soft fluffy fur and polished storybook 3D rendering. Keep the same character identity, head shape, body mass, fur length and markings throughout all eight frames.\nComposition/framing: Landscape 2:1 image, exact regular four-column two-row grid of equal square cells. Full body safely inside each cell with generous clear transparent padding. Same orthographic right-facing side camera, fixed focal length, no rotation. Panda stays centered at the same position and shares a consistent physical body scale in every cell. Its body is about 200 pixels wide and 120 pixels tall in a 256-pixel square cell; this denotes proportional placement even if output is higher resolution. Maintain the implied ground-contact baseline at 220/256 of every cell's height. Keep the torso center consistent, with only modest natural vertical bounce.\nMotion: These are eight consecutive evenly spaced phases of ONE complete looping gallop, not unrelated running poses. Distinct subtle steps with visible leg articulation in each successive frame. Frame 1: forefeet reaching forward toward landing, hind feet extended backward, elongated silhouette. Frame 2: near forepaw makes contact under the forward shoulder while far forepaw follows; hind paws begin folding forward. Frame 3: weight moves over both forelegs, torso lowers slightly, hind paws swing under the belly. Frame 4: hind paws gather and reach forward beneath the hips; forepaws lift and fold back. Frame 5: hind paws land and push beneath the hips, forelegs tuck upward, torso begins to rise. Frame 6: hind legs extend backward through the push-off; front legs begin unfolding forward. Frame 7: a brief low aerial phase with four paws off the ground, forelegs reaching forward and hindlegs stretching back. Frame 8: front paws approach the ground, easing smoothly back to frame 1. Preserve four legs; use near and far leg overlap naturally. Keep face, ears, back outline, shoulders and hips stable so the sequence loops smoothly.\nLighting/mood: Soft warm amber light from the TOP LEFT with a gentle amber rim along the back, ear and head, neutral soft fill, dark rich black fur. Match the existing panda and the scene's gentle warm sunset illumination.\nConstraints: Exactly 8 pandas. Consistent anatomy and body size. No clipped paws, ears, nose or tail. No additional limbs or disconnected fur. No motion streaks, sparkles, dust, text, watermark, props, cast shadows, or external glow. Genuine transparent background, with clean feathered alpha only at the fur edges.\n"
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "background-shrine": {
+    "source": "background-shrine-source.png",
+    "size": [
+      887,
+      1774
+    ]
+  },
+  "forest-foreground": {
+    "source": "forest-foreground-source.png",
+    "size": [
+      1254,
+      1254
+    ]
+  },
+  "panda-sheet": {
+    "source": "panda-sheet-source.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "atlas": [
+      1024,
+      768
+    ],
+    "cell": [
+      256,
+      256
+    ],
+    "feet": 0.859375,
+    "frames": [
+      {
+        "index": 0,
+        "size": [
+          154,
+          177
+        ],
+        "feet_y": 220,
+        "offset": [
+          51,
+          43
+        ]
+      },
+      {
+        "index": 1,
+        "size": [
+          154,
+          177
+        ],
+        "feet_y": 220,
+        "offset": [
+          51,
+          43
+        ]
+      },
+      {
+        "index": 2,
+        "size": [
+          154,
+          180
+        ],
+        "feet_y": 220,
+        "offset": [
+          51,
+          40
+        ]
+      },
+      {
+        "index": 3,
+        "size": [
+          157,
+          182
+        ],
+        "feet_y": 220,
+        "offset": [
+          49,
+          38
+        ]
+      },
+      {
+        "index": 4,
+        "size": [
+          155,
+          180
+        ],
+        "feet_y": 220,
+        "offset": [
+          50,
+          40
+        ]
+      },
+      {
+        "index": 5,
+        "size": [
+          151,
+          184
+        ],
+        "feet_y": 220,
+        "offset": [
+          52,
+          36
+        ]
+      },
+      {
+        "index": 6,
+        "size": [
+          129,
+          195
+        ],
+        "feet_y": 220,
+        "offset": [
+          63,
+          25
+        ]
+      },
+      {
+        "index": 7,
+        "size": [
+          179,
+          128
+        ],
+        "feet_y": 220,
+        "offset": [
+          38,
+          92
+        ]
+      },
+      {
+        "index": 8,
+        "size": [
+          214,
+          121
+        ],
+        "feet_y": 220,
+        "offset": [
+          21,
+          99
+        ]
+      },
+      {
+        "index": 9,
+        "size": [
+          177,
+          126
+        ],
+        "feet_y": 220,
+        "offset": [
+          39,
+          94
+        ]
+      },
+      {
+        "index": 10,
+        "size": [
+          163,
+          123
+        ],
+        "feet_y": 220,
+        "offset": [
+          46,
+          97
+        ]
+      },
+      {
+        "index": 11,
+        "size": [
+          186,
+          126
+        ],
+        "feet_y": 220,
+        "offset": [
+          35,
+          94
+        ]
+      }
+    ]
+  }
+}

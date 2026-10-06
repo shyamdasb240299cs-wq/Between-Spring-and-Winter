@@ -1,0 +1,16 @@
+{
+  "mode": "builtin-imagegen",
+  "assets": [
+    {
+      "file": "midnight-indigo-book-cloth.png",
+      "prompt": "Use case: photorealistic-natural\nAsset type: seamless square material texture for realistic 3D hardcover bookbinding, highest useful square resolution, target 2048x2048 if supported.\nPrimary request: an evenly lit seamless macro texture of fine MIDNIGHT-INDIGO woven bookbinding cloth. Tightly woven natural cotton, understated real premium hardcover linen, with very subtle fiber detail. Photographic realism.\nComposition/framing: flat straight-on orthographic surface scan filling the entire square, seamless and tileable on all four edges, uniform weave scale throughout. Only the material surface is visible.\nLighting/mood: completely even neutral illumination. Uniform dark midnight-indigo color with extremely restrained natural variation. No directional lighting, shadows, highlights, gradients or vignetting.\nMaterials/textures: very fine tightly woven premium cotton book cloth, small realistic interlaced threads, delicate restrained surface fibers. Subtle enough to serve as roughness and bump detail in a physically realistic 3D hardcover material. Smooth refined bookbinding linen, not coarse burlap or heavy upholstery.\nConstraints: a real photographic material texture. No book object, no folds, no wrinkles, no creases, no seams, no decorative pattern, no objects, no text, no letters, no logos, no borders, no dramatic contrast, no cartoon or illustrated appearance.",
+      "transparent_background": false
+    },
+    {
+      "file": "warm-ivory-book-paper.png",
+      "prompt": "Use case: photorealistic-natural\nAsset type: seamless square material texture for realistic 3D book pages, highest useful square resolution, target 2048x2048 if supported.\nPrimary request: an evenly lit seamless macro texture of warm IVORY uncoated book paper, with fine pressed cellulose fibers, restrained natural tooth, and very subtle off-white variation. Smooth premium reading paper. Photographic realism.\nComposition/framing: flat straight-on orthographic surface scan filling the entire square, seamlessly tileable on all four edges, uniform fine texture scale throughout. Only the paper material surface is visible.\nLighting/mood: completely even neutral illumination. Warm ivory off-white base with faint natural variations. No directional lighting, shadows, highlights, lighting gradients or vignetting.\nMaterials/textures: smooth uncoated reading paper with very fine pressed cellulose fibers and subtle restrained tooth. Realistic fine surface detail suitable as subtle roughness and bump detail in a physically realistic 3D book-page material. Refined machine-made premium paper, not rough handmade parchment.\nConstraints: a real photographic material texture. No stains, no dirt, no aging, no speckles, no torn fibers, no deckled edges, no paper edges, no folds, no creases, no objects, no text, no letters, no logos, no borders, no dramatic contrast, no cartoon or illustrated appearance.",
+      "transparent_background": false
+    }
+  ]
+}
+

@@ -1,0 +1,214 @@
+{
+  "rabbit": {
+    "path": "C:\\Users\\Shyam\\Desktop\\apps\\Between Spring and Winter Website\\Website\\public\\scene\\layers\\rabbit-sprite.webp",
+    "frames": 8,
+    "dimensions": [
+      2048,
+      384
+    ],
+    "cell": [
+      256,
+      384
+    ],
+    "alpha_range": [
+      0,
+      255
+    ],
+    "bytes": 148722,
+    "frame_visible_bounds_alpha_gt_50": [
+      [
+        45,
+        142,
+        204,
+        345
+      ],
+      [
+        46,
+        145,
+        206,
+        345
+      ],
+      [
+        46,
+        143,
+        207,
+        345
+      ],
+      [
+        42,
+        144,
+        206,
+        345
+      ],
+      [
+        37,
+        92,
+        219,
+        345
+      ],
+      [
+        44,
+        87,
+        205,
+        344
+      ],
+      [
+        52,
+        75,
+        204,
+        345
+      ],
+      [
+        54,
+        76,
+        201,
+        345
+      ]
+    ],
+    "source_sprite_bounds_alpha_gt_128": [
+      [
+        77,
+        120,
+        327,
+        441
+      ],
+      [
+        462,
+        128,
+        711,
+        444
+      ],
+      [
+        815,
+        128,
+        1065,
+        446
+      ],
+      [
+        1188,
+        128,
+        1443,
+        445
+      ],
+      [
+        71,
+        550,
+        339,
+        950
+      ],
+      [
+        464,
+        544,
+        717,
+        951
+      ],
+      [
+        844,
+        526,
+        1080,
+        952
+      ],
+      [
+        1207,
+        527,
+        1437,
+        952
+      ]
+    ],
+    "notes": "All coordinates are x0,y0,x1,y1. Static sprite sheet with preserved actual alpha. QA preview composites onto moss green because raw image viewers may display hidden RGB matte colors."
+  },
+  "crane": {
+    "path": "C:\\Users\\Shyam\\Desktop\\apps\\Between Spring and Winter Website\\Website\\public\\scene\\layers\\crane-sprite.webp",
+    "frames": 6,
+    "dimensions": [
+      2304,
+      384
+    ],
+    "cell": [
+      384,
+      384
+    ],
+    "alpha_range": [
+      0,
+      255
+    ],
+    "bytes": 136236,
+    "frame_visible_bounds_alpha_gt_50": [
+      [
+        23,
+        13,
+        361,
+        299
+      ],
+      [
+        25,
+        62,
+        358,
+        299
+      ],
+      [
+        25,
+        133,
+        358,
+        299
+      ],
+      [
+        22,
+        182,
+        361,
+        346
+      ],
+      [
+        24,
+        180,
+        359,
+        364
+      ],
+      [
+        26,
+        119,
+        358,
+        295
+      ]
+    ],
+    "source_sprite_bounds_alpha_gt_128": [
+      [
+        20,
+        25,
+        530,
+        458
+      ],
+      [
+        522,
+        99,
+        1025,
+        458
+      ],
+      [
+        1023,
+        208,
+        1525,
+        458
+      ],
+      [
+        19,
+        698,
+        531,
+        946
+      ],
+      [
+        520,
+        694,
+        1025,
+        972
+      ],
+      [
+        1023,
+        602,
+        1526,
+        867
+      ]
+    ],
+    "notes": "All coordinates are x0,y0,x1,y1. Static sprite sheet with preserved actual alpha. QA preview composites onto moss green because raw image viewers may display hidden RGB matte colors."
+  }
+}

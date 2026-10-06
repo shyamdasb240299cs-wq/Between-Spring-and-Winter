@@ -1,0 +1,24 @@
+Use case: stylized-concept
+Asset type: production animation sprite atlas for an illustrated spring forest website. Recreate the character cleanly as ONE coherent 16-frame animation atlas.
+
+Input images: Image 1 is identity and seated eating/standing pose reference ONLY; discard its background, obsolete coarse motion, and visible pale checker artifacts. Image 2 is the existing right-facing RUN animation reference: match panda identity, body proportions, warm fur, scale and final launch silhouette. Image 3 is lighting reference ONLY: golden spring forest with a lantern, waterfall and mossy stones. Do not draw any scenery from image 3.
+
+Output: square transparent 4-column × 4-row sprite sheet. Exactly sixteen fully separate pandas, one centered in each equal cell, read left to right then top to bottom. Logical atlas 1024×1024, logical cell 256×256. Every cell is transparent with generous empty margins. No labels, numbers, borders, grid lines, decorative details or background. TRUE clean transparent alpha, finely feathered fur edges; never render a white, grey, checkerboard or colored matte behind or within the character edges.
+
+Subject: SAME small young giant panda in every frame, round ears, black eye patches, short rounded muzzle, dense cream/off-white fur, charcoal limbs, warm amber rim-light from upper left, soft shaded underside. Painterly realistic textured fur, same charm and anatomy as image 2. Four paws only, no duplicated limbs, no extra fingers or mouth, no morphing torso or changing facial identity. Keep a calm natural honey-eating performance then a curious gentle departure. Honey can be a small sticky amber dab on its paw, no jar.
+
+Registration constraints: identical camera/viewpoint/light direction and one common character scale across ALL sixteen frames; head diameter about 60 logical pixels, seated silhouette about 155 pixels wide × 174 pixels tall, final all-fours silhouette about 195 pixels wide × 112 pixels tall. The grounded feet/bottom of body sit on the same logical y=220 baseline. Logical cell center x=128; same center of mass throughout sitting/rising. Full body never touches a cell edge. Do not enlarge the head/body when standing, turning or crouching. The run atlas reference's low side-facing quadruped body is the end target. Do not add ground shadows, rocks, water or grass to the cutouts.
+
+Frames 0–7 (top TWO rows): seamless delicate seated honey-eating LOOP. Panda sits near-front three-quarter facing slightly right, both hind feet planted, stable rounded torso, right paw close to mouth with a little amber honey, other paw resting naturally. Eight distinct tiny successive chewing/licking motions: mouth opens slightly, tongue touches honey, mouth closes, cheek and paw lower by just a few pixels, paw returns; subtle relaxed blink in the middle; frame 7 is almost exactly frame 0 for a seamless loop. Body, feet, ears and belly must not jump. Do not turn the panda during these first eight frames.
+
+Frames 8–15 (bottom TWO rows): eight smooth successive transition poses that follow frame 7 without a jump:
+8: pauses licking, same seated body, eyes begin noticing viewer, honey paw lowers slightly.
+9: lifts chin and gazes at viewer, paws relax, still seated.
+10: leans torso forward and places one front paw lower, beginning to rise.
+11: pushes upward from hindquarters, halfway rising, same scale and footline.
+12: briefly rises on hind legs and turns head/shoulders toward RIGHT; no waving or exaggerated gesture.
+13: turns further to right profile and leans torso down; forepaws descend toward the ground.
+14: nearly on all fours, right profile, rear legs planted, forepaws almost planted, smooth continuation of 13.
+15: fully on all fours in low right-facing ready-to-run profile, exactly the same young panda as image 2, poised with its near forepaw starting to reach forward; silhouette and head scale must match the beginning of the right-facing run atlas. No honey prop or floating debris remains.
+
+Critical: sixteen sequential frames, not sixteen unrelated illustrations. Same character/torso size, registered common foot baseline, smooth small differences between adjacent frames. Clean fur cutouts and genuinely transparent cells; no checkerboard, white halo, baked grey patches, opaque rectangles or stylistic changes.

@@ -1,0 +1,202 @@
+{
+  "source_dimensions": [
+    1448,
+    1086
+  ],
+  "atlas_dimensions": [
+    1024,
+    768
+  ],
+  "columns": 4,
+  "rows": 3,
+  "cell_count": 12,
+  "cell_dimensions": [
+    256,
+    256
+  ],
+  "feet_baseline_y": 220,
+  "alpha_preserved": true,
+  "processing": "Crop source gutters, common uniform Lanczos resize, per-frame integer translation, lossless WebP encode. No recoloring or alpha masking.",
+  "registration": [
+    {
+      "frame": 0,
+      "source_crop": [
+        0,
+        0,
+        362,
+        362
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        4,
+        17
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 1,
+      "source_crop": [
+        362,
+        0,
+        724,
+        362
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        5,
+        17
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 2,
+      "source_crop": [
+        724,
+        0,
+        1086,
+        362
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        6,
+        17
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 3,
+      "source_crop": [
+        1086,
+        0,
+        1448,
+        362
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        9,
+        17
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 4,
+      "source_crop": [
+        0,
+        362,
+        362,
+        695
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        5,
+        39
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 5,
+      "source_crop": [
+        362,
+        362,
+        724,
+        695
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        5,
+        39
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 6,
+      "source_crop": [
+        724,
+        362,
+        1086,
+        695
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        8,
+        39
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 7,
+      "source_crop": [
+        1086,
+        362,
+        1448,
+        695
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        8,
+        39
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 8,
+      "source_crop": [
+        0,
+        695,
+        362,
+        1086
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        4,
+        23
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 9,
+      "source_crop": [
+        362,
+        695,
+        724,
+        1086
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        5,
+        23
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 10,
+      "source_crop": [
+        724,
+        695,
+        1086,
+        1086
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        7,
+        23
+      ],
+      "feet_baseline": 220
+    },
+    {
+      "frame": 11,
+      "source_crop": [
+        1086,
+        695,
+        1448,
+        1086
+      ],
+      "common_scale": 0.62,
+      "offset": [
+        7,
+        23
+      ],
+      "feet_baseline": 220
+    }
+  ]
+}

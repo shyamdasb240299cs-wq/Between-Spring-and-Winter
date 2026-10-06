@@ -1,0 +1,25 @@
+# Local deployment and audit worktrees
+/.site-publish/
+/.codex-audit/
+/Website/.git.local/
+
+# Dependencies and tool state
+**/node_modules/
+**/.next/
+**/.vinext/
+**/.wrangler/
+**/.vercel/
+**/.output/
+**/.sites-runtime/
+**/.dart_tool/
+**/coverage/
+**/tsconfig.tsbuildinfo
+**/.idea/
+**/.DS_Store
+**/*.log
+**/.env*
+
+# Generated files that can be recreated from the committed source
+/Website/dist/
+/Original manga/Ascend/build/
+/Production build/

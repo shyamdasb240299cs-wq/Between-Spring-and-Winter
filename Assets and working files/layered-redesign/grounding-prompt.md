@@ -1,0 +1,9 @@
+# House grounding strip
+
+Generated with the built-in image-generation tool. References: `continuous-world-source.png` (palette and forest) and `house-source.png` (perspective and foundation).
+
+Saved source: `grounding-bank-source.png`. Compressed runtime asset: `Website/public/scene/layers/grounding-bank.webp`.
+
+Exact prompt:
+
+Use case: stylized-concept. Asset type: transparent 2D foreground grounding strip for a layered Japanese cherry-blossom forest website. Input image 1 is style and lighting reference: the continuous landscape, especially its lower mossy staircase grove. Input image 2 is house perspective and foundation reference; do not reproduce the house. Generate ONLY a low, wide irregular bank of dark moss-covered gray stones, soft green grass, delicate ferns and a few small pink fallen blossom petals, seen at ground level with golden sunlight from upper left and cool forest shadows. The top silhouette rises in small rocks toward the right and slopes gently down toward the left; lush but low growth should partially occlude the bottom edges of an overlaid wooden veranda. Composition approximately 3:1 wide; vegetation and rocks occupy the lower 60 percent of the canvas with small protrusions above, and break into sparse leaves around all edges, not a rectangular panel. True transparent alpha everywhere outside the individual plants and stones, including transparent gaps, no opaque background, no sky, no trees, no building, no gate, no rabbit, no lettering. Match the cinematic detailed painterly realism and exact olive, charcoal, warm amber and muted pink palette of the references. No platform slab or visible straight horizontal crop; organically irregular silhouette on all sides. A small flat grassy patch near left center should allow a rabbit to graze. This is a compositing asset, not an entire scene.

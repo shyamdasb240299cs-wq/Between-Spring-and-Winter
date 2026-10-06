@@ -1,0 +1,16 @@
+{
+  "mode": "builtin-imagegen",
+  "assets": [
+    {
+      "file": "dark-weathered-japanese-cedar.png",
+      "prompt": "Use case: photorealistic-natural\nAsset type: seamless square color material texture for a realistically modeled Japanese wooden house, highest useful square resolution, target 2048x2048 if supported.\nPrimary request: DARK WEATHERED JAPANESE CEDAR TIMBER, with evenly lit HORIZONTAL natural wood grain, subtle age, and the refined appearance of premium architectural cedar. Photographic realism.\nComposition/framing: a flat straight-on orthographic surface scan filling the entire square. Seamlessly tileable on all four edges. Natural fine wood grain travels horizontally across the texture. Only the continuous timber material surface is visible, with uniform detail scale.\nLighting/mood: completely even neutral illumination suitable for a 3D base-color map. Uniform dark warm cedar-brown color with restrained natural age and grain variation. No directional light, cast shadows, highlights, perspective, lighting gradients or vignette.\nMaterials/textures: realistically weathered Japanese cedar, fine natural grain and pores, understated aged grain lines, matte architectural wood, subtle dark patina. Small restrained knots only, none large enough to dominate. Natural fine surface detail rather than decorative wood artwork.\nConstraints: no boards layout, no plank divisions, no grooves between boards, no assembled wall, no actual beams, no object, no house, no nails, no metal, no text, no letters, no logos, no frames, no borders, no shadows, no cartoon or illustrated appearance.",
+      "transparent_background": false
+    },
+    {
+      "file": "charcoal-jade-japanese-roof-clay.png",
+      "prompt": "Use case: photorealistic-natural\nAsset type: seamless square color material texture for realistically modeled Japanese fired-clay roof tiles, highest useful square resolution, target 2048x2048 if supported.\nPrimary request: the surface material of aged fired-clay Japanese roof tiles in muted CHARCOAL JADE-GRAY, with fine mineral grain, restrained natural weathering and minute sparse lichen flecks. Photographic realism.\nComposition/framing: a flat straight-on orthographic surface scan filling the entire square. Seamlessly tileable on all four edges, uniform fine material scale throughout. Show ONLY the continuous fired-clay material surface.\nLighting/mood: completely even neutral illumination suitable for a 3D base-color map. Muted dark charcoal-gray with a restrained jade-green undertone, subtle fine mineral and age variations. No directional light, cast shadows, highlights, perspective, lighting gradients or vignette.\nMaterials/textures: realistically matte aged fired clay, fine compact mineral grain, very subtle natural weathering, minute subdued lichen flecks scattered sparsely. Elegant old Japanese roof ceramic with restrained color variation, not rough stone or heavily moss-covered material.\nConstraints: no actual arranged tiles, no tile outlines, no seams, no tile geometry, no roof, no objects, no shapes, no perspective, no text, no letters, no logos, no shadows, no frames, no borders, no cartoon or illustrated appearance.",
+      "transparent_background": false
+    }
+  ]
+}
+

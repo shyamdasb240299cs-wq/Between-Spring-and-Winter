@@ -1,0 +1,97 @@
+[
+  {
+    "id": 1,
+    "title": "Spring",
+    "cover": "/manga/part-1.webp",
+    "pages": [
+      {
+        "number": 1,
+        "src": "/manga/page-001.webp"
+      },
+      {
+        "number": 2,
+        "src": "/manga/page-002.webp"
+      },
+      {
+        "number": 3,
+        "src": "/manga/page-003.webp"
+      },
+      {
+        "number": 4,
+        "src": "/manga/page-004.webp"
+      },
+      {
+        "number": 5,
+        "src": "/manga/page-005.webp"
+      },
+      {
+        "number": 6,
+        "src": "/manga/page-006.webp"
+      },
+      {
+        "number": 7,
+        "src": "/manga/page-007.webp"
+      },
+      {
+        "number": 8,
+        "src": "/manga/page-008.webp"
+      },
+      {
+        "number": 9,
+        "src": "/manga/page-009.webp"
+      },
+      {
+        "number": 10,
+        "src": "/manga/page-010.webp"
+      },
+      {
+        "number": 11,
+        "src": "/manga/page-011.webp"
+      },
+      {
+        "number": 12,
+        "src": "/manga/page-012.webp"
+      },
+      {
+        "number": 13,
+        "src": "/manga/page-013.webp"
+      },
+      {
+        "number": 14,
+        "src": "/manga/page-014.webp"
+      },
+      {
+        "number": 15,
+        "src": "/manga/page-015.webp"
+      },
+      {
+        "number": 16,
+        "src": "/manga/page-016.webp"
+      },
+      {
+        "number": 17,
+        "src": "/manga/page-017.webp"
+      },
+      {
+        "number": 18,
+        "src": "/manga/page-018.webp"
+      },
+      {
+        "number": 19,
+        "src": "/manga/page-019.webp"
+      },
+      {
+        "number": 20,
+        "src": "/manga/page-020.webp"
+      },
+      {
+        "number": 21,
+        "src": "/manga/page-021.webp"
+      },
+      {
+        "number": 22,
+        "src": "/manga/page-022.webp"
+      }
+    ]
+  }
+]

@@ -1,0 +1,296 @@
+Worked for 28s
+
+
+Analysis output 1
+Analysis output 1
+Yes — I inspected the video. The important thing is: this is not really a 3D website in the Three.js/Blender sense. It looks 3D because of layered 2D artwork moving at different speeds.
+
+The technique is essentially scroll-driven parallax + layered illustrations + pinned sections.
+
+What’s happening in your video
+The landscape is broken into separate transparent layers, something roughly like:
+
+                BACKGROUND
+        mountains / sky / clouds
+                 ↓
+        ───────────────────
+
+              MIDGROUND
+       waterfall / cliffs / trees
+                 ↓
+        ───────────────────
+
+              CHARACTER
+           illustrated person
+                 ↓
+        ───────────────────
+
+              FOREGROUND
+        grass / rocks / plants
+                 ↓
+        ───────────────────
+
+             HTML TEXT
+      VISITE / Tranquillity etc.
+When you scroll, those layers don't move together.
+
+For example:
+
+Scroll: 0 → 100%
+
+Sky          translateY(0 → 40px)
+Mountain     translateY(0 → 100px)
+Waterfall    translateY(0 → 180px)
+Character    translateY(0 → 250px)
+Grass        translateY(0 → 350px)
+Text         translateY(0 → -100px)
+Your brain interprets the different movement speeds as depth.
+
+That's the main reason the website in the video has that gorgeous 3D/diorama feeling.
+
+The second trick is even more important
+Watch the transition between VISITE → Tranquillity → Biodiversity.
+
+It isn't simply:
+
+Page 1
+↓
+Page 2
+↓
+Page 3
+Instead, pieces of one scene remain on screen while the next scene enters.
+
+Imagine the webpage as one enormous vertical composition:
+
+┌────────────────────────────┐
+│ SKY                        │
+│                            │
+│       VISITE               │
+│        🏔️                  │
+│                  🧙        │
+│~~~~~~~~~~~~~~~~~~~~~~~~~~~~│
+│ waterfall                  │
+│                            │
+│       Tranquillity         │
+│                            │
+│           🧙               │
+│____________________________│
+│                            │
+│       Biodiversity         │
+│     🌲     🦌      🌲      │
+│                            │
+└────────────────────────────┘
+Then certain elements are absolute/sticky/pinned and animated while the viewport travels through it.
+
+That's why everything feels connected rather than like separate webpages.
+
+How I'd build this exact style
+You actually don't need Blender.
+
+I'd use:
+
+React / Next.js
+
+for the website itself.
+
+GSAP + ScrollTrigger
+
+for almost all of the animation.
+
+GSAP ScrollTrigger
+
+And optionally:
+
+Lenis
+
+for that extremely smooth scrolling feeling.
+
+Lenis
+
+The artwork should be exported as transparent PNG/WebP/AVIF layers.
+
+So an illustration might be exported as:
+
+scene/
+
+sky.webp
+mountain-back.webp
+mountain-front.webp
+waterfall.webp
+
+rocks-left.webp
+rocks-right.webp
+
+character.webp
+
+grass-back.webp
+grass-front.webp
+
+birds.webp
+fog.webp
+Then they're literally stacked:
+
+.scene {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+And GSAP manipulates them based on scroll position.
+
+Conceptually:
+
+gsap.to(".mountains", {
+    y: -100,
+    scrollTrigger: {
+        trigger: ".scene",
+        scrub: true
+    }
+});
+
+gsap.to(".foreground", {
+    y: -350,
+    scrollTrigger: {
+        trigger: ".scene",
+        scrub: true
+    }
+});
+
+gsap.to(".character", {
+    y: -220,
+    scale: 1.1,
+    scrollTrigger: {
+        trigger: ".scene",
+        scrub: true
+    }
+});
+
+The magic word here is:
+
+scrub: true
+
+Instead of playing an animation automatically, GSAP ties the animation's progress to the user's scroll.
+
+Scroll down:
+
+animation →
+
+Scroll back up:
+
+← animation
+
+Which is exactly the behaviour you're seeing in the video.
+
+There's another clever effect in the video
+Notice how some foreground objects pass in front of text/characters, while others remain behind.
+
+That's just careful layering:
+
+z-index 1   Sky
+z-index 2   Mountains
+z-index 3   Waterfall
+z-index 4   Background plants
+
+z-index 5   TEXT
+
+z-index 6   Character
+
+z-index 7   Foreground rocks
+z-index 8   Grass
+z-index 9   Leaves / particles
+This is a surprisingly cheap way of creating convincing depth.
+
+You don't necessarily need WebGL at all.
+
+And THIS changes what I'd recommend for your Jaani website
+For the birthday website you've been designing, I wouldn't make the entire thing Three.js.
+
+We could use this video's technique for the environment and reserve actual 3D-like animation for the book.
+
+For example:
+
+                 OPEN WEBSITE
+                       │
+                       ▼
+
+            🌸 Cherry blossom scene
+               petals drifting
+               multiple depth layers
+                       │
+                    SCROLL
+                       ↓
+
+           Background moves slowly
+           foreground moves quickly
+
+                       ↓
+
+                 👜 Bag appears
+
+                       ↓
+
+              📕 Jaani's book
+             lying beside the bag
+
+                       ↓
+                 CAMERA ZOOM
+
+                       ↓
+
+              Book fills screen
+
+                       ↓
+
+              BOOK OPENS
+             ╱            ╲
+            ╱              ╲
+       blank page       Manga Jaani
+
+                       ↓
+
+               normal scrolling
+                    STOPS
+
+                       ↓
+
+             CLICK RIGHT PAGE
+                    ↙
+              page bends
+              and flips
+                    ↓
+
+              next manga page
+The cherry-blossom environment can be entirely layered 2D + GSAP, exactly like this video.
+
+That would actually be better than unnecessarily making everything 3D: much lighter on phones, faster loading, easier to make beautiful, and easier for you to implement with Codex/Antigravity.
+
+Then for the book we can use either a proper Three.js book or a convincing CSS/GSAP page-turn implementation.
+
+So the effect in the Short is very achievable for your project. The hardest part isn't the coding — it's preparing the artwork as good separate layers. Once the assets are properly separated, the scroll implementation itself is quite manageable. 
+
+Is there a plugin to make 3d assets?
+
+Worked for a couple of seconds
+Yes. If you mean a ChatGPT plugin that can directly create true 3D models such as .glb/.gltf, I checked the available plugins, and I don't currently see a dedicated Meshy/Tripo-style 3D-generation plugin. The available creative plugins I found are mainly for images/video/websites rather than exportable 3D meshes.
+
+For your Jaani website, the best external tools are Meshy, Tripo AI, or Spline:
+
+Meshy / Tripo — generate a 3D model from an image or prompt, then export .glb for the website.
+Spline — build and animate web-oriented 3D scenes visually; particularly convenient for interactive websites.
+Blender — most control, but considerably more work.
+The workflow I'd recommend is:
+
+reference image → Meshy/Tripo → GLB → React Three Fiber → GSAP scroll animation
+
+For something like the 3D book, we don't even need AI asset generation. A simple book can be created procedurally in Three.js/React Three Fiber, which gives us much better control over individual page bending/flipping.
+
+And for the video you showed, I'd still use mostly 2.5D layered artwork, not 3D models. That will reproduce its aesthetic more accurately and perform much better on mobile.
+
+If you want, I can also show you the easiest free/cheap setup where you describe an asset and AI creates the GLB that Codex can immediately put into your website.
+
