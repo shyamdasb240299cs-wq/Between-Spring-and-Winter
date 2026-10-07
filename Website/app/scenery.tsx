@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { CLOSE_START, smooth } from "./journey-data";
-import { landscapeLayout, pandaPose, rabbitFrame, visibleFraction, type PandaClock, type RabbitClock } from "./scenery-layout";
+import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from "./scenery-layout";
 import { waterRoutes, type WaterPlane } from "./water-routes";
 
 const art = "/scene/layers/";
@@ -30,23 +30,20 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
     let waterBounds: { element: HTMLElement; plane: WaterPlane; left: number; top: number; width: number; height: number }[] = [];
     const rabbit = world.querySelector<HTMLElement>(".house-rabbit")!;
     const rabbitSprite = rabbit.firstElementChild as HTMLElement;
-    const panda = world.querySelector<HTMLElement>(".panda-actor")!;
-    const pandaSprite = panda.firstElementChild as HTMLElement;
     const birds = Array.from(world.querySelectorAll<HTMLElement>(".bird-flight"));
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const portrait = matchMedia("(max-width: 1024px) and (orientation: portrait)");
     let frame = 0, previous = -1, last = performance.now(), flightTime = 0, lastWing = -1;
-    let rabbitCell = -1, pandaCell = "", pandaProgress = -1, disposed = false;
-    let rabbitReady = false, pandaReady = false;
-    const rabbitImage = new Image(), pandaImage = new Image(), pandaRunImage = new Image();
-    rabbitImage.src = `${art}rabbit-polished.webp`; pandaImage.src = `${art}panda-encounter.webp`; pandaRunImage.src = `${art}panda-run-refined.webp`;
+    let rabbitCell = -1, disposed = false;
+    let rabbitReady = false;
+    const rabbitImage = new Image();
+    rabbitImage.src = `${art}rabbit-polished.webp`;
     rabbitImage.decode().then(() => { if (!disposed) rabbitReady = true; }).catch(() => {});
-    Promise.all([pandaImage.decode(),pandaRunImage.decode()]).then(() => { if (!disposed) pandaReady = true; }).catch(() => {});
     let layout = landscapeLayout(world.clientWidth, world.clientHeight);
     const size = () => {
       layout = landscapeLayout(world.clientWidth, world.clientHeight);
       for (const layer of [background, backgroundLife, foreground]) layer.style.height = layout.worldHeight + "px";
-      for (const [element, bounds] of [[terrain, layout.foreground], [rabbit, layout.rabbit], [panda, layout.panda], [backgroundWater,layout.background]] as const) {
+      for (const [element, bounds] of [[terrain, layout.foreground], [rabbit, layout.rabbit], [backgroundWater,layout.background]] as const) {
         element.style.left = bounds.left + "px"; element.style.top = bounds.top + "px";
         element.style.width = bounds.width + "px"; element.style.height = bounds.height + "px";
       }
@@ -58,11 +55,10 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
           width: route.width * bounds.width, height: route.height * bounds.height,
         }));
       });
-      previous = -1; pandaProgress = -1;
+      previous = -1;
     };
     size(); const observer = new ResizeObserver(size); observer.observe(world);
     const rabbitClock: RabbitClock = { eating: 0, lifting: 0 };
-    const pandaClock: PandaClock = { eating: 0, reaction: 0, escape: 0, phase: "eating" };
     const setMotion = (running: boolean) => {
       const value = String(running);
       if (world.dataset.waterRunning !== value) world.dataset.waterRunning = value;
@@ -85,7 +81,6 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
         const value = String(running && active && visibleFraction(bounds.left, y, bounds.width, bounds.height, layout.width, layout.height) > 0);
         if (bounds.element.dataset.running !== value) bounds.element.dataset.running = value;
       }
-      if(!active){pandaClock.phase="gone";if(panda.style.visibility!=="hidden")panda.style.visibility="hidden";}
       if (!moved && !active && !skyVisible) return;
       if (moved) {
         background.style.transform = backgroundLife.style.transform = `translate3d(0,${-cameraY}px,0)`;
@@ -95,7 +90,6 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
         previous = sceneryProgress;
       }
       if (p < 2.3) { rabbitClock.eating = 0; rabbitClock.lifting = 0; }
-      if (p < 3.3) { pandaClock.eating = 0; pandaClock.reaction = 0; pandaClock.escape = 0; pandaClock.phase = "eating"; }
       const rabbitVisible = rabbitReady && active && visibleFraction(layout.rabbit.left, layout.rabbit.top - foregroundY, layout.rabbit.width, layout.rabbit.height, layout.width, layout.height) >= .8;
       const cell = rabbitFrame(rabbitClock, dt, rabbitVisible, running, reduced.matches);
       if (cell !== rabbitCell) {
@@ -105,21 +99,6 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
       }
       const rabbitVisibility=rabbitReady ? "visible" : "hidden";
       if(rabbit.style.visibility!==rabbitVisibility)rabbit.style.visibility=rabbitVisibility;
-      // Count visible honey-eating time before the approach response can begin.
-      const pandaVisible = pandaReady && active && (pandaClock.phase!=="eating" || visibleFraction(layout.panda.left, layout.panda.top - foregroundY, layout.panda.width, layout.panda.height, layout.width, layout.height) >= .25);
-      const pose = pandaPose(pandaClock, dt, pandaVisible, running, p >= 3.72, reduced.matches);
-      const pandaKey=`${pose.phase}:${pose.frame}`;
-      if (pandaKey !== pandaCell) {
-        pandaSprite.style.backgroundPosition = `${pose.frame % 4 / 3 * 100}% ${Math.floor(pose.frame / 4) / (pose.phase==="running"?1:3) * 100}%`;
-        pandaCell = pandaKey;
-      }
-      if (pose.progress !== pandaProgress) {
-        panda.style.transform = `translate3d(${pose.progress * layout.escapeDistance}px,${pose.progress * layout.escapeDrop}px,0)`;
-        pandaProgress = pose.progress;
-      }
-      if (panda.dataset.pose !== pose.phase) panda.dataset.pose = pose.phase;
-      const pandaVisibility = pandaReady && active && pandaClock.phase !== "gone" ? "visible" : "hidden";
-      if (panda.style.visibility !== pandaVisibility) panda.style.visibility = pandaVisibility;
       // Birds belong to one patch of sky and leave the view with the background.
       if (running && skyVisible) flightTime += dt / 1000;
       const wingTick = Math.floor(flightTime * 7);
@@ -156,7 +135,6 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
         <WaterRibbons plane="foreground" />
       </div>
       <div className="house-rabbit"><div className="rabbit-sprite" /></div>
-      <div className="panda-actor" data-pose="eating"><div className="panda-sprite" /></div>
     </div>
   </div>;
 }

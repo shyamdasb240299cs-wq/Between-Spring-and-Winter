@@ -10,17 +10,14 @@ export function landscapeLayout(width: number, height: number) {
   const camera = (p: number) => smooth(p, 0, 3.5) * travel + smooth(p, 3.3, 4.35) * worldHeight * .14;
   const letterCamera = camera(3.15);
   const foregroundTop = .59 * worldHeight;
-  const rabbitHeight = .017 * worldHeight, rabbitWidth = rabbitHeight;
-  const pandaSize = .063 * worldHeight;
+  // Place the rabbit on the mossy ledge at the left of the falls.  Its feet
+  // use the same baseline as the terrain so it belongs to the painting.
+  const rabbitHeight = .034 * worldHeight, rabbitWidth = rabbitHeight;
   return {
     width, height, worldHeight, paintedWidth, cropX, travel, camera, letterCamera,
     background: { left: -cropX, top: 0, width: paintedWidth, height: worldHeight },
     foreground: { left: -cropX, top: foregroundTop, width: paintedWidth, height: paintedWidth },
-    // Both feet anchors are in the foreground painting: veranda and dry riverbank.
-    rabbit: { left: x(985 / 1254) - rabbitWidth / 2, top: foregroundTop + 552 / 1254 * paintedWidth - rabbitHeight * 220 / 256, width: rabbitWidth, height: rabbitHeight },
-    panda: { left: x(1030 / 1254) - pandaSize / 2, top: foregroundTop + 826 / 1254 * paintedWidth - pandaSize * 220 / 256, width: pandaSize, height: pandaSize },
-    escapeDistance: .25 * paintedWidth,
-    escapeDrop: .036 * paintedWidth,
+    rabbit: { left: x(410 / 1254) - rabbitWidth / 2, top: foregroundTop + 800 / 1254 * paintedWidth - rabbitHeight * 220 / 256, width: rabbitWidth, height: rabbitHeight },
   };
 }
 
@@ -44,50 +41,4 @@ export function rabbitFrame(clock: RabbitClock, dt: number, visible: boolean, ru
   }
   if (clock.eating < GRAZING_MS) return Math.floor(clock.eating / 90) % 8;
   return clock.lifting < LIFT_MS ? 8 + Math.min(2, Math.floor(clock.lifting / (LIFT_MS / 3))) : 11;
-}
-
-export type PandaClock = { eating: number; reaction: number; escape: number; phase: "eating" | "standing" | "running" | "gone" };
-export const PANDA_EATING_MS = 2400;
-export const PANDA_STANDING_MS = 1800;
-export const PANDA_ESCAPE_MS = 3000;
-export const PANDA_LAUNCH_MS = 420;
-
-/** A short acceleration followed by a steady lope, with no braking at the exit. */
-export function pandaTravel(elapsed: number) {
-  const t = Math.min(PANDA_ESCAPE_MS, Math.max(0, elapsed));
-  return t < PANDA_LAUNCH_MS ? t * t / (2 * PANDA_LAUNCH_MS) : t - PANDA_LAUNCH_MS / 2;
-}
-
-export function pandaPose(clock: PandaClock, dt: number, visible: boolean, running: boolean, approached: boolean, reduced: boolean) {
-  if (reduced) return { frame: 0, progress: 0, phase: "eating" as const };
-  if (visible && running && clock.phase !== "gone") {
-    let remaining = dt;
-    if (clock.phase === "eating") {
-      const needed = Math.max(0, PANDA_EATING_MS - clock.eating);
-      if (approached && remaining >= needed) {
-        clock.eating += needed;
-        remaining -= needed;
-        clock.phase = "standing";
-      } else {
-        clock.eating += remaining;
-        remaining = 0;
-      }
-    }
-    if (clock.phase === "standing") {
-      const consumed = Math.min(remaining, PANDA_STANDING_MS - clock.reaction);
-      clock.reaction += consumed;
-      remaining -= consumed;
-      if (clock.reaction >= PANDA_STANDING_MS) clock.phase = "running";
-    }
-    if (clock.phase === "running") {
-      clock.escape = Math.min(PANDA_ESCAPE_MS, clock.escape + remaining);
-      if (clock.escape >= PANDA_ESCAPE_MS) clock.phase = "gone";
-    }
-  }
-  const travel = pandaTravel(clock.escape);
-  const frame = clock.phase === "eating" ? Math.floor(clock.eating / 140) % 8
-    // Give the visitor time to read the look-up before the six rising/turning poses.
-    : clock.phase === "standing" ? clock.reaction < 720 ? 8 + Math.floor(clock.reaction / 360) : 10 + Math.min(5, Math.floor((clock.reaction - 720) / 180))
-    : Math.floor(travel / 60) % 8;
-  return { frame, progress: travel / pandaTravel(PANDA_ESCAPE_MS), phase: clock.phase };
 }

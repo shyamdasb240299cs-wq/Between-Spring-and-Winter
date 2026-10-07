@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Pause, Play, Maximize, Minimize, ZoomIn, X, ChevronUp } from "lucide-react";
 const PremiumBook = lazy(() => import("./journey-book"));
 import Scenery from "./scenery";
@@ -9,6 +9,9 @@ export default function Home(){
   const journey=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null),position=useRef(0);
   const [bookReady,setBookReady]=useState(false);
   const [paused,setPaused]=useState(false),[reading,setReading]=useState(false),[index,setIndex]=useState(0),[focus,setFocus]=useState<"left"|"right">("right"),[zoom,setZoom]=useState<PrintedPage|null>(null),[full,setFull]=useState(false),[saved,setSaved]=useState(0);
+  const [accessGranted,setAccessGranted]=useState(false),[passcode,setPasscode]=useState(""),[accessError,setAccessError]=useState(false);
+  useEffect(()=>{try{setAccessGranted(sessionStorage.getItem("between-spring-access")==="granted");}catch{}},[]);
+  const unlock=(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();if(passcode==="!60123"){try{sessionStorage.setItem("between-spring-access","granted");}catch{}setAccessError(false);setAccessGranted(true);return;}setAccessError(true);setPasscode("");};
   const jump=useCallback((unit:number)=>{if(!journey.current)return;window.scrollTo({top:journey.current.offsetTop+unit*innerHeight*SCROLL_SCALE,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});},[]);
   useEffect(()=>{
     const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -58,6 +61,7 @@ export default function Home(){
   const fullscreen=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else document.documentElement.requestFullscreen().catch(()=>{});};
   const spread=journeySpreads[index],label=index===0?"A dedication":index===1?"Part One":index===2?"Page 1":index===13?"Page 22":`Pages ${spread.left.number}–${spread.right.number}`;
   return <main className={"manga-journey "+(paused?"motion-paused":"")}>
+    {!accessGranted&&<div className="access-gate" role="dialog" aria-modal="true" aria-labelledby="access-title"><div className="access-card"><p className="chapter-label">A PRIVATE LITTLE WORLD</p><h1 id="access-title">Between<br/><em>Spring</em> &amp; Winter</h1><p>Enter the passcode to open this story.</p><form onSubmit={unlock}><input autoFocus aria-label="Passcode" type="password" value={passcode} onChange={event=>{setPasscode(event.target.value);setAccessError(false);}} aria-invalid={accessError}/><button type="submit">Enter the story</button><p className="access-error" role="alert">{accessError?"That passcode is not quite right.":""}</p></form></div></div>}
     <div className="landscape-prompt" role="status"><span aria-hidden="true">↻</span><h2>A little world,<br/><em>best held sideways.</em></h2><p>Rotate your phone to landscape<br/>to enter the story.</p></div>
     <section ref={journey} className="journey-scroll" style={{height:`${(JOURNEY_LENGTH*SCROLL_SCALE+1)*100}svh`}} aria-label="Between Spring and Winter — a story for Aami">
       <div ref={stage} className="journey-screen">
