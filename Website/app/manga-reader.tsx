@@ -16,9 +16,10 @@ export default function MangaReader({initialIndex,onClose,embedded=false,onExpan
   useEffect(()=>{if(!host)return;const observer=new ResizeObserver(entries=>{const r=entries[0].contentRect;setDimensions(old=>Math.abs(old.width-r.width)<2&&Math.abs(old.height-r.height)<2?old:{width:r.width,height:r.height});});observer.observe(host);return()=>observer.disconnect();},[host]);
   useEffect(()=>{
     if(mode==="scroll"||!host||!dimensions.width||!dimensions.height)return;
-    let dead=false,instance:PageFlip|null=null;setReady(false);
+    let dead=false,instance:PageFlip|null=null;
     import("page-flip/dist/js/page-flip.module.js").then(({PageFlip})=>{
       if(dead)return;
+      setReady(false);
       const root=document.createElement("div");root.className="physical-reader";host.appendChild(root);
       const spread=mode==="spread"&&dimensions.width>=700;
       const width=Math.floor(Math.min((dimensions.height-24)*2/3,(dimensions.width-32)/(spread?2:1)));

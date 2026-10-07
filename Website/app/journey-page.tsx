@@ -11,8 +11,9 @@ export default function Home(){
   const [paused,setPaused]=useState(false),[reading,setReading]=useState(false),[index,setIndex]=useState(0),[focus,setFocus]=useState<"left"|"right">("right"),[zoom,setZoom]=useState<PrintedPage|null>(null),[full,setFull]=useState(false),[saved,setSaved]=useState(0);
   const jump=useCallback((unit:number)=>{if(!journey.current)return;window.scrollTo({top:journey.current.offsetTop+unit*innerHeight*SCROLL_SCALE,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});},[]);
   useEffect(()=>{
-    const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;setPaused(reduce);
-    try{setSaved(clamp(Number(localStorage.getItem(journeyProgressKey))||0,0,journeySpreads.length-1));}catch{}
+    const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let restored=0;try{restored=clamp(Number(localStorage.getItem(journeyProgressKey))||0,0,journeySpreads.length-1);}catch{}
+    const motionFrame=requestAnimationFrame(()=>{setPaused(reduce);setSaved(restored);});
     let frame=0,last=performance.now(),lastPage=-1,lastFocus="",wasReading=false,viewportHeight=innerHeight,bookStarted=false,initialized=false;
     const screen=stage.current!,section=journey.current!;
     const size=()=>{const unit=window.scrollY/(viewportHeight*SCROLL_SCALE);viewportHeight=innerHeight;section.style.height=(JOURNEY_LENGTH*SCROLL_SCALE+1)*viewportHeight+"px";screen.style.height=viewportHeight+"px";window.scrollTo({top:unit*viewportHeight*SCROLL_SCALE,behavior:"instant"});wake();};
@@ -44,7 +45,7 @@ export default function Home(){
     function wake(){if(!frame){last=performance.now()-16;frame=requestAnimationFrame(tick);}}
     size();window.addEventListener("resize",size);window.addEventListener("scroll",wake,{passive:true});document.addEventListener("visibilitychange",wake);
     const changed=()=>setFull(Boolean(document.fullscreenElement));document.addEventListener("fullscreenchange",changed);
-    return()=>{cancelAnimationFrame(frame);window.removeEventListener("resize",size);window.removeEventListener("scroll",wake);document.removeEventListener("visibilitychange",wake);document.removeEventListener("fullscreenchange",changed);};
+    return()=>{cancelAnimationFrame(motionFrame);cancelAnimationFrame(frame);window.removeEventListener("resize",size);window.removeEventListener("scroll",wake);document.removeEventListener("visibilitychange",wake);document.removeEventListener("fullscreenchange",changed);};
   },[]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{if(zoom||!reading||(e.target as HTMLElement).closest("button,a,input"))return;const mobile=false;
