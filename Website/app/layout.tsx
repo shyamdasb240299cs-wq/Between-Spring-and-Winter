@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./journey.css";
+import "./garden-polish.css";
 
 export const metadata: Metadata = {
   title: "Between Spring and Winter — Read the Manga",

@@ -1,5 +1,9 @@
 # Asset credits
 
+## Garden details
+
+The campfire, extra blossom branch, six-frame butterfly atlas, and painted Fūrin bell with sixteen paper poses were generated and edited with the built-in OpenAI imagegen tool for this site. Transparent WebP assets preserve the painted setting's lighting. Original PNGs, full prompts, registration metadata, and preparation scripts are retained in `Assets and working files/garden-polish`. See `GARDEN-POLISH.md` for placement, animation, and validation details.
+
 ## Current continuous terrain design
 
 The current background is one uninterrupted Japanese mountain-to-forest painting, generated and edited with the built-in OpenAI imagegen tool from the owner's concept reference. Sunset mountains, mist, lake, upstream water, cherry forest, mossy stone steps and the shrine are baked into that single image. One broad transparent foreground painting combines the cedar house, lantern, stones, riverbank and lower waterfall. The earlier smooth-scroll video supplies motion inspiration only; no video frames are published.

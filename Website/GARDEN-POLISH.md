@@ -1,0 +1,13 @@
+# Garden details and access screen
+
+The access screen uses the existing secret and session storage behavior, with a paper invitation, painted side panel, show/hide button, keyboard focus, and announced error feedback. The story stays inert while locked. Portrait and short landscape layouts keep the form usable.
+
+Transparent raster assets were generated with the built-in OpenAI imagegen tool. Original PNGs, full prompts, atlas registration, and the reproducible Sharp preparation script are in `../Assets and working files/garden-polish/`. `prompts.json` records the first briefs. `campfire-reference-prompts.json` records the final lit stone-ring fire and separate smoke texture, made from the owner's latest placement reference. The final fire is encoded as an 800px lossless transparent WebP. `furin-paper-prompt.txt` records the sixteen paper poses. Earlier campfire versions are retained as unused source references.
+
+- Campfire: compact lit logs and golden flames within a stone ring on the dry right foreground ledge, following the owner's final image reference. A soft contact shadow and gentle light flicker ground the asset. Three staggered transparent smoke textures continuously rise, expand, curl, drift and dissolve over 7.2 seconds.
+- Flowers: a painted blossom branch layered in front of two butterflies; a third butterfly flies in front. Independent curved paths and a six-frame wing atlas repeat continuously.
+- Fūrin: one stable painted glass bell and sixteen separately registered paper bend poses. Neighbouring poses blend continuously. A damped pendulum and a lighter paper spring respond to varying gusts, with calm intervals and a natural return to rest. Fine airflow strokes appear only during gusts and move in the same direction as the force. There is no repeating swing timeline. `check-wind.mjs` validates rest, settling, bounded swing, and frame-rate consistency at 24, 60, and 120 updates per second.
+
+All details are attached to the same foreground terrain plane, so camera movement, cropping, and parallax stay aligned with the painting. The three butterflies are small, with a farther pair behind the extra blossoms. Motion pauses through the existing control, offscreen, in portrait, and in hidden tabs. Reduced motion keeps static butterflies and a still chime and hides smoke and airflow.
+
+Validation: TypeScript against source files (excluding stale generated `.next` validator files), Vercel production build, transparent asset and atlas preparation checks, and browser checks for desktop, 319×572 portrait, and 844×390 landscape. Incorrect and correct passcodes, focus, locked background, image loading, motion pause, and the visible scene composition were checked.

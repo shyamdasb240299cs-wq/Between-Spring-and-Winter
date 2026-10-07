@@ -1,17 +1,17 @@
 "use client";
-import { Suspense, lazy, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, Maximize, Minimize, ZoomIn, X, ChevronUp } from "lucide-react";
 const PremiumBook = lazy(() => import("./journey-book"));
 import Scenery from "./scenery";
+import AccessGate from "./access-gate";
 import { CLOSE_START, JOURNEY_LENGTH, PAGE_STEP, READ_START, SCROLL_SCALE, clamp, journeySpreads, journeyProgressKey, smooth, focusedSide, type PrintedPage } from "./journey-data";
 
 export default function Home(){
   const journey=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null),position=useRef(0);
   const [bookReady,setBookReady]=useState(false);
   const [paused,setPaused]=useState(false),[reading,setReading]=useState(false),[index,setIndex]=useState(0),[focus,setFocus]=useState<"left"|"right">("right"),[zoom,setZoom]=useState<PrintedPage|null>(null),[full,setFull]=useState(false),[saved,setSaved]=useState(0);
-  const [accessGranted,setAccessGranted]=useState(false),[passcode,setPasscode]=useState(""),[accessError,setAccessError]=useState(false);
-  useEffect(()=>{try{setAccessGranted(sessionStorage.getItem("between-spring-access")==="granted");}catch{}},[]);
-  const unlock=(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();if(passcode==="!60123"){try{sessionStorage.setItem("between-spring-access","granted");}catch{}setAccessError(false);setAccessGranted(true);return;}setAccessError(true);setPasscode("");};
+  const [accessGranted,setAccessGranted]=useState(false);
+  useEffect(()=>{const frame=requestAnimationFrame(()=>{try{setAccessGranted(sessionStorage.getItem("between-spring-access")==="granted");}catch{}});return()=>cancelAnimationFrame(frame);},[]);
   const jump=useCallback((unit:number)=>{if(!journey.current)return;window.scrollTo({top:journey.current.offsetTop+unit*innerHeight*SCROLL_SCALE,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});},[]);
   useEffect(()=>{
     const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -51,21 +51,21 @@ export default function Home(){
     return()=>{cancelAnimationFrame(motionFrame);cancelAnimationFrame(frame);window.removeEventListener("resize",size);window.removeEventListener("scroll",wake);document.removeEventListener("visibilitychange",wake);document.removeEventListener("fullscreenchange",changed);};
   },[]);
   useEffect(()=>{
-    const key=(e:KeyboardEvent)=>{if(zoom||!reading||(e.target as HTMLElement).closest("button,a,input"))return;const mobile=false;
+    const key=(e:KeyboardEvent)=>{if(!accessGranted||zoom||!reading||(e.target as HTMLElement).closest("button,a,input"))return;const mobile=false;
       if(["ArrowDown","ArrowRight","PageDown"," "].includes(e.key)){e.preventDefault();jump(READ_START+(mobile&&index>2&&focus==="left"&&index<13?index+.48:Math.min(journeySpreads.length,index+1)+.03)*PAGE_STEP);}
       if(["ArrowUp","ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();jump(READ_START+(mobile&&index>2&&focus==="right"?index+.08:Math.max(0,index-1)+.03)*PAGE_STEP);}
     };
     window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);
-  },[index,focus,jump,reading,zoom]);
+  },[accessGranted,index,focus,jump,reading,zoom]);
   useEffect(()=>{if(!zoom)return;const key=(e:KeyboardEvent)=>{if(e.key==="Escape")setZoom(null);if(e.key==="Tab")e.preventDefault();};window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);},[zoom]);
   const fullscreen=()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else document.documentElement.requestFullscreen().catch(()=>{});};
   const spread=journeySpreads[index],label=index===0?"A dedication":index===1?"Part One":index===2?"Page 1":index===13?"Page 22":`Pages ${spread.left.number}–${spread.right.number}`;
   return <main className={"manga-journey "+(paused?"motion-paused":"")}>
-    {!accessGranted&&<div className="access-gate" role="dialog" aria-modal="true" aria-labelledby="access-title"><div className="access-card"><p className="chapter-label">A PRIVATE LITTLE WORLD</p><h1 id="access-title">Between<br/><em>Spring</em> &amp; Winter</h1><p>Enter the passcode to open this story.</p><form onSubmit={unlock}><input autoFocus aria-label="Passcode" type="password" value={passcode} onChange={event=>{setPasscode(event.target.value);setAccessError(false);}} aria-invalid={accessError}/><button type="submit">Enter the story</button><p className="access-error" role="alert">{accessError?"That passcode is not quite right.":""}</p></form></div></div>}
-    <div className="landscape-prompt" role="status"><span aria-hidden="true">↻</span><h2>A little world,<br/><em>best held sideways.</em></h2><p>Rotate your phone to landscape<br/>to enter the story.</p></div>
-    <section ref={journey} className="journey-scroll" style={{height:`${(JOURNEY_LENGTH*SCROLL_SCALE+1)*100}svh`}} aria-label="Between Spring and Winter — a story for Aami">
+    {!accessGranted&&<AccessGate onUnlock={()=>{setAccessGranted(true);requestAnimationFrame(()=>document.querySelector<HTMLButtonElement>(".intro-actions button")?.focus({preventScroll:true}));}}/>}
+    <div className="landscape-prompt" role="status" inert={!accessGranted}><span aria-hidden="true">↻</span><h2>A little world,<br/><em>best held sideways.</em></h2><p>Rotate your phone to landscape<br/>to enter the story.</p></div>
+    <section ref={journey} className="journey-scroll" inert={!accessGranted} style={{height:`${(JOURNEY_LENGTH*SCROLL_SCALE+1)*100}svh`}} aria-label="Between Spring and Winter — a story for Aami">
       <div ref={stage} className="journey-screen">
-        <Scenery position={position} paused={paused}/><div className="scene-shade" aria-hidden="true"/>
+        <Scenery position={position} paused={paused||!accessGranted}/><div className="scene-shade" aria-hidden="true"/>
         <header className="journey-header" aria-hidden={reading} inert={reading}>
           <a href="#" className="full-wordmark" onClick={e=>{e.preventDefault();jump(0);}} aria-label="Between Spring and Winter — return to the beginning"><span>Between</span><span>Spring <i>&</i> Winter</span></a>
           <nav className="intro-nav" aria-label="Introduction"><button onClick={()=>jump(1.8)}>The story</button><button onClick={()=>jump(3.15)}>A love letter</button><button className="read-link" onClick={()=>jump(READ_START+.1)}>Read Spring</button></nav>
@@ -86,7 +86,7 @@ export default function Home(){
           <p>If love could fold the miles between us, I would be at your door before the morning light.</p><p>Until then, I have made you a little world of paper: a day without goodbyes, where nothing hurries us, and every small moment has room for you.</p><p>For your birthday, and for all the days after it, this is my heart, asking to sit beside yours.</p><p className="author-signature">Ever yours, Shyamu.</p>
         </section>
         <div className="book-invitation" data-reveal="4.08,4.35,4.65,5.05"><p className="chapter-label">03 / OUR FIRST SEASON</p><h2>Let the world grow quiet.<br/><em>Stay a little.</em></h2><p>Keep scrolling. I saved a day for us.</p></div>
-        {bookReady&&<Suspense fallback={<div className="journey-book"><img className="journey-book-fallback" src="/manga/cover-front.webp" alt=""/></div>}><PremiumBook position={position} paused={paused}/></Suspense>}
+        {bookReady&&<Suspense fallback={<div className="journey-book"><img className="journey-book-fallback" src="/manga/cover-front.webp" alt=""/></div>}><PremiumBook position={position} paused={paused||!accessGranted}/></Suspense>}
         <div className="reading-chrome" aria-hidden={!reading} inert={!reading}>
           <span className="reading-label">SPRING <span>{label}</span></span><span className="reading-instruction">Scroll to turn · Scroll up to return</span>
           <div className="reading-actions">{spread.left.number>0&&index<13&&<button className="zoom-left" aria-label={`Enlarge page ${spread.left.number}`} onClick={()=>setZoom(spread.left)}><ZoomIn size={17}/><span>{spread.left.number}</span></button>}<button aria-label={`Enlarge ${spread[focus].label.toLowerCase()}`} onClick={()=>setZoom(spread[focus])}><ZoomIn size={20}/></button><button aria-label={full?"Exit fullscreen":"Enter fullscreen"} onClick={fullscreen}>{full?<Minimize size={20}/>:<Maximize size={20}/>}</button></div>
