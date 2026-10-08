@@ -1,6 +1,7 @@
 # Local deployment and audit worktrees
 /.site-publish/
 /.codex-audit/
+/.audio-review/
 /Website/.git.local/
 
 # Dependencies and tool state

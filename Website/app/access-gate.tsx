@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Eye, EyeOff, LockKeyhole } from "lucide-react";
 
+export const accessSessionKey = "between-spring-access-v2";
+
 export default function AccessGate({ onUnlock }: { onUnlock: () => void }) {
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState(false);
@@ -15,8 +17,8 @@ export default function AccessGate({ onUnlock }: { onUnlock: () => void }) {
   }, []);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (passcode === "!60123") {
-      try { sessionStorage.setItem("between-spring-access", "granted"); } catch {}
+    if (passcode === "160123") {
+      try { sessionStorage.setItem(accessSessionKey, "granted"); } catch {}
       onUnlock();
     } else {
       setError(true);
@@ -39,7 +41,7 @@ export default function AccessGate({ onUnlock }: { onUnlock: () => void }) {
         <form onSubmit={submit} className="access-form">
           <label htmlFor="story-passcode">Your secret passcode</label>
           <div className={"access-field" + (error ? " has-error" : "")}>
-            <input ref={field} id="story-passcode" name="passcode" type={visible ? "text" : "password"} value={passcode} onChange={event => { setPasscode(event.target.value); setError(false); }} placeholder="Enter the passcode" autoComplete="off" autoCapitalize="none" spellCheck={false} required aria-invalid={error} aria-describedby="access-feedback"/>
+            <input ref={field} id="story-passcode" name="passcode" type={visible ? "text" : "password"} inputMode="numeric" value={passcode} onChange={event => { setPasscode(event.target.value); setError(false); }} placeholder="Enter the passcode" autoComplete="off" autoCapitalize="none" spellCheck={false} required aria-invalid={error} aria-describedby="access-feedback"/>
             <button className="access-visibility" type="button" aria-label={visible ? "Hide passcode" : "Show passcode"} aria-pressed={visible} onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={18}/> : <Eye size={18}/>}</button>
           </div>
           <p id="access-feedback" className="access-feedback" aria-live="polite">{error ? "That isn’t our secret. Try once more." : "Only you have the key to this little world."}</p>

@@ -3,7 +3,7 @@ import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { CLOSE_START, smooth } from "./journey-data";
 import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from "./scenery-layout";
 import { waterRoutes, type WaterPlane } from "./water-routes";
-import { advanceWind, createWindClock } from "./wind-motion";
+import { advanceWind, createWindClock, type WindClock } from "./wind-motion";
 
 const art = "/scene/layers/";
 
@@ -12,14 +12,15 @@ function WaterRibbons({ plane }: { plane: WaterPlane }) {
     {waterRoutes[plane].map(route => <div key={route.id} className="waterfall-motion" data-plane={plane} data-running="false" style={{
       left: `${route.left * 100}%`, top: `${route.top * 100}%`, width: `${route.width * 100}%`, height: `${route.height * 100}%`,
       clipPath: route.clip, "--flow-period": `${route.period}s`, "--flow-delay": `${route.delay}s`, "--flow-alpha": route.opacity,
-    } as CSSProperties}><div className="water-flow" /></div>)}
+    } as CSSProperties}><div className="water-flow"/><div className="water-foam"/></div>)}
   </div>;
 }
 
 /** Two complete landscape planes; all scenery stays attached to its terrain. */
-export default function Scenery({ position, paused }: { position: RefObject<number>; paused: boolean }) {
+export default function Scenery({ position, paused, onWindClock }: { position: RefObject<number>; paused: boolean; onWindClock?: (clock:WindClock|null)=>void }) {
   const host = useRef<HTMLDivElement>(null), pause = useRef(paused);
-  useEffect(() => { pause.current = paused; }, [paused]);
+  const wakeAnimation = useRef<(() => void) | null>(null);
+  useEffect(() => { pause.current = paused; wakeAnimation.current?.(); }, [paused]);
   useEffect(() => {
     const world = host.current!;
     const background = world.querySelector<HTMLElement>(".continuous-landscape")!;
@@ -38,14 +39,15 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
     const chime = world.querySelector<HTMLElement>(".furin")!;
     const paper = world.querySelector<HTMLElement>(".furin-paper")!;
     const paperFrames = Array.from(paper.querySelectorAll<HTMLElement>(".furin-paper-frame"));
-    const air = world.querySelector<HTMLElement>(".furin-air")!;
+    const branch = world.querySelector<HTMLElement>(".roof-blossom")!;
+    const air = world.querySelector<HTMLElement>(".blossom-air")!;
     const airPaths = Array.from(air.querySelectorAll<SVGPathElement>("path"));
     const petals = Array.from(air.querySelectorAll<HTMLElement>(".wind-petal"));
     const wind = createWindClock();
+    onWindClock?.(wind);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    const portrait = matchMedia("(max-width: 1024px) and (orientation: portrait)");
     let frame = 0, previous = -1, last = performance.now(), flightTime = 0, lastWing = -1;
-    let rabbitCell = -1, disposed = false;
+    let rabbitCell = -1, disposed = false, awakeUntil = performance.now()+700;
     let rabbitReady = false;
     const rabbitImage = new Image();
     rabbitImage.src = `${art}rabbit-polished.webp`;
@@ -54,7 +56,7 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
     const size = () => {
       layout = landscapeLayout(world.clientWidth, world.clientHeight);
       for (const layer of [background, backgroundLife, foreground]) layer.style.height = layout.worldHeight + "px";
-      for (const [element, bounds] of [[terrain, layout.foreground], [rabbit, layout.rabbit], [backgroundWater,layout.background]] as const) {
+      for (const [element, bounds] of [[background,layout.background], [terrain, layout.foreground], [rabbit, layout.rabbit], [backgroundWater,layout.background]] as const) {
         element.style.left = bounds.left + "px"; element.style.top = bounds.top + "px";
         element.style.width = bounds.width + "px"; element.style.height = bounds.height + "px";
       }
@@ -67,6 +69,7 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
         }));
       });
       previous = -1;
+      wakeAnimation.current?.();
     };
     size(); const observer = new ResizeObserver(size); observer.observe(world);
     const rabbitClock: RabbitClock = { eating: 0, lifting: 0 };
@@ -75,25 +78,30 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
       if (world.dataset.waterRunning !== value) world.dataset.waterRunning = value;
     };
     const tick = (now: number) => {
-      frame = requestAnimationFrame(tick);
+      frame = 0;
       const dt = Math.min(now - last, 80); last = now;
-      if (document.hidden || portrait.matches) { setMotion(false); garden.dataset.running = "false"; return; }
+      if (document.hidden) { setMotion(false); garden.dataset.running = "false"; return; }
       const p = position.current, sceneryProgress = Math.min(p, 5.25);
       const moved = Math.abs(sceneryProgress - previous) > .0001;
       const active = p < 5.75 || p > CLOSE_START + 2.6;
       const running = !pause.current && !reduced.matches;
+      if ((running && active) || now < awakeUntil) frame = requestAnimationFrame(tick);
       const cameraY = layout.camera(p);
-      const foregroundDepth = (cameraY - layout.letterCamera) * .035;
+      const cameraX = layout.cameraX(p);
+      const foregroundDepth = (cameraY - layout.letterCamera) * .075;
       const foregroundY = cameraY + foregroundDepth;
       const skyVisible = cameraY < layout.worldHeight * .14 + layout.height * .06;
       setMotion(running && active);
-      const gardenVisible = visibleFraction(layout.foreground.left + layout.foreground.width * .76, layout.foreground.top + layout.foreground.height * .2 - foregroundY, layout.foreground.width * .24, layout.foreground.height * .52, layout.width, layout.height) > 0;
-      garden.dataset.running = String(running && active && gardenVisible);
+      const gardenVisible = visibleFraction(cameraX + layout.foreground.left + layout.foreground.width * .64, layout.foreground.top - foregroundY, layout.foreground.width * .36, layout.foreground.height * .72, layout.width, layout.height) > 0;
+      const gardenRunning = String(running && active && gardenVisible);
+      if (garden.dataset.running !== gardenRunning) garden.dataset.running = gardenRunning;
       if (running && active && gardenVisible) {
         gardenTime += dt / 1000;
         advanceWind(wind,dt/1000);
-        chime.style.transform = `rotate(${wind.angle}rad)`;
-        paper.style.transform = `rotate(${wind.paper*.12}rad)`;
+        // Leftward air reaches the branch first, then the hanging bell.
+        branch.style.transform = `rotate(${-wind.branch}rad)`;
+        chime.style.transform = `rotate(${-wind.angle}rad)`;
+        paper.style.transform = `rotate(${-wind.paper*.12}rad)`;
         const bend = Math.max(0,Math.min(15,7.5+wind.paper*8));
         const first = Math.floor(bend), mix = bend-first;
         paperFrames.forEach((element,i) => {
@@ -101,15 +109,15 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
           element.style.backgroundPosition = `${cell%4/3*100}% ${Math.floor(cell/4)/3*100}%`;
           element.style.opacity = String(i ? mix : 1-mix);
         });
-        air.style.opacity = String(Math.abs(wind.wind)*.8);
-        air.style.transform = wind.wind < 0 ? "scaleX(-1)" : "scaleX(1)";
-        airPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-wind.time*(68+i*13)));
+        air.style.opacity = String(Math.abs(wind.air)*.8);
+        const gustAge=Math.max(0,wind.time-wind.start);
+        airPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-gustAge*(390+i*12)));
         petals.forEach((petal,i)=>{
-          const travel=(wind.time/(3.8+i*.5)+i*.31)%1;
-          petal.style.left=`${travel*100}%`;
-          petal.style.top=`${35+i*16+Math.sin(travel*6+i)*12}%`;
-          petal.style.transform=`rotate(${travel*290+i*80}deg) scaleX(${.65+.35*Math.cos(travel*9)})`;
-          petal.style.opacity=String(Math.sin(travel*Math.PI));
+          const travel=((gustAge-i*.22)/(2.3+i*.1))%1;
+          const x=(1-travel)*layout.foreground.width*.35;
+          const y=(.024+Math.sin(travel*Math.PI)*.1+i*.006)*layout.foreground.height;
+          petal.style.transform=`translate3d(${x}px,${y}px,0) rotate(${travel*290+i*80}deg) scaleX(${.65+.35*Math.cos(travel*9)})`;
+          petal.style.opacity=String(travel>0?Math.sin(travel*Math.PI):0);
         });
       }
       if (gardenVisible && (moved || running || reduced.matches)) {
@@ -118,27 +126,26 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
           const x = 22 + i * 21 + Math.sin(t) * (17 - i * 2);
           const y = 43 + Math.sin(t * 1.7 + i) * 22 + Math.cos(t * .6) * 7;
           const tilt = Math.cos(t) * 16;
-          butterfly.style.left = `${x}%`; butterfly.style.top = `${y}%`;
-          butterfly.style.transform = `translate3d(0,0,0) rotate(${tilt}deg)`;
+          butterfly.style.transform = `translate3d(${x/100*layout.foreground.width*.18}px,${y/100*layout.foreground.height*.17}px,0) rotate(${tilt}deg)`;
           const wing = reduced.matches ? 0 : Math.floor(gardenTime * 13 + i * 2) % 6;
           (butterfly.firstElementChild as HTMLElement).style.backgroundPosition = `${wing % 3 / 2 * 100}% ${Math.floor(wing / 3) * 100}%`;
         });
       }
       for (const bounds of waterBounds) {
         const y = bounds.top - (bounds.plane === "background" ? cameraY : foregroundY);
-        const value = String(running && active && visibleFraction(bounds.left, y, bounds.width, bounds.height, layout.width, layout.height) > 0);
+        const value = String(running && active && visibleFraction(cameraX + bounds.left, y, bounds.width, bounds.height, layout.width, layout.height) > 0);
         if (bounds.element.dataset.running !== value) bounds.element.dataset.running = value;
       }
       if (!moved && !active && !skyVisible) return;
       if (moved) {
-        background.style.transform = backgroundLife.style.transform = `translate3d(0,${-cameraY}px,0)`;
-        foreground.style.transform = `translate3d(0,${-foregroundY}px,0)`;
+        background.style.transform = backgroundLife.style.transform = `translate3d(${cameraX}px,${-cameraY}px,0)`;
+        foreground.style.transform = `translate3d(${cameraX}px,${-foregroundY}px,0)`;
         world.dataset.scene = p < 1.2 ? "sunset" : p < 2.64 ? "valley" : p < 3.65 ? "shrine" : "waterfall";
         world.dataset.ready = "true";
         previous = sceneryProgress;
       }
       if (p < 2.3) { rabbitClock.eating = 0; rabbitClock.lifting = 0; }
-      const rabbitVisible = rabbitReady && active && visibleFraction(layout.rabbit.left, layout.rabbit.top - foregroundY, layout.rabbit.width, layout.rabbit.height, layout.width, layout.height) >= .8;
+      const rabbitVisible = rabbitReady && active && visibleFraction(cameraX + layout.rabbit.left, layout.rabbit.top - foregroundY, layout.rabbit.width, layout.rabbit.height, layout.width, layout.height) >= .8;
       const cell = rabbitFrame(rabbitClock, dt, rabbitVisible, running, reduced.matches);
       if (cell !== rabbitCell) {
         rabbitSprite.style.backgroundPosition = `${cell % 4 / 3 * 100}% ${Math.floor(cell / 4) / 2 * 100}%`;
@@ -166,14 +173,22 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
       });
       lastWing = wingTick;
     };
+    const wake = () => {
+      awakeUntil=performance.now()+700;
+      if (!frame && !document.hidden) { last=performance.now(); frame=requestAnimationFrame(tick); }
+    };
+    wakeAnimation.current=wake;
     const visibilityChanged = () => {
       if (document.hidden) { setMotion(false); garden.dataset.running = "false"; }
       last = performance.now();
+      wake();
     };
     document.addEventListener("visibilitychange", visibilityChanged);
+    window.addEventListener("scroll",wake,{passive:true});
+    reduced.addEventListener("change",wake);
     frame = requestAnimationFrame(tick);
-    return () => { disposed = true; cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener("visibilitychange", visibilityChanged); };
-  }, [position]);
+    return () => { disposed = true; onWindClock?.(null); wakeAnimation.current=null; cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener("visibilitychange", visibilityChanged); window.removeEventListener("scroll",wake); reduced.removeEventListener("change",wake); };
+  }, [position,onWindClock]);
 
   return <div className="layered-world" ref={host} aria-hidden="true" data-water-running="false">
     <img className="continuous-landscape" src={`${art}continuous-shrine.webp`} srcSet={`${art}continuous-shrine-small.webp 960w, ${art}continuous-shrine.webp 1920w`} sizes="100vw" fetchPriority="high" alt="" />
@@ -184,11 +199,12 @@ export default function Scenery({ position, paused }: { position: RefObject<numb
     </div>
     <div className="foreground-world">
       <div className="foreground-terrain">
-        <img className="foreground-landscape" src={`${art}forest-foreground.webp`} decoding="async" alt="" />
+        <img className="foreground-landscape" src={`${art}forest-foreground-burned-out.webp`} decoding="async" alt="" />
         <WaterRibbons plane="foreground" />
         <div className="garden-life" data-running="false">
-          <div className="campfire"><div className="campfire-shadow"/><div className="campfire-glow"/><img src={`${art}campfire.webp`} alt="" decoding="async"/><div className="campfire-smoke">{Array.from({length:3},(_,i)=><span key={i} style={{"--smoke-delay":`${-i * 2.4}s`, "--smoke-drift":`${i % 2 ? 10 : -6}px`, "--smoke-tilt":`${i % 2 ? 3 : -2}deg`} as CSSProperties}/>)}</div></div>
-          <div className="furin-air"><svg viewBox="0 0 400 150" fill="none"><path d="M-100 81 C20 123 99 22 185 57 S292 103 500 31"/><path d="M-100 106 C25 160 129 64 210 86 S328 128 500 53"/><path d="M-100 44 C15 96 112 0 190 29 S304 65 500 4"/></svg>{[0,1,2].map(i=><span key={i} className="wind-petal"/>)}</div>
+          <div className="campfire-smoke">{Array.from({length:4},(_,i)=><span key={i} style={{"--smoke-delay":`${-i * 2.2}s`, "--smoke-drift":`${-8-i*3}px`, "--smoke-tilt":`${-1-i*.7}deg`} as CSSProperties}/>)}</div>
+          <img className="roof-blossom" src={`${art}roof-blossom.webp`} alt="" decoding="async"/>
+          <div className="blossom-air"><svg viewBox="0 0 600 300" fill="none"><path pathLength="1000" d="M630 38 C565 66 548 67 523 92 C493 130 523 222 454 229 C389 235 364 164 389 139 C414 114 441 139 431 165 C416 207 294 185 227 168 C130 139 52 151 -40 172"/><path pathLength="1000" d="M630 59 C555 96 526 75 498 120 C473 162 496 245 425 245 C347 245 354 177 379 165 C415 144 412 202 373 203 C275 213 143 156 -40 194"/></svg>{[0,1,2].map(i=><span key={i} className="wind-petal"/>)}</div>
           <div className="furin"><img className="furin-bell" src={`${art}furin-bell.webp`} alt=""/><div className="furin-paper"><div className="furin-paper-frame"/><div className="furin-paper-frame"/></div></div>
           <div className="butterfly-garden">
             {[0,1,2].map(i=><div key={i} className={`garden-butterfly butterfly-${i}`}><div className="butterfly-sprite"/></div>)}

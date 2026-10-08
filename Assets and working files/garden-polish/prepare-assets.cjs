@@ -27,6 +27,7 @@ async function atlas(name, columns, rows, pivots, scale, anchor) {
 }
 
 (async()=>{
+  await sharp(source('ground-dressing')).trim().resize({width:480}).webp({quality:90,alphaQuality:100}).toFile(path.join(output,'campfire-ground-dressing.webp'));
   await sharp(path.join(__dirname,'campfire-reference-source.png')).trim({threshold:20}).resize({width:800}).webp({lossless:true}).toFile(path.join(output,'campfire.webp'));
   await sharp(source('campfire-smoke')).resize({width:320}).webp({quality:95,alphaQuality:100}).toFile(path.join(output,'campfire-smoke.webp'));
   await sharp(source('garden-blossoms')).resize({width:480}).webp({quality:90,alphaQuality:100}).toFile(path.join(output,'garden-blossoms.webp'));

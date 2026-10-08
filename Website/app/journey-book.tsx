@@ -83,7 +83,8 @@ export default function JourneyBook({position}:{position:RefObject<number>;pause
       const insideBack=new THREE.Mesh(new THREE.PlaneGeometry(2.88,4.35),new THREE.MeshBasicMaterial({map:texture("/manga/blank.webp"),toneMapped:false}));insideBack.position.set(1.43,0,.020);rear.add(insideBack);
       dirty=true;setLoaded(true);parent.dataset.loaded="true";
     });
-    const resize=()=>{dirty=true;renderer.setSize(parent.clientWidth,parent.clientHeight,false);camera.aspect=parent.clientWidth/parent.clientHeight;camera.updateProjectionMatrix();};resize();const observer=new ResizeObserver(resize);observer.observe(parent);
+    let reservedHeight=128;
+    const resize=()=>{dirty=true;renderer.setSize(parent.clientWidth,parent.clientHeight,false);camera.aspect=parent.clientWidth/parent.clientHeight;camera.updateProjectionMatrix();const screen=parent.closest('.journey-screen');const footer=screen?.querySelector('.journey-footer')?.getBoundingClientRect().height??56;const toolbar=screen?.querySelector('.reading-chrome')?.getBoundingClientRect().height??44;reservedHeight=Math.max(128,2*(footer+8),2*(toolbar+8));};resize();const observer=new ResizeObserver(resize);observer.observe(parent);
     const portrait=matchMedia("(max-width: 1024px) and (orientation: portrait)");
     const reduced=matchMedia("(prefers-reduced-motion: reduce)");
     const pivotCenter=new THREE.Vector3(),originalCenter=new THREE.Vector3(),presentationRotation=new THREE.Quaternion();
@@ -147,7 +148,7 @@ export default function JourneyBook({position}:{position:RefObject<number>;pause
       let focus=-1.43;
       if(mobile){focus=index>2?-2.86*(1-smooth(fraction,.3,.43)):0;if(index===bookSheets.length)focus=-2.86;}
       camera.fov=THREE.MathUtils.lerp(31,9,zoom)*(1-finish)+31*finish;camera.updateProjectionMatrix();
-      const tangent=Math.tan(camera.fov*Math.PI/360),fitHeight=4.5/(2*tangent*((parent.clientHeight-(parent.clientHeight<500?74:110))/parent.clientHeight)),fitWidth=(mobile?3.04:6.06)/(2*tangent*((parent.clientWidth-22)/parent.clientHeight)),fullZ=Math.max(fitHeight,fitWidth);
+      const tangent=Math.tan(camera.fov*Math.PI/360),fitHeight=4.5/(2*tangent*(Math.max(80,parent.clientHeight-reservedHeight)/parent.clientHeight)),fitWidth=(mobile?3.04:6.06)/(2*tangent*((parent.clientWidth-22)/parent.clientHeight)),fullZ=Math.max(fitHeight,fitWidth);
       camera.position.set(THREE.MathUtils.lerp(0,focus,zoom)*(1-finish),0,THREE.MathUtils.lerp(THREE.MathUtils.lerp(12.8,fullZ,zoom),12.8,finish));
       const startX=mobile?0:2.25,baseYaw=THREE.MathUtils.lerp(-.48,.025,opening);
       const scale=THREE.MathUtils.lerp(THREE.MathUtils.lerp(mobile?.6:1,1,zoom),.88,finish);

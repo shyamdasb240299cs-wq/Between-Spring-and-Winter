@@ -14,8 +14,8 @@ for (const [plane, definition] of Object.entries(source)) {
       id, left: round(left / sourceWidth), top: round(top / sourceHeight),
       width: round(width / sourceWidth), height: round(height / sourceHeight),
       clip: `polygon(${points.map(([x, y]) => `${round((x - left) / width * 100)}% ${round((y - top) / height * 100)}%`).join(',')})`,
-      period: round(Math.max(.7, Math.min(2.4, height / (plane === 'background' ? 65 : 105)))),
-      delay: round(-index * .173), opacity: plane === 'background' ? .24 : .32,
+      period: round(Math.max(.5, Math.min(1.65, height / (plane === 'background' ? 110 : 175)))),
+      delay: round(-index * .173), opacity: plane === 'background' ? .4 : .52,
     };
   });
 }

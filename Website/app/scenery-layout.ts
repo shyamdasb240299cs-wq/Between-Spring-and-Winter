@@ -2,19 +2,22 @@ import { smooth } from "./journey-data";
 
 /** Two coherent terrain paintings share one camera and the same source scale. */
 export function landscapeLayout(width: number, height: number) {
-  const worldHeight = Math.max(height * 3.55, width * 2);
+  const portrait = width <= 1024 && height > width;
+  const worldHeight = Math.max(height * (portrait ? 2.65 : 3.55), width * 2);
   const paintedWidth = worldHeight / 2;
   const cropX = (paintedWidth - width) / 2;
   const x = (u: number) => u * paintedWidth - cropX;
   const travel = .73 * worldHeight - .48 * height;
   const camera = (p: number) => smooth(p, 0, 3.5) * travel + smooth(p, 3.3, 4.35) * worldHeight * .14;
   const letterCamera = camera(3.15);
+  // A narrow viewport follows the shrine and fire instead of cropping both away.
+  const cameraX = (p: number) => portrait ? -Math.min(cropX, paintedWidth * .31) * smooth(p, 2.3, 3.35) : 0;
   const foregroundTop = .59 * worldHeight;
   // Place the rabbit on the mossy ledge at the left of the falls.  Its feet
   // use the same baseline as the terrain so it belongs to the painting.
   const rabbitHeight = .034 * worldHeight, rabbitWidth = rabbitHeight;
   return {
-    width, height, worldHeight, paintedWidth, cropX, travel, camera, letterCamera,
+    width, height, worldHeight, paintedWidth, cropX, travel, camera, cameraX, letterCamera,
     background: { left: -cropX, top: 0, width: paintedWidth, height: worldHeight },
     foreground: { left: -cropX, top: foregroundTop, width: paintedWidth, height: paintedWidth },
     rabbit: { left: x(410 / 1254) - rabbitWidth / 2, top: foregroundTop + 800 / 1254 * paintedWidth - rabbitHeight * 220 / 256, width: rabbitWidth, height: rabbitHeight },

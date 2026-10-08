@@ -1,5 +1,11 @@
 # Asset credits
 
+## Published soundscape
+
+Music: [First Love / 初恋](https://amachamusic.chagasi.com/music_hatsukoi.html) by [Amacha / Music Atelier Amacha](https://amachamusic.chagasi.com/), used under the composer's [terms](https://amachamusic.chagasi.com/terms.html). The website version is normalized quietly, filtered and faded. The same score continues into reading with a warmer tone and lower gain.
+
+Opening birds, forest birds, gentle breeze, waterfall and residual campfire sounds: [Mixkit](https://mixkit.co/free-sound-effects/), under the [Sound Effects Free License](https://mixkit.co/license/modal/sfxFree/). Japanese glass wind-chime contact: [Sound Effect Lab](https://soundeffect-lab.info/sound/sub-category/summer.html), under its [terms](https://soundeffect-lab.info/agreement/). The recorded contact is cut and filtered, and follows the animated chime's motion. These processed assets are incorporated into this website's scroll-guided soundtrack; raw recordings and rejected drafts are not published.
+
 ## Garden details
 
 The campfire, extra blossom branch, six-frame butterfly atlas, and painted Fūrin bell with sixteen paper poses were generated and edited with the built-in OpenAI imagegen tool for this site. Transparent WebP assets preserve the painted setting's lighting. Original PNGs, full prompts, registration metadata, and preparation scripts are retained in `Assets and working files/garden-polish`. See `GARDEN-POLISH.md` for placement, animation, and validation details.
