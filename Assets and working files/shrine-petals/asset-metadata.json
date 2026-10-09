@@ -1,0 +1,50 @@
+{
+  "mode": "Built-in imagegen",
+  "backgroundUpscaled": false,
+  "source": [
+    887,
+    1774
+  ],
+  "files": [
+    {
+      "name": "continuous-shrine-separated.webp",
+      "width": 887,
+      "height": 1774,
+      "alpha": false,
+      "bytes": 697446
+    },
+    {
+      "name": "continuous-shrine-separated-small.webp",
+      "width": 640,
+      "height": 1280,
+      "alpha": false,
+      "bytes": 397766
+    },
+    {
+      "name": "valley-cherry-tree.webp",
+      "width": 900,
+      "height": 1141,
+      "alpha": true,
+      "bytes": 357366
+    },
+    {
+      "name": "shrine-gate-detailed.webp",
+      "width": 640,
+      "height": 720,
+      "alpha": true,
+      "bytes": 55714
+    }
+  ],
+  "gateCrop": {
+    "left": 490,
+    "top": 1110,
+    "width": 160,
+    "height": 180
+  },
+  "gateSolidBounds": {
+    "left": 510,
+    "top": 1139,
+    "width": 122,
+    "height": 94
+  }
+}

@@ -1,12 +1,16 @@
 "use client";
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
-import { CLOSE_START, smooth } from "./journey-data";
+import { CLOSE_START } from "./journey-data";
 import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from "./scenery-layout";
 import { waterRoutes, type WaterPlane } from "./water-routes";
 import { advanceWind, createWindClock, type WindClock } from "./wind-motion";
-import {OPENING_BRANCH,FLOCK_SIZE,horizonBird,createOpeningWind,advanceOpeningWind,createOpeningPetals,releaseOpeningPetal,advanceOpeningPetals} from './opening-motion';
+import {OPENING_BRANCH,FLOCK_SIZE,horizonBird,createOpeningWind,advanceOpeningWind} from './opening-motion';
+import {VALLEY_TREE,SHRINE_GATE,PETAL_CAPACITY,createPetalFlow,releaseFlowPetal,advancePetalFlow,flowPetalPose} from './petal-flow';
 
 const art = "/scene/layers/";
+function WindStrokes({paths,viewBox}:{paths:string[];viewBox:string}){
+  return <svg viewBox={viewBox} fill="none">{paths.map((d,i)=><g key={i}><path className="wind-shadow" pathLength="1000" d={d}/><path className="wind-highlight" pathLength="1000" d={d}/></g>)}</svg>;
+}
 
 function WaterRibbons({ plane }: { plane: WaterPlane }) {
   return <div className={`water-ribbons ${plane}-water`}>
@@ -38,9 +42,16 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
     const openingBranch = world.querySelector<HTMLElement>('.opening-branch')!;
     const openingAir = world.querySelector<HTMLElement>('.opening-air')!;
     const openingAirPaths=Array.from(openingAir.querySelectorAll<SVGPathElement>('path'));
-    const openingPetalElements=Array.from(world.querySelectorAll<HTMLElement>('.opening-petal'));
-    const openingWind=createOpeningWind(),openingPetals=createOpeningPetals();
-    let nextPetal=2,petalCursor=0;
+    const openingWind=createOpeningWind();
+    const valley=world.querySelector<HTMLElement>('.valley-foreground')!;
+    const valleyTree=world.querySelector<HTMLElement>('.valley-tree')!;
+    const shrine=world.querySelector<HTMLElement>('.shrine-world')!;
+    const valleyAir=world.querySelector<HTMLElement>('.valley-air')!;
+    const valleyAirPaths=Array.from(valleyAir.querySelectorAll<SVGPathElement>('path'));
+    const valleyWind={...createOpeningWind(),seed:773,start:.8,duration:5.3,strength:.63};
+    const flow=createPetalFlow(),flowElements=Array.from(world.querySelectorAll<HTMLElement>('.flow-petal'));
+    let nextOpeningPetal=1.8,nextValleyPetal=1.4,nextRoofPetal=2;
+    let openingSerial=0,valleySerial=0,roofSerial=0;
     const butterflies = Array.from(world.querySelectorAll<HTMLElement>(".garden-butterfly"));
     const garden = world.querySelector<HTMLElement>(".garden-life")!;
     let gardenTime = 0;
@@ -50,7 +61,6 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
     const branch = world.querySelector<HTMLElement>(".roof-blossom")!;
     const air = world.querySelector<HTMLElement>(".blossom-air")!;
     const airPaths = Array.from(air.querySelectorAll<SVGPathElement>("path"));
-    const petals = Array.from(air.querySelectorAll<HTMLElement>(".wind-petal"));
     const wind = createWindClock();
     onWindClock?.(wind);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -69,6 +79,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         element.style.width = bounds.width + "px"; element.style.height = bounds.height + "px";
       }
       opening.style.left=layout.background.left+'px';opening.style.width=layout.paintedWidth+'px';opening.style.height=layout.worldHeight+'px';
+      for(const layer of [valley,shrine]){layer.style.left=layout.background.left+'px';layer.style.width=layout.paintedWidth+'px';layer.style.height=layout.worldHeight+'px';}
       let cursor = 0;
       waterBounds = (["background", "foreground"] as const).flatMap(plane => {
         const bounds = layout[plane];
@@ -100,31 +111,36 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
       const foregroundDepth = (cameraY - layout.letterCamera) * .075;
       const foregroundY = cameraY + foregroundDepth;
       const skyVisible = cameraY < layout.worldHeight * .14 + layout.height * .06;
-      const openingVisible=visibleFraction(cameraX+layout.background.left,-cameraY*1.09,layout.paintedWidth*OPENING_BRANCH.width,layout.worldHeight*OPENING_BRANCH.height,layout.width,layout.height)>0;
+      const scale=layout.paintedWidth/887;
+      const valleyDepth=(cameraY-layout.camera(1.65))*.04,valleyY=cameraY+valleyDepth;
+      const valleyVisible=visibleFraction(cameraX+layout.background.left+VALLEY_TREE.left*scale,VALLEY_TREE.top*scale-valleyY,VALLEY_TREE.width*scale,VALLEY_TREE.height*scale,layout.width,layout.height)>0;
+      const openingVisible=visibleFraction(cameraX+layout.background.left,-cameraY*1.09,layout.paintedWidth,layout.worldHeight*Math.max(OPENING_BRANCH.height,500/1774),layout.width,layout.height)>0;
       opening.dataset.running=String(running&&active&&openingVisible);
       if(running&&active&&openingVisible){
         advanceOpeningWind(openingWind,dt/1000);
         openingBranch.style.transform=`translate3d(${openingWind.air*layout.paintedWidth*.002}px,0,0) rotate(${-openingWind.angle}rad)`;
-        openingAir.style.opacity=String(openingWind.air*.42);
+        openingAir.style.opacity=String(openingWind.air*.95);
         const age=Math.max(0,openingWind.time-openingWind.start);
-        openingAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(245+i*18)));
-        if(openingWind.air>.18&&openingWind.time>nextPetal){
-          const petal=openingPetals[petalCursor];
-          if(!petal.active){releaseOpeningPetal(petal,petalCursor);const angle=-openingWind.angle,x=petal.x,y=petal.y-370*.19;petal.x=x*Math.cos(angle)-y*Math.sin(angle)+openingWind.air*887*.002;petal.y=x*Math.sin(angle)+y*Math.cos(angle)+370*.19;petalCursor=(petalCursor+1)%openingPetals.length;}
-          nextPetal=openingWind.time+.95;
+        openingAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(245+Math.floor(i/2)*18)));
+        if(openingWind.air>.15&&openingWind.time>nextOpeningPetal){
+          for(let i=0;i<2;i++)if(releaseFlowPetal(flow,'opening',openingSerial,-openingWind.angle,-cameraY*.09/scale,openingWind.air*887*.002))openingSerial++;
+          nextOpeningPetal=openingWind.time+.42;
         }
-        advanceOpeningPetals(openingPetals,dt/1000,openingWind.air);
-        const scale=layout.paintedWidth/887;
-        openingPetals.forEach((petal,i)=>{
-          const element=openingPetalElements[i];
-          if(!petal.active){element.style.opacity='0';return;}
-          const fade=smooth(petal.age,0,.35)*(1-smooth(petal.age,petal.life-1.6,petal.life));
-          element.style.opacity=String(fade*.86);
-          element.style.transform=`translate3d(${(petal.x+Math.sin(petal.age*2.8+petal.phase)*1.5)*scale}px,${petal.y*scale}px,0) rotate(${petal.age*43+petal.phase*60}deg) scale(${petal.size/6*scale},${(.65+.35*Math.cos(petal.age*3+petal.phase))*petal.size/6*scale})`;
-        });
       }
+      if(running&&active&&valleyVisible){
+        advanceOpeningWind(valleyWind,dt/1000);
+        valleyTree.style.transform=`rotate(${-valleyWind.angle*.65}rad)`;
+        valleyAir.style.opacity=String(valleyWind.air*.8);
+        const age=Math.max(0,valleyWind.time-valleyWind.start);
+        valleyAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(220+Math.floor(i/2)*13)));
+        if(valleyWind.air>.15&&valleyWind.time>nextValleyPetal){
+          if(releaseFlowPetal(flow,'valley',valleySerial,-valleyWind.angle*.65,-valleyDepth/scale))valleySerial++;
+          nextValleyPetal=valleyWind.time+.36;
+        }
+      }else if(!valleyVisible)valleyAir.style.opacity='0';
       setMotion(running && active);
       const gardenVisible = visibleFraction(cameraX + layout.foreground.left + layout.foreground.width * .64, layout.foreground.top - foregroundY, layout.foreground.width * .36, layout.foreground.height * .72, layout.width, layout.height) > 0;
+      const roofVisible=visibleFraction(cameraX+layout.foreground.left+layout.foreground.width*.883,layout.foreground.top-layout.foreground.width*.005-foregroundY,layout.foreground.width*.125,layout.foreground.width*.1875,layout.width,layout.height)>0;
       const gardenRunning = String(running && active && gardenVisible);
       if (garden.dataset.running !== gardenRunning) garden.dataset.running = gardenRunning;
       if (running && active && gardenVisible) {
@@ -144,14 +160,21 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         air.style.opacity = String(Math.abs(wind.air)*.8);
         const gustAge=Math.max(0,wind.time-wind.start);
         airPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-gustAge*(390+i*12)));
-        petals.forEach((petal,i)=>{
-          const travel=((gustAge-i*.22)/(2.3+i*.1))%1;
-          const x=(1-travel)*layout.foreground.width*.35;
-          const y=(.024+Math.sin(travel*Math.PI)*.1+i*.006)*layout.foreground.height;
-          petal.style.transform=`translate3d(${x}px,${y}px,0) rotate(${travel*290+i*80}deg) scaleX(${.65+.35*Math.cos(travel*9)})`;
-          petal.style.opacity=String(travel>0?Math.sin(travel*Math.PI):0);
-        });
+        if(roofVisible&&Math.abs(wind.air)>.17&&wind.time>nextRoofPetal){
+          for(let i=0;i<2;i++)if(releaseFlowPetal(flow,'roof',roofSerial,-wind.branch,-foregroundDepth/scale))roofSerial++;
+          nextRoofPetal=wind.time+.45;
+        }
       }
+      if(running&&active)advancePetalFlow(flow,dt/1000);
+      if(moved||running||reduced.matches)flow.forEach((petal,i)=>{
+        const element=flowElements[i];
+        if(!petal.active||reduced.matches){if(element.style.opacity!=='0')element.style.opacity='0';return;}
+        const pose=flowPetalPose(petal),x=cameraX+layout.background.left+pose.x*scale,y=pose.y*scale-cameraY;
+        if(x<-16||x>layout.width+16||y<-16||y>layout.height+16){if(element.style.opacity!=='0')element.style.opacity='0';return;}
+        const size=petal.size/6*scale*pose.depth;
+        element.style.opacity=String(pose.opacity);element.style.zIndex=String(pose.layer);
+        element.style.transform=`translate3d(${x}px,${y}px,0) rotate(${pose.turn}deg) scale(${size},${size*pose.fold})`;
+      });
       if (gardenVisible && (moved || running || reduced.matches)) {
         butterflies.forEach((butterfly, i) => {
           const t = gardenTime * (.45 + i * .07) + i * 2.2;
@@ -173,6 +196,8 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         background.style.transform = backgroundLife.style.transform = `translate3d(${cameraX}px,${-cameraY}px,0)`;
         foreground.style.transform = `translate3d(${cameraX}px,${-foregroundY}px,0)`;
         opening.style.transform=`translate3d(${cameraX}px,${-cameraY*1.09}px,0)`;
+        valley.style.transform=`translate3d(${cameraX}px,${-valleyY}px,0)`;
+        shrine.style.transform=`translate3d(${cameraX}px,${-cameraY}px,0)`;
         world.dataset.scene = p < 1.2 ? "sunset" : p < 2.64 ? "valley" : p < 3.65 ? "shrine" : "waterfall";
         world.dataset.ready = "true";
         previous = sceneryProgress;
@@ -221,12 +246,21 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
   }, [position,onWindClock]);
 
   return <div className="layered-world" ref={host} aria-hidden="true" data-water-running="false">
-    <img className="continuous-landscape" src={`${art}continuous-shrine-enhanced.webp`} srcSet={`${art}continuous-shrine-enhanced-small.webp 960w, ${art}continuous-shrine-enhanced.webp 1920w, ${art}continuous-shrine-enhanced-large.webp 2880w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
+    <img className="continuous-landscape" src={`${art}continuous-shrine-separated.webp`} srcSet={`${art}continuous-shrine-separated-small.webp 640w, ${art}continuous-shrine-separated.webp 887w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
     <div className="background-life">
       <WaterRibbons plane="background" />
       {Array.from({length:FLOCK_SIZE},(_,i)=><div key={i} className="bird-flight"><div className="bird-sprite" /></div>)}
     </div>
-    <div className="opening-foreground" data-running="false"><img className="opening-branch" src={`${art}opening-blossom.webp`} alt="" decoding="async"/><div className="opening-air"><svg viewBox="0 0 887 370" fill="none"><path pathLength="1000" d="M-45 172 C80 202 158 89 266 113 C366 136 389 226 482 192 C578 158 674 91 932 148"/><path pathLength="1000" d="M-45 206 C75 220 183 126 277 146 C367 165 426 239 514 208 C648 161 720 132 932 184"/></svg></div><div className="opening-petals">{Array.from({length:7},(_,i)=><span key={i} className="opening-petal"/>)}</div></div>
+    <div className="shrine-world"><img className="shrine-gate" src={`${art}shrine-gate-detailed.webp`} alt="" decoding="async" style={{left:`${SHRINE_GATE.left/887*100}%`,top:`${SHRINE_GATE.top/1774*100}%`,width:`${SHRINE_GATE.width/887*100}%`,height:`${SHRINE_GATE.height/1774*100}%`}}/></div>
+    <div className="valley-foreground"><img className="valley-tree" src={`${art}valley-cherry-tree.webp`} alt="" decoding="async" style={{left:`${VALLEY_TREE.left/887*100}%`,top:`${VALLEY_TREE.top/1774*100}%`,width:`${VALLEY_TREE.width/887*100}%`,height:`${VALLEY_TREE.height/1774*100}%`}}/><div className="valley-air"><WindStrokes viewBox="0 0 887 1774" paths={[
+      'M25 916 C85 983 170 897 220 930 C273 964 243 1008 291 1024 C355 1048 419 1044 500 1126 C546 1172 548 1188 568 1200',
+      'M60 962 C165 1026 205 938 293 977 C353 1004 348 1062 396 1087 C456 1118 522 1144 563 1193',
+    ]}/></div></div>
+    <div className="opening-foreground" data-running="false"><img className="opening-branch" src={`${art}opening-blossom.webp`} alt="" decoding="async"/><div className="opening-air"><WindStrokes viewBox="0 0 887 500" paths={[
+      'M25 118 C140 191 258 83 350 105 C405 118 370 169 412 180 C468 197 550 178 593 233 C641 294 618 334 602 411',
+      'M180 83 C294 175 387 111 465 148 C519 174 462 205 526 237 C608 278 555 329 570 374 C581 408 587 447 574 492',
+    ]}/></div></div>
+    <div className="petal-stream">{Array.from({length:PETAL_CAPACITY},(_,i)=><span key={i} className="flow-petal"/>)}</div>
     <div className="foreground-world">
       <div className="foreground-terrain">
         <img className="foreground-landscape" src={`${art}forest-foreground-burned-out.webp`} decoding="async" alt="" />
@@ -234,7 +268,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         <div className="garden-life" data-running="false">
           <div className="campfire-smoke">{Array.from({length:4},(_,i)=><span key={i} style={{"--smoke-delay":`${-i * 2.2}s`, "--smoke-drift":`${-8-i*3}px`, "--smoke-tilt":`${-1-i*.7}deg`} as CSSProperties}/>)}</div>
           <img className="roof-blossom" src={`${art}roof-blossom.webp`} alt="" decoding="async"/>
-          <div className="blossom-air"><svg viewBox="0 0 600 300" fill="none"><path pathLength="1000" d="M630 38 C565 66 548 67 523 92 C493 130 523 222 454 229 C389 235 364 164 389 139 C414 114 441 139 431 165 C416 207 294 185 227 168 C130 139 52 151 -40 172"/><path pathLength="1000" d="M630 59 C555 96 526 75 498 120 C473 162 496 245 425 245 C347 245 354 177 379 165 C415 144 412 202 373 203 C275 213 143 156 -40 194"/></svg>{[0,1,2].map(i=><span key={i} className="wind-petal"/>)}</div>
+          <div className="blossom-air"><svg viewBox="0 0 600 300" fill="none"><path pathLength="1000" d="M630 38 C565 66 548 67 523 92 C493 130 523 222 454 229 C389 235 364 164 389 139 C414 114 441 139 431 165 C416 207 294 185 227 168 C130 139 52 90 2 77"/><path pathLength="1000" d="M630 59 C555 96 526 75 498 120 C473 162 496 245 425 245 C347 245 354 177 379 165 C415 144 412 202 373 203 C275 213 143 121 2 88"/></svg></div>
           <div className="furin"><img className="furin-bell" src={`${art}furin-bell.webp`} alt=""/><div className="furin-paper"><div className="furin-paper-frame"/><div className="furin-paper-frame"/></div></div>
           <div className="butterfly-garden">
             {[0,1,2].map(i=><div key={i} className={`garden-butterfly butterfly-${i}`}><div className="butterfly-sprite"/></div>)}
