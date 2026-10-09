@@ -11,7 +11,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 .journey-screen{position:sticky;top:0;height:100svh;overflow:clip;isolation:isolate;--page-opacity:0;--book-opacity:0;--finished-opacity:0;--scene-shade:.08}
 .layered-world{position:absolute;inset:0;z-index:-5;overflow:hidden;background:#20332b;pointer-events:none;contain:layout paint}
 .continuous-landscape{position:absolute;top:0;left:0;width:100%;height:max(355svh,200vw);object-fit:cover;object-position:center top;max-width:none;will-change:transform}
-.layered-world:not([data-ready=true]) .background-life,.layered-world:not([data-ready=true]) .foreground-world{visibility:hidden}
+.layered-world:not([data-ready=true]) .background-life,.layered-world:not([data-ready=true]) .foreground-world,.layered-world:not([data-ready=true]) .opening-foreground{visibility:hidden}
 .background-life,.foreground-world{position:absolute;top:0;left:0;width:100%;will-change:transform}
 .background-life{z-index:1}.foreground-world{z-index:2}
 .foreground-terrain{position:absolute}
@@ -25,9 +25,16 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 .rabbit-sprite{position:relative;z-index:1;width:100%;height:100%;background:url('/scene/layers/rabbit-polished.webp') 0 0/400% 300% no-repeat;filter:brightness(.93) saturate(.9) blur(.15px);opacity:.96;mask-image:linear-gradient(#000 82.5%,#000b 85.6%,transparent 87.4%)}
 .house-rabbit{position:absolute;aspect-ratio:1;visibility:hidden}
 .house-rabbit:before{content:"";position:absolute;left:18%;top:85%;width:64%;height:3.5%;background:#2b1f13a8;border-radius:50%;filter:blur(.8px)}
-.bird-flight{position:absolute;left:0;top:0;width:auto;height:6vh;aspect-ratio:1;will-change:transform;visibility:hidden}
-.bird-two{height:4.5vh}
+.bird-flight{position:absolute;left:0;top:0;width:28px;height:28px;aspect-ratio:1;transform-origin:center;will-change:transform;visibility:hidden}
 .bird-sprite{width:100%;height:100%;background:url('/scene/layers/crane-sprite.webp') 0 0/600% 100% no-repeat}
+.opening-foreground{position:absolute;top:0;z-index:3;pointer-events:none;will-change:transform}
+.opening-branch{position:absolute;left:0;top:0;width:71.026%;height:20.857%;max-width:none;object-fit:fill;transform-origin:0 19%;will-change:transform}
+.opening-air{position:absolute;left:0;top:0;width:100%;height:20.857%;opacity:0;mask-image:linear-gradient(90deg,transparent,#000 10% 80%,transparent)}
+.opening-air svg{display:block;width:100%;height:100%;overflow:visible}
+.opening-air path{stroke:#ffe9d1;stroke-width:1;stroke-linecap:round;stroke-dasharray:135 865;opacity:.42}
+.opening-air path+path{stroke-width:.7;stroke-dasharray:100 900;opacity:.25}
+.opening-petals{position:absolute;inset:0;pointer-events:none}
+.opening-petal{position:absolute;left:0;top:0;width:6px;height:8px;border-radius:75% 25% 70% 35%;background:radial-gradient(at 25% 20%,#ffebe1,#eaa7a4 74%,#cd7f88);opacity:0;transform-origin:center;will-change:transform}
 .scene-shade{position:absolute;inset:0;z-index:-3;background:#081713;opacity:var(--scene-shade);pointer-events:none}
 .journey-screen:after{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(90deg,#0b14145c 0%,#0b141426 35%,transparent 65%),linear-gradient(0deg,#091a163a,transparent 18%);opacity:calc(1 - var(--page-opacity))}
 .journey-header{position:absolute;top:0;left:0;width:100%;padding:28px 4%;z-index:15;display:flex;align-items:center;gap:32px;transition:opacity .2s;text-shadow:0 2px 12px #0007}
@@ -138,4 +145,4 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 }
 @media(max-width:1024px) and (orientation:portrait) and (max-height:700px){.reveal-copy,.book-invitation,.ending-copy{top:calc(86px + env(safe-area-inset-top));bottom:calc(82px + env(safe-area-inset-bottom));padding:18px}.introduction{max-height:calc(100% - 168px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}.introduction h1{font-size:40px}.chapter-label{margin-bottom:9px}.intro-dedication{font-size:18px;margin-top:12px}.reveal-copy h2,.book-invitation h2,.ending-copy h2{font-size:31px;margin-bottom:12px}.story-copy>p:not(.chapter-label),.author-introduction>p:not(.chapter-label){font-size:13px;line-height:1.5;margin-bottom:10px}}
 @media(max-width:900px) and (orientation:landscape){.footer-controls{gap:8px}.ambient-button>span{display:none}.journey-footer{padding-inline:max(16px,env(safe-area-inset-left));padding-bottom:max(8px,env(safe-area-inset-bottom))}.journey-scroll-cue{font-size:10px;letter-spacing:.5px}.reading-instruction{display:none}.journey-header{padding-left:max(4%,env(safe-area-inset-left));padding-right:max(4%,env(safe-area-inset-right))}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.action-line,.journey-header{transition:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.action-line,.journey-header{transition:none}.opening-air,.opening-petals{display:none}.opening-branch{will-change:auto;transform:none!important}}

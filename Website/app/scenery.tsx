@@ -4,6 +4,7 @@ import { CLOSE_START, smooth } from "./journey-data";
 import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from "./scenery-layout";
 import { waterRoutes, type WaterPlane } from "./water-routes";
 import { advanceWind, createWindClock, type WindClock } from "./wind-motion";
+import {OPENING_BRANCH,FLOCK_SIZE,horizonBird,createOpeningWind,advanceOpeningWind,createOpeningPetals,releaseOpeningPetal,advanceOpeningPetals} from './opening-motion';
 
 const art = "/scene/layers/";
 
@@ -33,6 +34,13 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
     const rabbit = world.querySelector<HTMLElement>(".house-rabbit")!;
     const rabbitSprite = rabbit.firstElementChild as HTMLElement;
     const birds = Array.from(world.querySelectorAll<HTMLElement>(".bird-flight"));
+    const opening = world.querySelector<HTMLElement>('.opening-foreground')!;
+    const openingBranch = world.querySelector<HTMLElement>('.opening-branch')!;
+    const openingAir = world.querySelector<HTMLElement>('.opening-air')!;
+    const openingAirPaths=Array.from(openingAir.querySelectorAll<SVGPathElement>('path'));
+    const openingPetalElements=Array.from(world.querySelectorAll<HTMLElement>('.opening-petal'));
+    const openingWind=createOpeningWind(),openingPetals=createOpeningPetals();
+    let nextPetal=2,petalCursor=0;
     const butterflies = Array.from(world.querySelectorAll<HTMLElement>(".garden-butterfly"));
     const garden = world.querySelector<HTMLElement>(".garden-life")!;
     let gardenTime = 0;
@@ -60,6 +68,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         element.style.left = bounds.left + "px"; element.style.top = bounds.top + "px";
         element.style.width = bounds.width + "px"; element.style.height = bounds.height + "px";
       }
+      opening.style.left=layout.background.left+'px';opening.style.width=layout.paintedWidth+'px';opening.style.height=layout.worldHeight+'px';
       let cursor = 0;
       waterBounds = (["background", "foreground"] as const).flatMap(plane => {
         const bounds = layout[plane];
@@ -91,6 +100,29 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
       const foregroundDepth = (cameraY - layout.letterCamera) * .075;
       const foregroundY = cameraY + foregroundDepth;
       const skyVisible = cameraY < layout.worldHeight * .14 + layout.height * .06;
+      const openingVisible=visibleFraction(cameraX+layout.background.left,-cameraY*1.09,layout.paintedWidth*OPENING_BRANCH.width,layout.worldHeight*OPENING_BRANCH.height,layout.width,layout.height)>0;
+      opening.dataset.running=String(running&&active&&openingVisible);
+      if(running&&active&&openingVisible){
+        advanceOpeningWind(openingWind,dt/1000);
+        openingBranch.style.transform=`translate3d(${openingWind.air*layout.paintedWidth*.002}px,0,0) rotate(${-openingWind.angle}rad)`;
+        openingAir.style.opacity=String(openingWind.air*.42);
+        const age=Math.max(0,openingWind.time-openingWind.start);
+        openingAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(245+i*18)));
+        if(openingWind.air>.18&&openingWind.time>nextPetal){
+          const petal=openingPetals[petalCursor];
+          if(!petal.active){releaseOpeningPetal(petal,petalCursor);const angle=-openingWind.angle,x=petal.x,y=petal.y-370*.19;petal.x=x*Math.cos(angle)-y*Math.sin(angle)+openingWind.air*887*.002;petal.y=x*Math.sin(angle)+y*Math.cos(angle)+370*.19;petalCursor=(petalCursor+1)%openingPetals.length;}
+          nextPetal=openingWind.time+.95;
+        }
+        advanceOpeningPetals(openingPetals,dt/1000,openingWind.air);
+        const scale=layout.paintedWidth/887;
+        openingPetals.forEach((petal,i)=>{
+          const element=openingPetalElements[i];
+          if(!petal.active){element.style.opacity='0';return;}
+          const fade=smooth(petal.age,0,.35)*(1-smooth(petal.age,petal.life-1.6,petal.life));
+          element.style.opacity=String(fade*.86);
+          element.style.transform=`translate3d(${(petal.x+Math.sin(petal.age*2.8+petal.phase)*1.5)*scale}px,${petal.y*scale}px,0) rotate(${petal.age*43+petal.phase*60}deg) scale(${petal.size/6*scale},${(.65+.35*Math.cos(petal.age*3+petal.phase))*petal.size/6*scale})`;
+        });
+      }
       setMotion(running && active);
       const gardenVisible = visibleFraction(cameraX + layout.foreground.left + layout.foreground.width * .64, layout.foreground.top - foregroundY, layout.foreground.width * .36, layout.foreground.height * .72, layout.width, layout.height) > 0;
       const gardenRunning = String(running && active && gardenVisible);
@@ -140,6 +172,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
       if (moved) {
         background.style.transform = backgroundLife.style.transform = `translate3d(${cameraX}px,${-cameraY}px,0)`;
         foreground.style.transform = `translate3d(${cameraX}px,${-foregroundY}px,0)`;
+        opening.style.transform=`translate3d(${cameraX}px,${-cameraY*1.09}px,0)`;
         world.dataset.scene = p < 1.2 ? "sunset" : p < 2.64 ? "valley" : p < 3.65 ? "shrine" : "waterfall";
         world.dataset.ready = "true";
         previous = sceneryProgress;
@@ -158,16 +191,13 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
       if (running && skyVisible) flightTime += dt / 1000;
       const wingTick = Math.floor(flightTime * 7);
       birds.forEach((bird, i) => {
-        const visibility = skyVisible && !reduced.matches ? "visible" : "hidden";
+        const flight=horizonBird(flightTime,i,layout);
+        const visibility = skyVisible && !reduced.matches&&flight.visible ? "visible" : "hidden";
         if (bird.style.visibility !== visibility) bird.style.visibility = visibility;
-        if (!skyVisible || reduced.matches) return;
+        if (!skyVisible || reduced.matches||!flight.visible) return;
         if (moved || running) {
-          const t = (flightTime / 18 + i * .12) % 1;
-          const birdSize = layout.height * (i === 0 ? .06 : .045);
-          const x = (.52 + t * .36) * layout.paintedWidth - layout.cropX - birdSize / 2;
-          const y = (.11 - Math.sin(t * Math.PI) * .018 + i * .012) * layout.worldHeight - birdSize / 2;
-          bird.style.transform = `translate3d(${x}px,${y}px,0)`;
-          bird.style.opacity = String(smooth(t, 0, .12) * (1 - smooth(t, .84, 1)));
+          bird.style.transform = `translate3d(${flight.x-14}px,${flight.y-14}px,0) rotate(${flight.rotation}deg) scale(${flight.size/28})`;
+          bird.style.opacity = String(flight.opacity);
         }
         if (wingTick !== lastWing) (bird.firstElementChild as HTMLElement).style.backgroundPosition = `${(wingTick + i * 2) % 6 / 5 * 100}% 0`;
       });
@@ -191,12 +221,12 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
   }, [position,onWindClock]);
 
   return <div className="layered-world" ref={host} aria-hidden="true" data-water-running="false">
-    <img className="continuous-landscape" src={`${art}continuous-shrine.webp`} srcSet={`${art}continuous-shrine-small.webp 960w, ${art}continuous-shrine.webp 1920w`} sizes="100vw" fetchPriority="high" alt="" />
+    <img className="continuous-landscape" src={`${art}continuous-shrine-enhanced.webp`} srcSet={`${art}continuous-shrine-enhanced-small.webp 960w, ${art}continuous-shrine-enhanced.webp 1920w, ${art}continuous-shrine-enhanced-large.webp 2880w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
     <div className="background-life">
       <WaterRibbons plane="background" />
-      <div className="bird-flight bird-one"><div className="bird-sprite" /></div>
-      <div className="bird-flight bird-two"><div className="bird-sprite" /></div>
+      {Array.from({length:FLOCK_SIZE},(_,i)=><div key={i} className="bird-flight"><div className="bird-sprite" /></div>)}
     </div>
+    <div className="opening-foreground" data-running="false"><img className="opening-branch" src={`${art}opening-blossom.webp`} alt="" decoding="async"/><div className="opening-air"><svg viewBox="0 0 887 370" fill="none"><path pathLength="1000" d="M-45 172 C80 202 158 89 266 113 C366 136 389 226 482 192 C578 158 674 91 932 148"/><path pathLength="1000" d="M-45 206 C75 220 183 126 277 146 C367 165 426 239 514 208 C648 161 720 132 932 184"/></svg></div><div className="opening-petals">{Array.from({length:7},(_,i)=><span key={i} className="opening-petal"/>)}</div></div>
     <div className="foreground-world">
       <div className="foreground-terrain">
         <img className="foreground-landscape" src={`${art}forest-foreground-burned-out.webp`} decoding="async" alt="" />

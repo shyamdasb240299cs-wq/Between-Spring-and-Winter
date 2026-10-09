@@ -1,0 +1,55 @@
+{
+  "background": {
+    "source": [
+      887,
+      1774
+    ],
+    "master": [
+      3548,
+      7096
+    ],
+    "upscaler": "Installed Upscayl / digital-art-4x",
+    "scale": 4,
+    "files": [
+      {
+        "name": "continuous-shrine-enhanced-small.webp",
+        "width": 960,
+        "height": 1920,
+        "bytes": 686920
+      },
+      {
+        "name": "continuous-shrine-enhanced.webp",
+        "width": 1920,
+        "height": 3840,
+        "bytes": 1738820
+      },
+      {
+        "name": "continuous-shrine-enhanced-large.webp",
+        "width": 2880,
+        "height": 5760,
+        "bytes": 2811294
+      }
+    ]
+  },
+  "branch": {
+    "source": [
+      1637,
+      961
+    ],
+    "encoded": [
+      1440,
+      846
+    ],
+    "bytes": 480192,
+    "sourceBounds": {
+      "left": 0,
+      "top": 0,
+      "width": 0.7102593010146562,
+      "height": 0.20856820744081173
+    }
+  },
+  "sun": {
+    "x": 0.668,
+    "y": 0.114
+  }
+}

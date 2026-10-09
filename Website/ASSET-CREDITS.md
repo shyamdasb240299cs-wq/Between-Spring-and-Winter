@@ -12,6 +12,8 @@ The campfire, extra blossom branch, six-frame butterfly atlas, and painted Fūri
 
 ## Current continuous terrain design
 
+The opening background was subsequently edited with built-in OpenAI imagegen to remove its upper-left overhead cherry bough and refine landscape detail. The bough was separately extracted as a transparent foreground image. The owner's installed Upscayl `digital-art-4x` model produced a 3548 × 7096 lossless master (4× the 887 × 1774 source). Responsive WebP variants serve the site. Exact prompts, original sources, the master, registration metadata and encoding scripts are preserved in `Assets and working files/opening-refinement`. Opening airflow, falling petals and five-bird flights use code; the existing bird atlas is retained.
+
 The current background is one uninterrupted Japanese mountain-to-forest painting, generated and edited with the built-in OpenAI imagegen tool from the owner's concept reference. Sunset mountains, mist, lake, upstream water, cherry forest, mossy stone steps and the shrine are baked into that single image. One broad transparent foreground painting combines the cedar house, lantern, stones, riverbank and lower waterfall. The earlier smooth-scroll video supplies motion inspiration only; no video frames are published.
 
 A generated transparent water texture supplies downward highlights over twenty-one source-traced water curtains. The current panda uses sixteen clean generated eating/encounter frames in a4×4 atlas plus eight uniformly registered running frames in a4×2 atlas, all with256px cells and a220px feet baseline. The current rabbit uses twelve warm-lit feeding/head-lift frames in a4×3 atlas; the six-frame crane atlas remains in use. All characters and terrain match the warm forest lighting.
