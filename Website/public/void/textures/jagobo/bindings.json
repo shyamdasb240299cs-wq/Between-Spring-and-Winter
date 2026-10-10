@@ -1,0 +1,16 @@
+{
+  "LanternPost_Mat": {
+    "map": "/void/textures/jagobo/LanternPost-Mat-map.webp",
+    "normalMap": "/void/textures/jagobo/LanternPost-Mat-normalMap.webp",
+    "roughnessMap": "/void/textures/jagobo/LanternPost-Mat-roughnessMap.webp",
+    "emissiveMap": "/void/textures/jagobo/LanternPost-Mat-emissiveMap.webp"
+  },
+  "bark": {
+    "map": "/void/textures/jagobo/bark-map.webp",
+    "normalMap": "/void/textures/jagobo/bark-normalMap.webp",
+    "roughnessMap": "/void/textures/jagobo/bark-roughnessMap.webp"
+  },
+  "foliage": {
+    "map": "/void/textures/jagobo/foliage-map.webp"
+  }
+}

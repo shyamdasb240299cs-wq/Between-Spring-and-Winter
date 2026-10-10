@@ -38,8 +38,8 @@ export function entryPose(clock:EntryClock,reduced=false){
   if(reduced)return{scale:1,travel:0,shade:0,flash:0,black:smooth(clock.elapsed,0,650),tunnel:0,streak:0,glow:1-smooth(clock.elapsed,0,350)};
   const scale=1;
   return{scale,travel:smooth(t,.04,.62),shade:.32+smooth(t,0,.7)*.18,
-    flash:smooth(t,.84,.96)*(1-smooth(t,1,1.18)),black:smooth(t,1.01,1.22),
-    tunnel:smooth(t,1.04,1.25)*(1-smooth(t,2.45,2.93)),
+    flash:smooth(t,.84,.96)*(1-smooth(t,1,1.24)),black:smooth(t,.95,1.22),
+    tunnel:smooth(t,.58,1.08)*(1-smooth(t,2.38,2.94)),
     streak:smooth(t,0,.3)*(1-smooth(t,1.03,1.2)),glow:1-smooth(t,1.03,1.2)};
 }
 /** Different plane distances simulate travel; the entire page never zooms. */

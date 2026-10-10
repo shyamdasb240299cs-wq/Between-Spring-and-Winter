@@ -1,0 +1,85 @@
+{
+  "photos": [
+    {
+      "id": "photo-1",
+      "src": "/manga/cover-front.webp",
+      "caption": "Between Spring & Winter — The day we dream of"
+    },
+    {
+      "id": "photo-2",
+      "src": "/manga/part-1.webp",
+      "caption": "Part One · Spring — Where our season begins"
+    },
+    {
+      "id": "photo-3",
+      "src": "/manga/page-001.webp",
+      "caption": "A quiet morning, holding hands by the riverbank"
+    },
+    {
+      "id": "photo-4",
+      "src": "/manga/page-002.webp",
+      "caption": "The gentle light that reaches us across the miles"
+    },
+    {
+      "id": "photo-5",
+      "src": "/manga/cover-back.webp",
+      "caption": "Wherever you are, the best of me is already with you"
+    }
+  ],
+  "replay": "loop",
+  "attribution": [
+    {
+      "asset": "Rock Moss Set 01 (3D models and 1k PBR textures)",
+      "author": "Poly Haven",
+      "source": "https://polyhaven.com/a/rock_moss_set_01",
+      "license": "CC0",
+      "status": "integrated",
+      "note": "Natural mossy stone boulders lining the photo monument islands and waterline."
+    },
+    {
+      "asset": "Mossy Stone Wall (1k PBR material)",
+      "author": "Poly Haven",
+      "source": "https://polyhaven.com/a/mossy_stone_wall",
+      "license": "CC0",
+      "status": "integrated",
+      "note": "Ancient weathered stone texture maps applied to the standing monument archways."
+    },
+    {
+      "asset": "Cherry Blossom Trees (original meshes and textures)",
+      "author": "Jagobo",
+      "source": "https://sketchfab.com/3d-models/cherry-blossom-trees-f69be55d2e4f4f73b568ebb185bd8496",
+      "license": "CC BY 4.0",
+      "status": "integrated",
+      "note": "Original downloaded GLB; normalized scale, near/mid/far detail meshes, shared WebP bark and blossom textures, lighting and wind adapted."
+    },
+    {
+      "asset": "Lantern",
+      "author": "Microsoft / sbtron",
+      "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern",
+      "license": "CC0",
+      "status": "integrated",
+      "note": "Original prebuilt lantern with authored PBR and emission textures; removed street pole and chain, reduced mesh and normalized scale."
+    },
+    {
+      "asset": "Magic Crystal B&W",
+      "author": "Toni García Vilche / zul_gv",
+      "source": "https://sketchfab.com/3d-models/magic-crystal-bw-871e40e7271d4db28fe466bf32598d8a",
+      "license": "CC BY 4.0",
+      "status": "integrated",
+      "note": "Owner supplied complete original GLB, including moon and sparkles; original materials retained, normalized scale and temporary brightness pulse."
+    }
+  ],
+  "scene": {
+    "units": "meters",
+    "waterLevel": 0,
+    "cameraHeight": 1.63,
+    "cameraOffset": 0,
+    "treeSpacing": 9,
+    "treeRowOffset": 6.1,
+    "monumentSpacing": 18,
+    "lanternSpacing": 9,
+    "segmentLength": 72,
+    "firstMemoryDistance": 28,
+    "crystalDistance": 18
+  }
+}

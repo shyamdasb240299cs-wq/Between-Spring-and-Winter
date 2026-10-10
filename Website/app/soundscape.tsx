@@ -4,10 +4,11 @@ import {Volume2,VolumeX} from 'lucide-react';
 import {soundMix} from './sound-mix';
 import {pausePlayback,startPlayback} from './sound-playback';
 import type {WindClock} from './wind-motion';
+import {setAudioEnabled} from './audio-setting';
 
 const base='/audio/';
 const ambientFiles={birds:'birds-v2.mp3',waterfall:'waterfall-v2.mp3',breeze:'breeze-v3.mp3',fire:'fire-v2.mp3'};
-type Props={position:RefObject<number>;wind:RefObject<WindClock|null>;paused:boolean;silenced?:boolean};
+type Props={position:RefObject<number>;wind:RefObject<WindClock|null>;paused:boolean;silenced?:boolean;hidden?:boolean};
 type Layer={gain:GainNode;media:HTMLAudioElement;started:boolean;starting:boolean;target:number;failed:boolean;attempt:number};
 type Engine={context:AudioContext;music:Layer;filter:BiquadFilterNode;layers:Map<string,Layer>;buffers:Map<string,AudioBuffer>;pending:Set<string>;failed:Set<string>;controller:AbortController;disposed:boolean;muted:boolean;birdAt:number;birdCount:number;lastRing:number;lastVelocity:number;clock:number;elapsed:number;active:Set<AudioBufferSourceNode>;error:(message:string)=>void};
 
@@ -51,7 +52,7 @@ function dispose(engine:Engine){
   void engine.context.close();
 }
 
-export default function Soundscape({position,wind,paused,silenced=false}:Props){
+export default function Soundscape({position,wind,paused,silenced=false,hidden=false}:Props){
   const engine=useRef<Engine|null>(null),pause=useRef(paused);
   const silence=useRef(silenced);
   const audioHost=useRef<HTMLDivElement>(null);
@@ -70,6 +71,7 @@ export default function Soundscape({position,wind,paused,silenced=false}:Props){
       void loadContact(current,'bird','opening-bird-v3.mp3');
     }else current.muted=!current.muted;
     setEnabled(!current.muted);setError('');
+    setAudioEnabled(!current.muted);
     if(current.muted){
       for(const layer of [current.music,...current.layers.values()])pausePlayback(layer);
       for(const source of current.active)source.stop();
@@ -81,13 +83,16 @@ export default function Soundscape({position,wind,paused,silenced=false}:Props){
       // this gesture, then let the scroll mixer pause and resume it as needed.
       for(const [name,file] of Object.entries(ambientFiles)){
         let layer=current.layers.get(name);
-        if(!layer){layer=stream(current.context,file,current.context.destination,audioHost.current!);current.layers.set(name,layer);}
-        layer.gain.gain.cancelScheduledValues(current.context.currentTime);layer.gain.gain.setValueAtTime(0,current.context.currentTime);layer.target=-1;
-        startPlayback(current,layer);
+        if(!layer&&audioHost.current){layer=stream(current.context,file,current.context.destination,audioHost.current);current.layers.set(name,layer);}
+        if(layer){
+          layer.gain.gain.cancelScheduledValues(current.context.currentTime);layer.gain.gain.setValueAtTime(0,current.context.currentTime);layer.target=-1;
+          startPlayback(current,layer);
+        }
       }
       void loadContact(current,'bird','opening-bird-v3.mp3');
     }
   };
+  useEffect(()=>{window.addEventListener('journey-audio-request',toggle);return()=>window.removeEventListener('journey-audio-request',toggle);});
   useEffect(()=>{
     if(!enabled)return;
     let last=performance.now(),timer:ReturnType<typeof setTimeout>|undefined,disposed=false;
@@ -100,21 +105,21 @@ export default function Soundscape({position,wind,paused,silenced=false}:Props){
       }else{last=performance.now();if(current&&!current.muted){void current.context.resume();startPlayback(current,current.music);}tick();}
     };
     const tick=()=>{
-      if(disposed||document.hidden)return;
+      if(disposed||document.hidden||!audioHost.current)return;
       timer=setTimeout(tick,50);
       const now=performance.now(),seconds=Math.min(.15,(now-last)/1000);last=now;
-      const current=engine.current;if(!current||current.muted)return;
+      const current=engine.current;if(!current||current.muted||!audioHost.current)return;
       current.elapsed+=seconds;
       const motion=wind.current;
       const mix=soundMix(position.current,innerWidth,innerHeight,pause.current?0:motion?.air??0);
       const audioTime=current.context.currentTime;
       fadeLayer(current.music,silence.current?0:mix.music,audioTime);
       if(Math.abs(lastFrequency-mix.frequency)>8){current.filter.frequency.cancelScheduledValues(audioTime);current.filter.frequency.setTargetAtTime(mix.frequency,audioTime,2.2);lastFrequency=mix.frequency;}
-      audioHost.current!.dataset.reading=String(mix.reading>.99);
+      if(audioHost.current)audioHost.current.dataset.reading=String(mix.reading>.99);
       for(const [name,file] of Object.entries(ambientFiles)){
         const volume=silence.current?0:mix[name as keyof typeof ambientFiles];
         let layer=current.layers.get(name);
-        if(volume>.01&&!layer){layer=stream(current.context,file,current.context.destination,audioHost.current!);current.layers.set(name,layer);}
+        if(volume>.01&&!layer&&audioHost.current){layer=stream(current.context,file,current.context.destination,audioHost.current);current.layers.set(name,layer);}
         if(!layer)continue;
         fadeLayer(layer,volume,audioTime);
         if(volume>.01&&!layer.started)startPlayback(current,layer);
@@ -122,14 +127,14 @@ export default function Soundscape({position,wind,paused,silenced=false}:Props){
         if(volume<.001&&layer.gain.gain.value<.001&&layer.started&&!layer.starting)pausePlayback(layer);
       }
       if(!silence.current&&mix.openingBird>.05&&current.birdCount<2&&current.elapsed>current.birdAt){
-        if(contact(current,'bird',mix.openingBird,current.birdCount===0?-.25:.25)){current.birdCount++;audioHost.current!.dataset.birdCalls=String(current.birdCount);current.birdAt=current.elapsed+13.5;}
+        if(contact(current,'bird',mix.openingBird,current.birdCount===0?-.25:.25)){current.birdCount++;if(audioHost.current)audioHost.current.dataset.birdCalls=String(current.birdCount);current.birdAt=current.elapsed+13.5;}
       }
       if(mix.bell>.02)void loadContact(current,'bell','furin-contact-v3.mp3');
       if(motion){
         // A clapper contacts the glass near a swing reversal, with no ticking loop.
         const reversal=current.lastVelocity*motion.velocity<0;
         if(!silence.current&&!pause.current&&reversal&&Math.abs(motion.angle)>.027&&motion.time-current.lastRing>1.7&&mix.bell>.01){
-          if(contact(current,'bell',mix.bell*Math.min(1,.4+Math.abs(motion.paper)),.22)){current.lastRing=motion.time;audioHost.current!.dataset.lastRing=String(motion.time);}
+          if(contact(current,'bell',mix.bell*Math.min(1,.4+Math.abs(motion.paper)),.22)){current.lastRing=motion.time;if(audioHost.current)audioHost.current.dataset.lastRing=String(motion.time);}
         }
         current.lastVelocity=motion.velocity;current.clock=motion.time;
       }
@@ -138,7 +143,7 @@ export default function Soundscape({position,wind,paused,silenced=false}:Props){
     return()=>{disposed=true;if(timer)clearTimeout(timer);document.removeEventListener('visibilitychange',visibility);};
   },[position,wind,enabled]);
   useEffect(()=>()=>{if(engine.current){dispose(engine.current);engine.current=null;}},[]);
-  return <div className="sound-control">
+  return <div className="sound-control" hidden={hidden}>
     <div ref={audioHost} hidden aria-hidden="true"/>
     <button className="sound-toggle" aria-label={enabled?'Turn music off':'Turn music on'} aria-pressed={enabled} onClick={toggle}>{enabled?<Volume2 size={17}/>:<VolumeX size={17}/>}<span>{enabled?'Music on':'Music off'}</span></button>
     {error&&<span className="sound-error" role="status">{error}</span>}

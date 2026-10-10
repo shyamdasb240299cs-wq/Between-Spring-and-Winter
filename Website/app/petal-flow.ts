@@ -4,12 +4,12 @@ export const SCENE_CANVAS={width:887,height:1774};
 export const VALLEY_TREE={left:0,top:750,width:300,height:380,pivot:{x:18,y:1100}};
 export const SHRINE_GATE={left:490,top:1110,width:160,height:180};
 export const SHRINE_ENTRY={x:568,y:1200};
-export const PETAL_CAPACITY=72;
+export const PETAL_CAPACITY=108;
 export type PetalSource='opening'|'valley'|'roof';
 type Point={x:number;y:number};
 export type FlowPetal={active:boolean;source:PetalSource;age:number;life:number;start:Point;first:Point;second:Point;phase:number;size:number};
 export function createPetalFlow():FlowPetal[]{return Array.from({length:PETAL_CAPACITY},(_,i)=>({active:false,source:'opening',age:0,life:0,start:{x:0,y:0},first:{x:0,y:0},second:{x:0,y:0},phase:i*2.39996,size:4+i%4}));}
-const sourceLimits={opening:34,valley:18,roof:20};
+const sourceLimits={opening:50,valley:28,roof:30};
 const origins={
   opening:[[65,135],[170,115],[285,75],[395,115],[490,60],[130,245],[245,200]],
   valley:[[25,795],[90,890],[160,930],[215,985],[125,1005],[40,915]],
@@ -28,7 +28,7 @@ export function releaseFlowPetal(pool:FlowPetal[],source:PetalSource,serial:numb
   petal.first=source==='opening'?{x:petal.start.x+210,y:petal.start.y+65}:source==='valley'?{x:petal.start.x+160,y:petal.start.y+40}:{x:petal.start.x-130,y:petal.start.y+55};
   petal.second=source==='opening'?{x:720+variation,y:740}:source==='valley'?{x:440+variation,y:1155}:{x:610+variation,y:1250};
   petal.active=true;petal.source=source;petal.age=0;
-  petal.life=(source==='opening'?20:source==='valley'?11:13)+(serial%5)*.7;
+  petal.life=(source==='opening'?18:source==='valley'?8:9)+(serial%5)*.7;
   return true;
 }
 export function advancePetalFlow(pool:FlowPetal[],seconds:number){for(const petal of pool){if(!petal.active)continue;petal.age=Math.min(petal.life,petal.age+seconds);if(petal.age>=petal.life)petal.active=false;}}

@@ -126,8 +126,8 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
         const age=Math.max(0,openingWind.time-openingWind.start);
         openingAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(245+Math.floor(i/2)*18)));
         if(openingWind.air>.15&&openingWind.time>nextOpeningPetal){
-          for(let i=0;i<3;i++)if(releaseFlowPetal(flow,'opening',openingSerial,-openingWind.angle,-cameraY*.09/scale,openingWind.air*887*.002))openingSerial++;
-          nextOpeningPetal=openingWind.time+.38;
+          for(let i=0;i<4;i++)if(releaseFlowPetal(flow,'opening',openingSerial,-openingWind.angle,-cameraY*.09/scale,openingWind.air*887*.002))openingSerial++;
+          nextOpeningPetal=openingWind.time+.3;
         }
       }
       if(running&&active&&valleyVisible){
@@ -137,8 +137,8 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
         const age=Math.max(0,valleyWind.time-valleyWind.start);
         valleyAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(220+Math.floor(i/2)*13)));
         if(valleyWind.air>.15&&valleyWind.time>nextValleyPetal){
-          for(let i=0;i<2;i++)if(releaseFlowPetal(flow,'valley',valleySerial,-valleyWind.angle*.65,-valleyDepth/scale))valleySerial++;
-          nextValleyPetal=valleyWind.time+.38;
+          for(let i=0;i<3;i++)if(releaseFlowPetal(flow,'valley',valleySerial,-valleyWind.angle*.65,-valleyDepth/scale))valleySerial++;
+          nextValleyPetal=valleyWind.time+.32;
         }
       }else if(!valleyVisible)valleyAir.style.opacity='0';
       setMotion(running && active);
@@ -164,8 +164,8 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
         const gustAge=Math.max(0,wind.time-wind.start);
         airPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-gustAge*(390+i*12)));
         if(roofVisible&&Math.abs(wind.air)>.17&&wind.time>nextRoofPetal){
-          for(let i=0;i<3;i++)if(releaseFlowPetal(flow,'roof',roofSerial,-wind.branch,-foregroundDepth/scale))roofSerial++;
-          nextRoofPetal=wind.time+.45;
+          for(let i=0;i<4;i++)if(releaseFlowPetal(flow,'roof',roofSerial,-wind.branch,-foregroundDepth/scale))roofSerial++;
+          nextRoofPetal=wind.time+.35;
         }
       }
       if((running||shrineLink.current.charge>0)&&active)advancePetalFlow(flow,dt/1000*(1+shrineLink.current.charge*7));
