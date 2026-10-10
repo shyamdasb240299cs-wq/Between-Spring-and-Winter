@@ -1,0 +1,17 @@
+{
+  "researchedOn": "2026-10-10",
+  "status": "plan-only; source listings verified; binaries not downloaded or audited",
+  "assets": [
+    {"id":"cherry-trees", "author":"Jagobo", "url":"https://sketchfab.com/3d-models/cherry-blossom-trees-f69be55d2e4f4f73b568ebb185bd8496", "license":"CC-BY-4.0", "role":"recommended tree variants", "listedTriangles":156800, "variants":3, "requiredWork":"Inspect archive, make LODs, optimize foliage alpha overdraw, compress textures, retain attribution"},
+    {"id":"hero-tree-alternative", "author":"Viasky", "url":"https://sketchfab.com/3d-models/cherry-blossom-sakura-tree-realistic-model-6c70f11081e4438b878f4c007a48ab65", "license":"CC-BY-4.0", "role":"optional heavy hero source", "listedTriangles":284200, "requiredWork":"Only use if optimized visual test beats recommended set"},
+    {"id":"moss-rocks", "author":"Kless Gyzen / Poly Haven", "url":"https://polyhaven.com/a/rock_moss_set_01", "license":"CC0-1.0", "role":"island bases and irregular stones", "listedTriangles":63000, "variants":6, "requiredWork":"Reduce geometry; use shared 1–2k texture set"},
+    {"id":"monument-stone", "author":"Amal Kumar / Poly Haven", "url":"https://polyhaven.com/a/mossy_stone_wall", "license":"CC0-1.0", "role":"material for custom photo pillars", "requiredWork":"Bake onto custom chipped/bevelled stone frame; no runtime displacement"},
+    {"id":"distant-stone-lantern", "author":"CerFriBar", "url":"https://blendswap.com/blend/10020", "license":"CC0-1.0", "role":"optional far prop, not the concept's wooden hero lantern", "listedPolygons":660, "requiredWork":"Convert older Blender source; verify texture paths and materials"},
+    {"id":"photo-pillar", "source":"custom mesh", "role":"recessed photograph in ancient stone surround", "requiredWork":"Model around actual photo aspect ratios; combine CC0 material with original geometry"},
+    {"id":"wooden-lantern", "source":"custom mesh", "role":"warm paper box with timber frame and curved roof", "requiredWork":"Near and distant LOD; emissive paper; baked shading"},
+    {"id":"water", "source":"original shader adapted from Three.js Water/Reflector", "role":"black reflective plane", "requiredWork":"One bounded reflection target, proxy scene, subtle normals, Fresnel"},
+    {"id":"petals-and-fog", "source":"original geometry and textures", "role":"bounded instanced particles and soft haze", "requiredWork":"6–12 triangle petal, small atlas, no heavy volumetric pass"},
+    {"id":"photographs", "source":"user originals, selection pending", "role":"ordered personal gallery", "requiredWork":"Create image manifest; responsive encodes; bounded GPU cache; preserve color and aspect ratio"}
+  ],
+  "intakeChecklist":["Download from original listing", "Retain license and attribution evidence", "Verify units, UVs, normals, alpha modes and texture files", "Validate optimized GLB and KTX2 exports", "Record real payload and GPU costs", "Review visual slice on target Intel Iris device"]
+}

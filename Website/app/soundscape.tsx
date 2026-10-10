@@ -7,7 +7,7 @@ import type {WindClock} from './wind-motion';
 
 const base='/audio/';
 const ambientFiles={birds:'birds-v2.mp3',waterfall:'waterfall-v2.mp3',breeze:'breeze-v3.mp3',fire:'fire-v2.mp3'};
-type Props={position:RefObject<number>;wind:RefObject<WindClock|null>;paused:boolean};
+type Props={position:RefObject<number>;wind:RefObject<WindClock|null>;paused:boolean;silenced?:boolean};
 type Layer={gain:GainNode;media:HTMLAudioElement;started:boolean;starting:boolean;target:number;failed:boolean;attempt:number};
 type Engine={context:AudioContext;music:Layer;filter:BiquadFilterNode;layers:Map<string,Layer>;buffers:Map<string,AudioBuffer>;pending:Set<string>;failed:Set<string>;controller:AbortController;disposed:boolean;muted:boolean;birdAt:number;birdCount:number;lastRing:number;lastVelocity:number;clock:number;elapsed:number;active:Set<AudioBufferSourceNode>;error:(message:string)=>void};
 
@@ -51,11 +51,13 @@ function dispose(engine:Engine){
   void engine.context.close();
 }
 
-export default function Soundscape({position,wind,paused}:Props){
+export default function Soundscape({position,wind,paused,silenced=false}:Props){
   const engine=useRef<Engine|null>(null),pause=useRef(paused);
+  const silence=useRef(silenced);
   const audioHost=useRef<HTMLDivElement>(null);
   const [enabled,setEnabled]=useState(false),[error,setError]=useState('');
   useEffect(()=>{pause.current=paused;},[paused]);
+  useEffect(()=>{silence.current=silenced;},[silenced]);
   const toggle=()=>{
     let current=engine.current;
     if(!current){
@@ -106,11 +108,11 @@ export default function Soundscape({position,wind,paused}:Props){
       const motion=wind.current;
       const mix=soundMix(position.current,innerWidth,innerHeight,pause.current?0:motion?.air??0);
       const audioTime=current.context.currentTime;
-      fadeLayer(current.music,mix.music,audioTime);
+      fadeLayer(current.music,silence.current?0:mix.music,audioTime);
       if(Math.abs(lastFrequency-mix.frequency)>8){current.filter.frequency.cancelScheduledValues(audioTime);current.filter.frequency.setTargetAtTime(mix.frequency,audioTime,2.2);lastFrequency=mix.frequency;}
       audioHost.current!.dataset.reading=String(mix.reading>.99);
       for(const [name,file] of Object.entries(ambientFiles)){
-        const volume=mix[name as keyof typeof ambientFiles];
+        const volume=silence.current?0:mix[name as keyof typeof ambientFiles];
         let layer=current.layers.get(name);
         if(volume>.01&&!layer){layer=stream(current.context,file,current.context.destination,audioHost.current!);current.layers.set(name,layer);}
         if(!layer)continue;
@@ -119,14 +121,14 @@ export default function Soundscape({position,wind,paused}:Props){
         // Silent media sleeps after its fade. It resumes without re-downloading.
         if(volume<.001&&layer.gain.gain.value<.001&&layer.started&&!layer.starting)pausePlayback(layer);
       }
-      if(mix.openingBird>.05&&current.birdCount<2&&current.elapsed>current.birdAt){
+      if(!silence.current&&mix.openingBird>.05&&current.birdCount<2&&current.elapsed>current.birdAt){
         if(contact(current,'bird',mix.openingBird,current.birdCount===0?-.25:.25)){current.birdCount++;audioHost.current!.dataset.birdCalls=String(current.birdCount);current.birdAt=current.elapsed+13.5;}
       }
       if(mix.bell>.02)void loadContact(current,'bell','furin-contact-v3.mp3');
       if(motion){
         // A clapper contacts the glass near a swing reversal, with no ticking loop.
         const reversal=current.lastVelocity*motion.velocity<0;
-        if(!pause.current&&reversal&&Math.abs(motion.angle)>.027&&motion.time-current.lastRing>1.7&&mix.bell>.01){
+        if(!silence.current&&!pause.current&&reversal&&Math.abs(motion.angle)>.027&&motion.time-current.lastRing>1.7&&mix.bell>.01){
           if(contact(current,'bell',mix.bell*Math.min(1,.4+Math.abs(motion.paper)),.22)){current.lastRing=motion.time;audioHost.current!.dataset.lastRing=String(motion.time);}
         }
         current.lastVelocity=motion.velocity;current.clock=motion.time;

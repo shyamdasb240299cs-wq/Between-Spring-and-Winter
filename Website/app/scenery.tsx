@@ -1,15 +1,17 @@
 "use client";
-import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
+import { useEffect, useId, useRef, type CSSProperties, type RefObject } from "react";
 import { CLOSE_START } from "./journey-data";
 import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from "./scenery-layout";
 import { waterRoutes, type WaterPlane } from "./water-routes";
 import { advanceWind, createWindClock, type WindClock } from "./wind-motion";
 import {OPENING_BRANCH,FLOCK_SIZE,horizonBird,createOpeningWind,advanceOpeningWind} from './opening-motion';
 import {VALLEY_TREE,SHRINE_GATE,PETAL_CAPACITY,createPetalFlow,releaseFlowPetal,advancePetalFlow,flowPetalPose} from './petal-flow';
+import type {ShrineLink} from './shrine-entry-motion';
 
 const art = "/scene/layers/";
 function WindStrokes({paths,viewBox}:{paths:string[];viewBox:string}){
-  return <svg viewBox={viewBox} fill="none">{paths.map((d,i)=><g key={i}><path className="wind-shadow" pathLength="1000" d={d}/><path className="wind-highlight" pathLength="1000" d={d}/></g>)}</svg>;
+  const id=useId().replace(/:/g,'');
+  return <svg viewBox={viewBox} fill="none"><defs><linearGradient id={id} x1="0" x2="1"><stop stopColor="#e8d6c9" stopOpacity="0"/><stop offset=".3" stopColor="#fff4de" stopOpacity=".55"/><stop offset=".7" stopColor="#ffe7df" stopOpacity=".7"/><stop offset="1" stopColor="#ffe7df" stopOpacity="0"/></linearGradient></defs>{paths.map((d,i)=><g key={i}><path className="wind-shadow" style={{stroke:`url(#${id})`}} pathLength="1000" d={d}/><path className="wind-highlight" style={{stroke:`url(#${id})`}} pathLength="1000" d={d}/></g>)}</svg>;
 }
 
 function WaterRibbons({ plane }: { plane: WaterPlane }) {
@@ -22,7 +24,7 @@ function WaterRibbons({ plane }: { plane: WaterPlane }) {
 }
 
 /** Two complete landscape planes; all scenery stays attached to its terrain. */
-export default function Scenery({ position, paused, onWindClock }: { position: RefObject<number>; paused: boolean; onWindClock?: (clock:WindClock|null)=>void }) {
+export default function Scenery({ position, paused, onWindClock, shrineLink }: { position: RefObject<number>; paused: boolean; onWindClock?: (clock:WindClock|null)=>void; shrineLink:RefObject<ShrineLink> }) {
   const host = useRef<HTMLDivElement>(null), pause = useRef(paused);
   const wakeAnimation = useRef<(() => void) | null>(null);
   useEffect(() => { pause.current = paused; wakeAnimation.current?.(); }, [paused]);
@@ -100,6 +102,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
     const tick = (now: number) => {
       frame = 0;
       const dt = Math.min(now - last, 80); last = now;
+      if(shrineLink.current.complete||(shrineLink.current.committed&&world.style.visibility==='hidden')){setMotion(false);garden.dataset.running='false';return;}
       if (document.hidden) { setMotion(false); garden.dataset.running = "false"; return; }
       const p = position.current, sceneryProgress = Math.min(p, 5.25);
       const moved = Math.abs(sceneryProgress - previous) > .0001;
@@ -123,8 +126,8 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         const age=Math.max(0,openingWind.time-openingWind.start);
         openingAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(245+Math.floor(i/2)*18)));
         if(openingWind.air>.15&&openingWind.time>nextOpeningPetal){
-          for(let i=0;i<2;i++)if(releaseFlowPetal(flow,'opening',openingSerial,-openingWind.angle,-cameraY*.09/scale,openingWind.air*887*.002))openingSerial++;
-          nextOpeningPetal=openingWind.time+.42;
+          for(let i=0;i<3;i++)if(releaseFlowPetal(flow,'opening',openingSerial,-openingWind.angle,-cameraY*.09/scale,openingWind.air*887*.002))openingSerial++;
+          nextOpeningPetal=openingWind.time+.38;
         }
       }
       if(running&&active&&valleyVisible){
@@ -134,8 +137,8 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         const age=Math.max(0,valleyWind.time-valleyWind.start);
         valleyAirPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-age*(220+Math.floor(i/2)*13)));
         if(valleyWind.air>.15&&valleyWind.time>nextValleyPetal){
-          if(releaseFlowPetal(flow,'valley',valleySerial,-valleyWind.angle*.65,-valleyDepth/scale))valleySerial++;
-          nextValleyPetal=valleyWind.time+.36;
+          for(let i=0;i<2;i++)if(releaseFlowPetal(flow,'valley',valleySerial,-valleyWind.angle*.65,-valleyDepth/scale))valleySerial++;
+          nextValleyPetal=valleyWind.time+.38;
         }
       }else if(!valleyVisible)valleyAir.style.opacity='0';
       setMotion(running && active);
@@ -161,12 +164,12 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         const gustAge=Math.max(0,wind.time-wind.start);
         airPaths.forEach((path,i)=>path.style.strokeDashoffset=String(-gustAge*(390+i*12)));
         if(roofVisible&&Math.abs(wind.air)>.17&&wind.time>nextRoofPetal){
-          for(let i=0;i<2;i++)if(releaseFlowPetal(flow,'roof',roofSerial,-wind.branch,-foregroundDepth/scale))roofSerial++;
+          for(let i=0;i<3;i++)if(releaseFlowPetal(flow,'roof',roofSerial,-wind.branch,-foregroundDepth/scale))roofSerial++;
           nextRoofPetal=wind.time+.45;
         }
       }
-      if(running&&active)advancePetalFlow(flow,dt/1000);
-      if(moved||running||reduced.matches)flow.forEach((petal,i)=>{
+      if((running||shrineLink.current.charge>0)&&active)advancePetalFlow(flow,dt/1000*(1+shrineLink.current.charge*7));
+      if(moved||running||shrineLink.current.charge>0||reduced.matches)flow.forEach((petal,i)=>{
         const element=flowElements[i];
         if(!petal.active||reduced.matches){if(element.style.opacity!=='0')element.style.opacity='0';return;}
         const pose=flowPetalPose(petal),x=cameraX+layout.background.left+pose.x*scale,y=pose.y*scale-cameraY;
@@ -198,6 +201,8 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         opening.style.transform=`translate3d(${cameraX}px,${-cameraY*1.09}px,0)`;
         valley.style.transform=`translate3d(${cameraX}px,${-valleyY}px,0)`;
         shrine.style.transform=`translate3d(${cameraX}px,${-cameraY}px,0)`;
+        const x=cameraX+layout.background.left+568*scale,y=1200*scale-cameraY;
+        shrineLink.current.reportAnchor({x,y,width:122*scale,height:102*scale,viewportWidth:layout.width,viewportHeight:layout.height,visible:p<4.2&&y>85&&y<layout.height-80&&x>20&&x<layout.width-20});
         world.dataset.scene = p < 1.2 ? "sunset" : p < 2.64 ? "valley" : p < 3.65 ? "shrine" : "waterfall";
         world.dataset.ready = "true";
         previous = sceneryProgress;
@@ -233,6 +238,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
       if (!frame && !document.hidden) { last=performance.now(); frame=requestAnimationFrame(tick); }
     };
     wakeAnimation.current=wake;
+    shrineLink.current.setWake(wake);
     const visibilityChanged = () => {
       if (document.hidden) { setMotion(false); garden.dataset.running = "false"; }
       last = performance.now();
@@ -242,25 +248,34 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
     window.addEventListener("scroll",wake,{passive:true});
     reduced.addEventListener("change",wake);
     frame = requestAnimationFrame(tick);
-    return () => { disposed = true; onWindClock?.(null); wakeAnimation.current=null; cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener("visibilitychange", visibilityChanged); window.removeEventListener("scroll",wake); reduced.removeEventListener("change",wake); };
-  }, [position,onWindClock]);
+    return () => { disposed = true; onWindClock?.(null); wakeAnimation.current=null; shrineLink.current.setWake(null); cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener("visibilitychange", visibilityChanged); window.removeEventListener("scroll",wake); reduced.removeEventListener("change",wake); };
+  }, [position,onWindClock,shrineLink]);
 
   return <div className="layered-world" ref={host} aria-hidden="true" data-water-running="false">
-    <img className="continuous-landscape" src={`${art}continuous-shrine-separated.webp`} srcSet={`${art}continuous-shrine-separated-small.webp 640w, ${art}continuous-shrine-separated.webp 887w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
+    <div className="entry-plane entry-far-plane">
+    <img className="continuous-landscape" src={`${art}continuous-shrine-entry.webp`} srcSet={`${art}continuous-shrine-entry-small.webp 960w, ${art}continuous-shrine-entry.webp 1920w, ${art}continuous-shrine-entry-large.webp 2880w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
     <div className="background-life">
       <WaterRibbons plane="background" />
       {Array.from({length:FLOCK_SIZE},(_,i)=><div key={i} className="bird-flight"><div className="bird-sprite" /></div>)}
     </div>
-    <div className="shrine-world"><img className="shrine-gate" src={`${art}shrine-gate-detailed.webp`} alt="" decoding="async" style={{left:`${SHRINE_GATE.left/887*100}%`,top:`${SHRINE_GATE.top/1774*100}%`,width:`${SHRINE_GATE.width/887*100}%`,height:`${SHRINE_GATE.height/1774*100}%`}}/></div>
+    </div>
+    <div className="entry-plane entry-gate-plane">
+    <div className="shrine-world"><img className="shrine-gate" src={`${art}shrine-gate-detailed.webp`} alt="" decoding="async" style={{left:`${SHRINE_GATE.left/887*100}%`,top:`${SHRINE_GATE.top/1774*100}%`,width:`${SHRINE_GATE.width/887*100}%`,height:`${SHRINE_GATE.height/1774*100}%`}}/><div className="shrine-opening-shine"/></div>
+    </div>
+    <div className="entry-plane entry-tree-plane">
     <div className="valley-foreground"><img className="valley-tree" src={`${art}valley-cherry-tree.webp`} alt="" decoding="async" style={{left:`${VALLEY_TREE.left/887*100}%`,top:`${VALLEY_TREE.top/1774*100}%`,width:`${VALLEY_TREE.width/887*100}%`,height:`${VALLEY_TREE.height/1774*100}%`}}/><div className="valley-air"><WindStrokes viewBox="0 0 887 1774" paths={[
       'M25 916 C85 983 170 897 220 930 C273 964 243 1008 291 1024 C355 1048 419 1044 500 1126 C546 1172 548 1188 568 1200',
       'M60 962 C165 1026 205 938 293 977 C353 1004 348 1062 396 1087 C456 1118 522 1144 563 1193',
     ]}/></div></div>
+    </div>
+    <div className="entry-plane entry-canopy-plane">
     <div className="opening-foreground" data-running="false"><img className="opening-branch" src={`${art}opening-blossom.webp`} alt="" decoding="async"/><div className="opening-air"><WindStrokes viewBox="0 0 887 500" paths={[
       'M25 118 C140 191 258 83 350 105 C405 118 370 169 412 180 C468 197 550 178 593 233 C641 294 618 334 602 411',
       'M180 83 C294 175 387 111 465 148 C519 174 462 205 526 237 C608 278 555 329 570 374 C581 408 587 447 574 492',
     ]}/></div></div>
+    </div>
     <div className="petal-stream">{Array.from({length:PETAL_CAPACITY},(_,i)=><span key={i} className="flow-petal"/>)}</div>
+    <div className="entry-plane entry-near-plane">
     <div className="foreground-world">
       <div className="foreground-terrain">
         <img className="foreground-landscape" src={`${art}forest-foreground-burned-out.webp`} decoding="async" alt="" />
@@ -268,7 +283,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         <div className="garden-life" data-running="false">
           <div className="campfire-smoke">{Array.from({length:4},(_,i)=><span key={i} style={{"--smoke-delay":`${-i * 2.2}s`, "--smoke-drift":`${-8-i*3}px`, "--smoke-tilt":`${-1-i*.7}deg`} as CSSProperties}/>)}</div>
           <img className="roof-blossom" src={`${art}roof-blossom.webp`} alt="" decoding="async"/>
-          <div className="blossom-air"><svg viewBox="0 0 600 300" fill="none"><path pathLength="1000" d="M630 38 C565 66 548 67 523 92 C493 130 523 222 454 229 C389 235 364 164 389 139 C414 114 441 139 431 165 C416 207 294 185 227 168 C130 139 52 90 2 77"/><path pathLength="1000" d="M630 59 C555 96 526 75 498 120 C473 162 496 245 425 245 C347 245 354 177 379 165 C415 144 412 202 373 203 C275 213 143 121 2 88"/></svg></div>
+          <div className="blossom-air"><WindStrokes viewBox="0 0 600 300" paths={['M630 38 C565 66 548 67 523 92 C493 130 523 222 454 229 C389 235 364 164 389 139 C414 114 441 139 431 165 C416 207 294 185 227 168 C130 139 52 90 2 77','M630 59 C555 96 526 75 498 120 C473 162 496 245 425 245 C347 245 354 177 379 165 C415 144 412 202 373 203 C275 213 143 121 2 88']}/></div>
           <div className="furin"><img className="furin-bell" src={`${art}furin-bell.webp`} alt=""/><div className="furin-paper"><div className="furin-paper-frame"/><div className="furin-paper-frame"/></div></div>
           <div className="butterfly-garden">
             {[0,1,2].map(i=><div key={i} className={`garden-butterfly butterfly-${i}`}><div className="butterfly-sprite"/></div>)}
@@ -277,6 +292,7 @@ export default function Scenery({ position, paused, onWindClock }: { position: R
         </div>
       </div>
       <div className="house-rabbit"><div className="rabbit-sprite" /></div>
+    </div>
     </div>
   </div>;
 }

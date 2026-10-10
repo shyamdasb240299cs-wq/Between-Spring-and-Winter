@@ -5,6 +5,8 @@ const PremiumBook = lazy(() => import("./journey-book"));
 const Soundscape = lazy(() => import("./soundscape"));
 import type { WindClock } from "./wind-motion";
 import Scenery from "./scenery";
+import ShrineEntry from './shrine-entry';
+import {createShrineLink} from './shrine-entry-motion';
 import AccessGate, { accessSessionKey } from "./access-gate";
 import { CLOSE_START, JOURNEY_LENGTH, PAGE_STEP, READ_START, SCROLL_SCALE, clamp, journeySpreads, journeyProgressKey, smooth, focusedSide, type PrintedPage } from "./journey-data";
 
@@ -14,6 +16,11 @@ export default function Home(){
   const [paused,setPaused]=useState(false),[reading,setReading]=useState(false),[index,setIndex]=useState(0),[focus,setFocus]=useState<"left"|"right">("right"),[zoom,setZoom]=useState<PrintedPage|null>(null),[full,setFull]=useState(false),[saved,setSaved]=useState(0);
   const [accessGranted,setAccessGranted]=useState(false);
   const [portrait,setPortrait]=useState(false);
+  const shrineLink=useRef(createShrineLink());
+  const [entering,setEntering]=useState(false),[entered,setEntered]=useState(false);
+  const commitShrine=useCallback(()=>setEntering(true),[]);
+  // Replace this completion hook with the future void scene mount.
+  const completeShrine=useCallback(()=>setEntered(true),[]);
   const soundWind=useRef<WindClock|null>(null);
   const setSoundWind=useCallback((clock:WindClock|null)=>{soundWind.current=clock;},[]);
   useEffect(()=>{const query=matchMedia("(max-width: 1024px) and (orientation: portrait)");const update=()=>setPortrait(query.matches);const frame=requestAnimationFrame(update);query.addEventListener("change",update);return()=>{cancelAnimationFrame(frame);query.removeEventListener("change",update);};},[]);
@@ -75,12 +82,13 @@ export default function Home(){
   const spread=journeySpreads[index],label=index===0?"A dedication":index===1?"Part One":index===2?"Page 1":index===13?"Page 22":portrait?spread[focus].label:`Pages ${spread.left.number}–${spread.right.number}`;
   const shownPage=reading?spread[focus]:{src:"/manga/cover-front.webp",label:"Between Spring and Winter cover",number:0};
   useEffect(()=>{if(!portrait||!reading)return;const neighbors=focus==="left"?[spread.right,journeySpreads[index-1]?.right]:[journeySpreads[index+1]?.left,journeySpreads[index+1]?.right];for(const page of neighbors){if(page&&page.src!==shownPage.src){const image=new Image();image.src=page.src;}}},[portrait,reading,index,focus,spread,shownPage.src]);
-  return <main className={"manga-journey "+(paused?"motion-paused":"")}>
+  return <main className={"manga-journey "+(paused?"motion-paused":"")} data-domain-ready={entered}>
     {!accessGranted&&<AccessGate onUnlock={()=>{setAccessGranted(true);requestAnimationFrame(()=>document.querySelector<HTMLButtonElement>(".intro-actions button")?.focus({preventScroll:true}));}}/>}
     <section ref={journey} className="journey-scroll" inert={!accessGranted} style={{height:`${(JOURNEY_LENGTH*SCROLL_SCALE+1)*100}svh`}} aria-label="Between Spring and Winter — a story for Aami">
       <div ref={stage} className="journey-screen">
-        <Scenery position={position} paused={paused||!accessGranted} onWindClock={setSoundWind}/><div className="scene-shade" aria-hidden="true"/>
-        <header className="journey-header" aria-hidden={reading} inert={reading}>
+        <Scenery position={position} paused={paused||!accessGranted||entered} onWindClock={setSoundWind} shrineLink={shrineLink}/><div className="scene-shade" aria-hidden="true"/>
+        {accessGranted&&<ShrineEntry link={shrineLink} stage={stage} onCommit={commitShrine} onComplete={completeShrine}/>}
+    <header className="journey-header" aria-hidden={reading||entering} inert={reading||entering}>
           <a href="#" className="full-wordmark" onClick={e=>{e.preventDefault();jump(0);}} aria-label="Between Spring and Winter — return to the beginning"><span>Between</span><span>Spring <i>&</i> Winter</span></a>
           <nav className="intro-nav" aria-label="Introduction"><button onClick={()=>jump(1.8)}>The story</button><button onClick={()=>jump(3.15)}>A love letter</button><button className="read-link" onClick={()=>jump(READ_START+.1)}>Read Spring</button></nav>
           <span className="season-note"><span lang="ja">春</span><span>PART I<br/>SPRING</span></span>
@@ -106,7 +114,7 @@ export default function Home(){
           <span className="reading-label">SPRING <span>{label}</span></span><span className="reading-instruction">Scroll to turn · Scroll up to return</span>
           <div className="reading-actions">{!portrait&&spread.left.number>0&&index<13&&<button className="zoom-left" aria-label={`Enlarge page ${spread.left.number}`} onClick={()=>setZoom(spread.left)}><ZoomIn size={17}/><span>{spread.left.number}</span></button>}<button aria-label={`Enlarge ${spread[focus].label.toLowerCase()}`} onClick={()=>setZoom(spread[focus])}><ZoomIn size={20}/></button><button aria-label={full?"Exit fullscreen":"Enter fullscreen"} onClick={fullscreen}>{full?<Minimize size={20}/>:<Maximize size={20}/>}</button></div>
         </div>
-        <footer className="journey-footer"><span className="journey-scroll-cue">{reading?"SCROLL TO TURN THE PAGE":"SCROLL TO DISCOVER"}<span/></span><div className="footer-controls">{accessGranted&&<Suspense fallback={null}><Soundscape position={position} wind={soundWind} paused={paused}/></Suspense>}<button className="ambient-button" onClick={()=>setPaused(!paused)} aria-label={paused?"Play ambient motion":"Pause ambient motion"}>{paused?<Play size={15}/>:<Pause size={15}/>}<span>{paused?"Motion paused":"Pause motion"}</span></button></div><div className="reading-progress"/></footer>
+        <footer className="journey-footer"><span className="journey-scroll-cue">{reading?"SCROLL TO TURN THE PAGE":"SCROLL TO DISCOVER"}<span/></span><div className="footer-controls">{accessGranted&&!entered&&<Suspense fallback={null}><Soundscape position={position} wind={soundWind} paused={paused} silenced={entering}/></Suspense>}<button className="ambient-button" onClick={()=>setPaused(!paused)} aria-label={paused?"Play ambient motion":"Pause ambient motion"}>{paused?<Play size={15}/>:<Pause size={15}/>}<span>{paused?"Motion paused":"Pause motion"}</span></button></div><div className="reading-progress"/></footer>
         <section className="ending-copy" data-reveal={`${CLOSE_START+3.85},${CLOSE_START+4.25},${JOURNEY_LENGTH+1},${JOURNEY_LENGTH+2}`} aria-label="Part One complete"><p className="chapter-label">END OF PART ONE</p><h2>Until our next day<br/><em>together.</em></h2><p>Wherever you are, my Aami,<br/>the best of me is already with you.</p><button className="text-action" onClick={()=>jump(READ_START+.1)}>Read Spring again <span className="action-line"/></button><button className="back-to-beginning" onClick={()=>jump(0)}><ChevronUp size={17}/> Back to the beginning</button></section>
         {zoom&&<div className="page-detail" role="dialog" aria-modal="true" aria-label={`Enlarged ${zoom.label}`}><div className="detail-header"><span>{zoom.label} · Scroll to explore</span><button autoFocus aria-label="Close enlarged page" onClick={()=>setZoom(null)}><X size={24}/></button></div><div className="detail-scroll"><img src={zoom.src} alt={zoom.label+" enlarged"}/></div></div>}
       </div>

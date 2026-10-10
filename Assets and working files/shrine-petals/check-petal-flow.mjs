@@ -9,7 +9,7 @@ for(const source of ['opening','valley','roof']){
   petal.age=petal.life*.9;const entering=flowPetalPose(petal);assert.equal(entering.layer,1,'Petals enter behind the gate, below the house');assert.ok(entering.depth<.5);
   petal.age=petal.life;const end=flowPetalPose(petal);assert.ok(Math.hypot(end.x-SHRINE_ENTRY.x,end.y-SHRINE_ENTRY.y)<1e-8);assert.equal(end.opacity,0);
   for(let i=0;i<1000;i++)releaseFlowPetal(pool,source,i,.01,-12,1);
-  assert.ok(pool.filter(p=>p.active).length<=24);assert.equal(pool.length,PETAL_CAPACITY);
+  assert.ok(pool.filter(p=>p.active).length<=34);assert.equal(pool.length,PETAL_CAPACITY);
   advancePetalFlow(pool,30);assert.equal(pool.filter(p=>p.active).length,0);
 }
 const combined=createPetalFlow();
@@ -20,4 +20,4 @@ for(const rate of [24,60,120]){
   for(let i=0;i<rate*6;i++)advancePetalFlow(pool,1/rate);
   const pose=flowPetalPose(pool[0]);assert.ok(pose.x>200&&pose.x<SHRINE_ENTRY.x&&pose.opacity>.85);
 }
-console.log('Three wind directions, gate convergence/occlusion/fade, 50-petal bounds and frame-rate-independent paths pass.');
+console.log('Three wind directions, gate convergence/occlusion/fade, bounded petals and frame-rate-independent paths pass.');

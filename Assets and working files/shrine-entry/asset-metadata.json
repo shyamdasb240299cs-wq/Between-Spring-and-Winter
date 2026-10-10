@@ -1,0 +1,33 @@
+{
+  "source": "../shrine-petals/background-separated-source.png",
+  "sourceSize": [
+    887,
+    1774
+  ],
+  "masterSize": [
+    3548,
+    7096
+  ],
+  "upscaler": "Installed Upscayl digital-art-4x",
+  "scale": 4,
+  "files": [
+    {
+      "name": "continuous-shrine-entry-small.webp",
+      "width": 960,
+      "height": 1920,
+      "bytes": 732440
+    },
+    {
+      "name": "continuous-shrine-entry.webp",
+      "width": 1920,
+      "height": 3840,
+      "bytes": 1772898
+    },
+    {
+      "name": "continuous-shrine-entry-large.webp",
+      "width": 2880,
+      "height": 5760,
+      "bytes": 2858576
+    }
+  ]
+}
