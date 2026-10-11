@@ -18,7 +18,6 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     const hit=root.querySelector<HTMLButtonElement>('.shrine-hit')!,effects=root.querySelector<HTMLElement>('.entry-effects')!;
     const glow=root.querySelector<HTMLElement>('.entry-glow')!,wash=root.querySelector<HTMLElement>('.entry-colour-wash')!,dark=root.querySelector<HTMLElement>('.entry-dark')!;
     const plate=root.querySelector<HTMLElement>('.entry-film-plate')!,poster=root.querySelector<HTMLImageElement>('.entry-film-poster')!,video=root.querySelector<HTMLVideoElement>('video')!;
-    const canvas=root.querySelector<HTMLCanvasElement>('.entry-trails')!,context=canvas.getContext('2d',{alpha:true});
     for(const key of ['videoPresented','handoffTime','mediaTime','videoFrames','droppedFrames','videoError'])delete root.dataset[key];
     poster.style.opacity='1';root.dataset.phase='idle';
     const clock=createEntryClock(),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -38,10 +37,15 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     const resize=()=>{
       if(!screen.clientWidth||!screen.clientHeight)return;
       width=innerWidth;height=screen.clientHeight;
-      const dpr=Math.min(devicePixelRatio,1.5,1920/width,1200/height);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);context?.setTransform(dpr,0,0,dpr,0,0);
       if(phaseOrigin)origin={x:phaseOrigin.x*width,y:phaseOrigin.y*height,w:phaseOrigin.w*width};
       const layout=filmLayout(width,height);
-      for(const element of [poster,video]){element.style.left=layout.left+'px';element.style.top=layout.top+'px';element.style.width=layout.width+'px';element.style.height=layout.height+'px';}
+      // Mirrored overscan stays outside the actual frame. It prevents a rectangular
+      // plate edge while the registered opening is still smaller than the display.
+      plate.style.left=-width+'px';plate.style.top=-height+'px';plate.style.right='auto';plate.style.bottom='auto';plate.style.width=width*3+'px';plate.style.height=height*3+'px';
+      for(const element of [video,...plate.querySelectorAll<HTMLImageElement>('img')]){
+        const tileX=Number(element.dataset.tileX||0),tileY=Number(element.dataset.tileY||0);
+        element.style.left=layout.left+width+tileX*layout.width+'px';element.style.top=layout.top+height+tileY*layout.height+'px';element.style.width=layout.width+'px';element.style.height=layout.height+'px';
+      }
       sync();if(clock.phase!=='idle')wake();
     };
     const lock=()=>{if(locked)return;locked=true;const scrollbar=innerWidth-document.documentElement.clientWidth;if(scrollbar)document.body.style.paddingRight=scrollbar+'px';document.documentElement.style.overflow='hidden';};
@@ -60,25 +64,14 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
       shrineLink.commit();phaseOrigin={x:origin.x/width,y:origin.y/height,w:origin.w/width};document.body.style.backgroundColor='#000';hit.hidden=true;screen.dataset.shrineState='committed';
       for(const child of Array.from(screen.children))if(child!==root){const el=child as HTMLElement;inertBefore.set(el,el.inert);el.inert=true;}onCommit();
     };
-    const paint=(time:number,x:number,y:number,amount:number)=>{
-      if(!context)return;context.clearRect(0,0,width,height);if(reduced.matches||amount<.001)return;
-      const ctx=context,radius=Math.hypot(width,height);
-      for(let i=0;i<100;i++){
-        const life=(i*.618034+time*(clock.committed?.72:.22))%1,a=i*2.399963+life*.8;
-        const r=radius*.78*(1-life)**1.5,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r*.66;
-        const alpha=amount*Math.min(1,life*7)*Math.min(1,(1-life)*8),size=(2+i%4)*(1-life*.65);
-        ctx.save();ctx.translate(px,py);ctx.rotate(a+time*(.4+i%3*.1));ctx.fillStyle=`rgba(255,${174+i%25},${200+i%25},${alpha})`;
-        ctx.beginPath();ctx.moveTo(0,-size*1.8);ctx.bezierCurveTo(size*1.4,-size*.7,size*1.2,size,0,size*1.6);ctx.bezierCurveTo(-size*1.3,size,-size*1.1,-size*.9,0,-size*1.8);ctx.fill();ctx.restore();
-      }
-    };
-    const complete=()=>{if(completed||disposed)return;completed=true;video.pause();dark.style.opacity='1';context?.clearRect(0,0,width,height);shrineLink.finish();root.dataset.phase='complete';screen.dataset.shrineState='complete';scene.style.visibility='hidden';onComplete();};
+    const complete=()=>{if(completed||disposed)return;completed=true;video.pause();dark.style.opacity='1';shrineLink.finish();root.dataset.phase='complete';screen.dataset.shrineState='complete';scene.style.visibility='hidden';onComplete();};
     const tick=(now:number)=>{
       frame=0;if(disposed||document.hidden||landscapeBlocked())return;const dt=last?Math.max(0,now-last):0;last=now;
       const committed=clock.committed;if(!committed)advanceEntry(clock,dt);if(!committed&&clock.committed)commit();
       shrineLink.setCharge(clock.charge);effects.style.opacity=clock.phase==='idle'?'0':'1';
       if(!clock.committed){
         root.dataset.phase=clock.phase;glow.style.width=Math.max(90,origin.w*1.8)+'px';glow.style.height=Math.max(100,origin.w*2)+'px';glow.style.transform=`translate(${origin.x}px,${origin.y}px) translate(-50%,-50%)`;glow.style.opacity=String(clock.charge*.8);wash.style.opacity=String(clock.charge*.12);
-        scene.style.transform='';paint(clock.hold/1000,origin.x,origin.y,clock.charge*.62);shrineLink.wake();
+        scene.style.transform='';shrineLink.wake();
         if(clock.phase==='idle'){screen.removeAttribute('data-shrine-state');effects.style.opacity='0';unlock();return;}
       }else{
         if(!reduced.matches&&!failed&&!ended){
@@ -89,15 +82,13 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
         if(posterReady&&(videoReady||failed||reduced.matches))zoom=Math.min(SHRINE_FILM.zoomMs,zoom+dt);
         const pose=shrineVideoPose(reduced.matches?SHRINE_FILM.zoomMs:zoom,origin,width,height);
         scene.style.transformOrigin='0 0';scene.style.transform=reduced.matches?'':`translate3d(${pose.tx}px,${pose.ty}px,0) scale(${pose.scale})`;
-        plate.style.transformOrigin='0 0';plate.style.transform=`translate3d(${pose.plateX}px,${pose.plateY}px,0) scale(${pose.plateScale})`;
+        plate.style.transformOrigin=`${width}px ${height}px`;plate.style.transform=`translate3d(${pose.plateX}px,${pose.plateY}px,0) scale(${pose.plateScale})`;
         plate.style.opacity=String(reduced.matches?smooth(zoom,0,350):pose.plateOpacity);
-        const feather=(1-pose.p)*18;
-        plate.style.maskImage=pose.p>=.98?'none':`radial-gradient(circle ${pose.maskRadius}px at ${pose.target.x}px ${pose.target.y}px,#000 45%,transparent 100%),linear-gradient(to right,transparent,#000 ${feather}%,#000 ${100-feather}%,transparent),linear-gradient(to bottom,transparent,#000 ${feather}%,#000 ${100-feather}%,transparent)`;
-        plate.style.maskComposite='intersect';
-        glow.style.transform=`translate(${pose.x}px,${pose.y}px) translate(-50%,-50%) scale(${pose.scale})`;glow.style.opacity=String(.7*(1-pose.plateOpacity));wash.style.opacity=String(.25*(1-pose.plateOpacity));
+        plate.style.maskImage=pose.p>=.98?'none':`radial-gradient(circle ${pose.maskRadius}px at ${pose.target.x+width}px ${pose.target.y+height}px,#000 65%,#000c 82%,transparent 100%)`;
+        const replacement=smooth(pose.p,.72,.98);
+        glow.style.transform=`translate(${pose.x}px,${pose.y}px) translate(-50%,-50%) scale(${pose.scale})`;glow.style.opacity=String(.8*(1-replacement));wash.style.opacity=String(.22*(1-replacement));
         const atFilm=zoom>=SHRINE_FILM.zoomMs;
         root.dataset.phase=atFilm?'video':'zoom';root.dataset.zoom=pose.p.toFixed(3);
-        paint((clock.hold+zoom)/1000,pose.x,pose.y,(.65+.2*pose.travel)*(1-pose.plateOpacity));
         if(atFilm){scene.style.visibility='hidden';if(!reduced.matches)playback();}
         root.dataset.mediaTime=video.currentTime.toFixed(3);
         if(playing&&typeof video.getVideoPlaybackQuality==='function'){const quality=video.getVideoPlaybackQuality();root.dataset.videoFrames=String(quality.totalVideoFrames);root.dataset.droppedFrames=String(quality.droppedVideoFrames);}
@@ -120,7 +111,7 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     const hidden=()=>{if(document.hidden||landscapeBlocked()){input.abort();video.pause();cancelAnimationFrame(frame);frame=0;}else if(clock.phase!=='idle'){if(playing&&!ended)void video.play().catch(()=>{});wake();}};
     const blur=()=>input.abort();
     video.addEventListener('loadeddata',loaded);video.addEventListener('error',videoError);video.addEventListener('ended',videoEnd);window.addEventListener('journey-audio-change',sound);
-    if(!video.getAttribute('src'))video.src='/scene/entry/shrine-entry.mp4';if(video.readyState>=2)loaded();sound();
+    if(!video.getAttribute('src'))video.src='/scene/entry/shrine-entry-clean.mp4';if(video.readyState>=2)loaded();sound();
     void poster.decode().then(()=>{if(!disposed){posterReady=true;wake();}}).catch(()=>{posterReady=true;failed=true;wake();});
     hit.addEventListener('pointerdown',input.down);hit.addEventListener('pointerup',input.up);hit.addEventListener('pointercancel',input.up);hit.addEventListener('lostpointercapture',input.lost);hit.addEventListener('keydown',input.keyDown);hit.addEventListener('keyup',input.keyUp);hit.addEventListener('blur',blur);hit.addEventListener('contextmenu',prevent);
     document.addEventListener('wheel',prevent,{passive:false});document.addEventListener('touchmove',prevent,{passive:false});document.addEventListener('keydown',preventKeys);document.addEventListener('visibilitychange',hidden);window.addEventListener('blur',blur);
@@ -137,6 +128,6 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
   },[link,stage,onCommit,onComplete]);
   return <div className="shrine-entry" ref={host}>
     <button className="shrine-hit" hidden aria-label="Hold to enter the shrine" title="Hold to enter the shrine"/>
-    <div className="entry-effects" aria-hidden="true"><div className="entry-colour-wash"/><div className="entry-glow"/><div className="entry-film-plate"><video src="/scene/entry/shrine-entry.mp4" preload="auto" playsInline muted disablePictureInPicture poster="/scene/entry/shrine-entry-first.webp"/><img className="entry-film-poster" src="/scene/entry/shrine-entry-first.webp" alt="" decoding="async"/></div><canvas className="entry-trails"/><div className="entry-dark"/></div>
+    <div className="entry-effects" aria-hidden="true"><div className="entry-colour-wash"/><div className="entry-glow"/><div className="entry-film-plate">{[-1,0,1].flatMap(y=>[-1,0,1].filter(x=>x!==0||y!==0).map(x=><img key={`${x},${y}`} className="entry-film-edge" data-tile-x={x} data-tile-y={y} src="/scene/entry/shrine-entry-clean-first.webp" alt="" decoding="async" style={{transform:`scale(${x? -1:1},${y? -1:1})`}}/>))}<video src="/scene/entry/shrine-entry-clean.mp4" preload="auto" playsInline muted disablePictureInPicture poster="/scene/entry/shrine-entry-clean-first.webp"/><img className="entry-film-poster" src="/scene/entry/shrine-entry-clean-first.webp" alt="" decoding="async"/></div><div className="entry-dark"/></div>
   </div>;
 }

@@ -16,7 +16,8 @@ export function shrineVideoPose(ms:number,origin:{x:number;y:number;w:number},wi
   const plateScale=scale*origin.w/target.gateWidth;
   return{p,travel,x,y,scale,tx:x-origin.x*scale,ty:y-origin.y*scale,
     plateScale,plateX:x-target.x*plateScale,plateY:y-target.y*plateScale,
-    plateOpacity:smooth(p,.28,.88),maskRadius:Math.hypot(width,height)*(.1+smooth(p,.22,.94)*1.65),target};
+    // Reveal through the luminous opening, rather than crossfading two full scenes.
+    plateOpacity:smooth(p,.12,.2),maskRadius:Math.hypot(width,height)*(.018+smooth(p,.23,.94)*1.5),target};
 }
 export function filmBlack(time:number,duration:number){
   if(!Number.isFinite(duration)||duration<=0)return 0;

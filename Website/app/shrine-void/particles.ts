@@ -15,13 +15,17 @@ export function createPetals(texture: THREE.Texture,reduced: boolean) {
         float x=mix(-5.7,5.7,seed.y)+sin(life*4.+seed.w*6.)*.8+falling*1.2;
         float y=mix(7.5,.065,falling);float camGlobal=anchor.z-anchor.y;
         float span=mix(54.,32.,surface);float z=camGlobal+4.-mod(seed.z*span+camGlobal+4.+5400.,span)+anchor.y+sin(life*5.+seed.y*5.)*.8*(1.-surface);
-        float angle=variety*6.28+time*.7*(1.-landed);float size=.04+variety*.045;
+        float angle=variety*6.28+time*.7*(1.-landed);float size=.05+variety*.04;
         vec3 p=position*size;vec2 spin=mat2(cos(angle),-sin(angle),sin(angle),cos(angle))*p.xy;
         p=landed>.5?vec3(spin.x,0.,spin.y):vec3(spin.x,spin.y*cos(time*.9+seed.z*8.),spin.y*sin(time*.9+seed.z*8.));
         vFade=mix(smoothstep(0.,.08,life)*(1.-smoothstep(.9,1.,life)),1.,surface);gl_Position=projectionMatrix*viewMatrix*vec4(vec3(x,y,z)+p,1.);
       }`,
-    fragmentShader:`uniform sampler2D petal;uniform float reveal;varying vec2 vUv;varying float vFade;void main(){vec4 c=texture2D(petal,vUv);if(c.a<.15)discard;gl_FragColor=vec4(c.rgb*vec3(2.1,1.05,1.4),c.a*vFade*.9*reveal);\n #include <tonemapping_fragment>\n #include <colorspace_fragment>\n }`
+    fragmentShader:`uniform sampler2D petal;uniform float reveal;varying vec2 vUv;varying float vFade;void main(){vec4 c=texture2D(petal,vUv);if(c.a<.15)discard;gl_FragColor=vec4(c.rgb*vec3(2.65,1.4,1.85),c.a*vFade*.94*reveal);\n #include <tonemapping_fragment>\n #include <colorspace_fragment>\n }`
   });
   const mesh=new THREE.Mesh(geometry,material);mesh.frustumCulled=false;
-  return{mesh,update(time:number,cameraZ:number,origin:number,reveal=1){uniforms.reveal.value=reveal;uniforms.time.value=reduced?8:time;uniforms.anchor.value.set(0,origin,cameraZ);},dispose(){geometry.dispose();material.dispose();}};
+  const glowMaterial=new THREE.ShaderMaterial({uniforms,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
+    vertexShader:material.vertexShader.replace('position*size','position*size*1.8'),
+    fragmentShader:`uniform float reveal;varying vec2 vUv;varying float vFade;void main(){float r=length(vUv-.5);float halo=exp(-r*r*26.)*(1.-smoothstep(.3,.49,r));gl_FragColor=vec4(vec3(1.,.38,.6),halo*.075*vFade*reveal);\n #include <tonemapping_fragment>\n #include <colorspace_fragment>\n }`});
+  const glow=new THREE.Mesh(geometry,glowMaterial);glow.frustumCulled=false;mesh.add(glow);
+  return{mesh,update(time:number,cameraZ:number,origin:number,reveal=1){uniforms.reveal.value=reveal;uniforms.time.value=reduced?8:time;uniforms.anchor.value.set(0,origin,cameraZ);},dispose(){geometry.dispose();material.dispose();glowMaterial.dispose();}};
 }

@@ -3,9 +3,9 @@
 .journey-screen[data-shrine-state=committed] .entry-plane{will-change:transform}
 .journey-screen[data-shrine-state=committed] .layered-world{overflow:visible;contain:layout;background:transparent}
 .opening-air path,.valley-air path,.blossom-air path{stroke-linecap:round;stroke-dasharray:260 740}
-.opening-air .wind-shadow,.valley-air .wind-shadow,.blossom-air .wind-shadow{stroke-width:13;opacity:.18}
-.opening-air .wind-highlight,.valley-air .wind-highlight,.blossom-air .wind-highlight{stroke-width:4;opacity:.25}
-.shrine-opening-shine{position:absolute;left:60.9%;top:65.5%;width:6.4%;height:4.2%;pointer-events:none;background:radial-gradient(ellipse at 50% 65%,#fff0ca8c,#ffd8bc45 35%,#ffe3c01a 58%,transparent 76%);mix-blend-mode:screen}
+.opening-air .wind-shadow,.valley-air .wind-shadow,.blossom-air .wind-shadow{stroke-width:18;opacity:.13}
+.opening-air .wind-highlight,.valley-air .wind-highlight,.blossom-air .wind-highlight{stroke-width:2.4;opacity:.1}
+.shrine-opening-shine{position:absolute;left:60.9%;top:65.5%;width:6.4%;height:4.2%;pointer-events:none;background:radial-gradient(ellipse at 50% 65%,#fff4dfb5,#ffd6c663 35%,#ffe3c025 58%,transparent 76%);mix-blend-mode:screen}
 .shrine-entry{position:absolute;inset:0;pointer-events:none}
 .shrine-hit{position:absolute;z-index:5;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:transparent;border:0;padding:0;cursor:pointer}
 .shrine-hit[hidden]{display:none}.shrine-hit:focus-visible{outline:1px solid #ffe0ba80;outline-offset:0;border-radius:20%}

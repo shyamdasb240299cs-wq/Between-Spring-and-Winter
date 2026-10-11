@@ -66,11 +66,16 @@ export function createWater(proxyScene:THREE.Scene,steps:ReturnType<typeof creat
   // Reflector clones uniforms: reconnect the shared contact clock and records.
   Object.assign(mat.uniforms,steps.uniforms);
   const original=mesh.onBeforeRender.bind(mesh);let last=-Infinity,rate=24;
+  const capturedCamera=new THREE.Matrix4(),capturedProjection=new THREE.Matrix4();
   const worldProjection=new THREE.Matrix4(),inverseModel=new THREE.Matrix4();
   mesh.onBeforeRender=(renderer,_scene,camera,geo,material,group)=>{
     const now=performance.now()/1000;
-    if(now-last<1/rate){mat.uniforms.textureMatrix.value.copy(worldProjection).multiply(mesh.matrixWorld);return;}
+    // A cached reflection belongs to its captured camera. Refresh on every
+    // walking/look frame; only a stationary view may reuse the previous image.
+    const moving=!capturedCamera.equals(camera.matrixWorld)||!capturedProjection.equals(camera.projectionMatrix);
+    if(!moving&&now-last<1/rate){mat.uniforms.textureMatrix.value.copy(worldProjection).multiply(mesh.matrixWorld);return;}
     last=now;original(renderer,proxyScene,camera,geo,material,group);
+    capturedCamera.copy(camera.matrixWorld);capturedProjection.copy(camera.projectionMatrix);
     inverseModel.copy(mesh.matrixWorld).invert();worldProjection.copy(mat.uniforms.textureMatrix.value).multiply(inverseModel);
   };
   return {mesh,update(time:number,camera:THREE.Camera,reflectionRate:number,size:number){

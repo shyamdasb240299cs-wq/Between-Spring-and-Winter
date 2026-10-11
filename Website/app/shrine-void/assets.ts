@@ -60,7 +60,7 @@ export function preloadVoidAssets(): Promise<VoidAssets> {
       model('/void/models/polished/moss-rocks.glb',false),model('/void/models/polished/moss-rocks-far.glb',false),
       model('/void/models/crystal.glb',false),
       texture('/void/textures/stone_wall/mossy_stone_wall_diff_1k.jpg'), texture('/void/textures/stone_wall/mossy_stone_wall_nor_gl_1k.jpg',false),
-      texture('/void/textures/petal_centered.webp'),
+      texture('/scene/layers/sakura-petal-1.svg'),
       Promise.all(manifest.photos.slice(0,6).filter(p => p.src).map(async p => [p.src,await texture(p.src)] as const))
     ]);
     stone.wrapS = stone.wrapT = stoneNormal.wrapS = stoneNormal.wrapT = THREE.RepeatWrapping;

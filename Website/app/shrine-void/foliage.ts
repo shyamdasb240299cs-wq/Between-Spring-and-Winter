@@ -12,7 +12,7 @@ export function createFoliageGroup(assets: VoidAssets) {
       const mat = blossom ? new THREE.MeshLambertMaterial({
         map: part.material.map, color: blossom ? 0xffe4d9 : 0xcbbbad,
         emissive: blossom ? 0xff91af : 0x000000, emissiveMap: blossom ? part.material.map : null,
-        emissiveIntensity: blossom ? .32 : 0,
+        emissiveIntensity: blossom ? .58 : 0,
         side: blossom ? THREE.DoubleSide : THREE.FrontSide, alphaTest: blossom ? .38 : 0,
       }) : new THREE.MeshStandardMaterial({map:part.material.map,normalMap:part.material.normalMap,roughnessMap:part.material.roughnessMap,normalScale:new THREE.Vector2(.8,.8),color:0xd8c8c2,roughness:.95});
       mat.onBeforeCompile = shader => {
@@ -26,7 +26,7 @@ export function createFoliageGroup(assets: VoidAssets) {
       group.add(mesh);return mesh;
     }));
     proxies[variant] = lods.slice(1).map(parts=>parts.map(part => {
-      const mat = new THREE.MeshBasicMaterial({ map: part.material.map, color: /foliage/i.test(part.name) ? new THREE.Color(1.35,.65,.9) : new THREE.Color(0x655049), alphaTest: .38, side: THREE.DoubleSide });
+      const mat = new THREE.MeshBasicMaterial({ map: part.material.map, color: /foliage/i.test(part.name) ? new THREE.Color(1.55,.8,1.05) : new THREE.Color(0x655049), alphaTest: .38, side: THREE.DoubleSide });
       mat.userData.revealColour=mat.color.clone();materials.push(mat);const mesh = new THREE.InstancedMesh(part.geometry,mat,32);mesh.setColorAt(0,new THREE.Color(0xffffff));mesh.count = 0;mesh.frustumCulled = false;reflection.add(mesh);return mesh;
     }));
   });
@@ -58,5 +58,5 @@ export function createFoliageGroup(assets: VoidAssets) {
     }
     [...batches.flat(2),...proxies.flat(2)].forEach(m => {m.instanceMatrix.needsUpdate = true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
   }
-  return { group,reflection,place,update(time: number,reveal=1) { wind.value = time;group.visible=reflection.visible=reveal>.001;materials.forEach(material=>{const m=material as THREE.MeshLambertMaterial;m.color.copy(m.userData.revealColour).multiplyScalar(reveal);if(m instanceof THREE.MeshLambertMaterial)m.emissiveIntensity=.32*reveal;}); },dispose() { materials.forEach(m => m.dispose());batches.flat(2).forEach(m=>m.dispose());proxies.flat(2).forEach(m=>m.dispose()); } };
+  return { group,reflection,place,update(time: number,reveal=1) { wind.value = time;group.visible=reflection.visible=reveal>.001;materials.forEach(material=>{const m=material as THREE.MeshLambertMaterial;m.color.copy(m.userData.revealColour).multiplyScalar(reveal);if(m instanceof THREE.MeshLambertMaterial)m.emissiveIntensity=.58*reveal;}); },dispose() { materials.forEach(m => m.dispose());batches.flat(2).forEach(m=>m.dispose());proxies.flat(2).forEach(m=>m.dispose()); } };
 }
