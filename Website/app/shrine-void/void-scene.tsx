@@ -1,10 +1,9 @@
 "use client";
 import { useEffect,useRef,useState,type PointerEvent as ReactPointerEvent } from 'react';
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { GlowPass } from './glow-pass';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {SharpOutput} from './sharp-output';
 import { ArrowLeft,Pause,Play,ZoomIn,Volume2,VolumeX } from 'lucide-react';
 import {createWorld,type VoidWorld} from './create-world';
 import {preloadVoidAssets,type PhotoManifest} from './assets';
@@ -13,6 +12,7 @@ import type {AwakeningPhase} from './awakening';
 import {sanctuaryCue} from './sanctuary-audio';
 import {useAudioEnabled,requestAudioToggle} from '../audio-setting';
 import './void.css';
+import {landscapeBlocked} from '../landscape-guard';
 
 export default function VoidScene({active,paused,onReady,onExit}:{active:boolean;paused:boolean;onReady?:()=>void;onExit?:()=>void}){
   const soundEnabled=useAudioEnabled();
@@ -48,12 +48,15 @@ export default function VoidScene({active,paused,onReady,onExit}:{active:boolean
       renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';
       renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Memory sanctuary: use arrow keys to walk, drag to look');
       container.appendChild(renderer.domElement);w=createWorld(renderer,assets);world.current=w;
-      composer=new EffectComposer(renderer);composer.addPass(new RenderPass(w.scene,w.camera));
-      const glow=new GlowPass();composer.addPass(glow);composer.addPass(new OutputPass());
+      composer=new EffectComposer(renderer);
+      for(const [pass,label] of [[new RenderPass(w.scene,w.camera),'scene'],[new SharpOutput(),'output']] as const){
+        const draw=pass.render.bind(pass);
+        pass.render=(...args)=>{w!.quality.beginRender(label);draw(...args);w!.quality.endRender();};composer.addPass(pass);
+      }
       function size(){
         if(dead||!renderer||!composer||!w)return;
         const width=container.clientWidth,height=container.clientHeight;
-        const budget=Math.sqrt(1050000/Math.max(1,width*height)),scale=w.quality.scale*Math.min(1,budget);
+        const scale=Math.min(w.quality.scale,Math.sqrt(1900000/Math.max(1,width*height)));
         const rw=Math.max(1,Math.round(width*scale)),rh=Math.max(1,Math.round(height*scale));
         renderer.setSize(rw,rh,false);composer.setSize(rw,rh);w.resize(width,height);
         container.dataset.renderSize=rw+'×'+rh;
@@ -73,29 +76,32 @@ export default function VoidScene({active,paused,onReady,onExit}:{active:boolean
       const pointerMove=(e:PointerEvent)=>{if(e.pointerId!==drag)return;w!.travel.look(e.clientX-px,e.clientY-py);px=e.clientX;py=e.clientY;};
       const pointerEnd=(e:PointerEvent)=>{if(e.pointerId===drag){drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);}};
       const tick=(now:number)=>{
-        frame=0;if(dead||document.hidden||lost)return;
+        frame=0;if(dead||document.hidden||landscapeBlocked()||lost)return;
         const raw=last?(now-last)/1000:1/60;last=now;
-        if(w!.quality.update(raw))size();
-        w!.update(Math.min(raw,.05),pausedRef.current||overlayRef.current);
+        w!.quality.update(raw);
+        const updateStart=performance.now();w!.update(Math.min(raw,.1),pausedRef.current||overlayRef.current);
+        const updateMs=performance.now()-updateStart;
         const cinematic=w!.cinematic;
         if(black.current)black.current.style.opacity=String(cinematic.black);
         if(flash.current){flash.current.style.opacity=String(cinematic.flash);if(cinematic.flash>0){const p=w!.pulseOrigin,r=(.035+cinematic.pulse**2*1.25)*Math.hypot(container.clientWidth,container.clientHeight);flash.current.style.background=`radial-gradient(ellipse ${r}px ${r}px at ${p.x*100}% ${p.y*100}%,#fff 0%,#fff 30%,#ffffffbf 56%,#ffffff30 76%,transparent 94%)`;}}
         if(lastPhase!==cinematic.phase){lastPhase=cinematic.phase;setPhase(lastPhase);container.dataset.phase=lastPhase;sanctuaryCue(lastPhase);}
         if(lastNear!==cinematic.canTouch){lastNear=cinematic.canTouch;setNearCrystal(lastNear);}
         if(w!.travel.state.activePhotoIndex!==lastStats){lastStats=w!.travel.state.activePhotoIndex;setActivePhoto(lastStats);}
-        renderer!.info.reset();renderer!.info.autoReset=false;composer!.render();
+        renderer!.info.reset();renderer!.info.autoReset=false;
+        const renderStart=performance.now();composer!.render();
+        const renderMs=performance.now()-renderStart;
         frames++;statsTime+=raw;
-        if(statsTime>.75){container.dataset.fps=(frames/statsTime).toFixed(1);container.dataset.drawCalls=String(renderer!.info.render.calls);container.dataset.triangles=String(renderer!.info.render.triangles);container.dataset.distance=w!.travel.state.distance.toFixed(2);container.dataset.cameraX=w!.travel.state.x.toFixed(2);container.dataset.yaw=w!.travel.state.yaw.toFixed(3);statsTime=frames=0;}
+        if(statsTime>.75){container.dataset.fps=(frames/statsTime).toFixed(1);container.dataset.gpuMs=w!.quality.gpuMs.toFixed(2);container.dataset.sceneMs=w!.quality.sceneMs.toFixed(2);container.dataset.outputMs=w!.quality.outputMs.toFixed(2);container.dataset.updateMs=updateMs.toFixed(2);container.dataset.renderMs=renderMs.toFixed(2);container.dataset.drawCalls=String(renderer!.info.render.calls);container.dataset.triangles=String(renderer!.info.render.triangles);container.dataset.distance=w!.travel.state.distance.toFixed(2);container.dataset.cameraX=w!.travel.state.x.toFixed(2);container.dataset.yaw=w!.travel.state.yaw.toFixed(3);statsTime=frames=0;}
         frame=requestAnimationFrame(tick);
       };
-      const wake=()=>{clear();if(document.hidden){cancelAnimationFrame(frame);frame=0;}else if(!frame&&!lost&&!dead){last=0;frame=requestAnimationFrame(tick);}};
+      const wake=()=>{clear();if(document.hidden||landscapeBlocked()){cancelAnimationFrame(frame);frame=0;}else if(!frame&&!lost&&!dead){last=0;frame=requestAnimationFrame(tick);}};
       const onLost=(e:Event)=>{e.preventDefault();lost=true;cancelAnimationFrame(frame);frame=0;clear();setReady(false);setError('The graphics connection was interrupted. Please reload the sanctuary.');};
       const restored=()=>{lost=false;setError('');setReady(true);wake();};
-      window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',wake);
+      window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',wake);window.addEventListener('journey-orientation-change',wake);
       canvas.addEventListener('wheel',wheel,{passive:false});canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);
       canvas.addEventListener('pointerup',pointerEnd);canvas.addEventListener('pointercancel',pointerEnd);canvas.addEventListener('lostpointercapture',pointerEnd);
       canvas.addEventListener('webglcontextlost',onLost);canvas.addEventListener('webglcontextrestored',restored);
-      cleanupInput=()=>{window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',wake);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerEnd);canvas.removeEventListener('pointercancel',pointerEnd);canvas.removeEventListener('lostpointercapture',pointerEnd);canvas.removeEventListener('webglcontextlost',onLost);canvas.removeEventListener('webglcontextrestored',restored);};
+      cleanupInput=()=>{window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',wake);window.removeEventListener('journey-orientation-change',wake);canvas.removeEventListener('wheel',wheel);canvas.removeEventListener('pointerdown',pointerDown);canvas.removeEventListener('pointermove',pointerMove);canvas.removeEventListener('pointerup',pointerEnd);canvas.removeEventListener('pointercancel',pointerEnd);canvas.removeEventListener('lostpointercapture',pointerEnd);canvas.removeEventListener('webglcontextlost',onLost);canvas.removeEventListener('webglcontextrestored',restored);};
       observer=new ResizeObserver(size);observer.observe(container);frame=requestAnimationFrame(tick);
     })().catch(fail);
     return()=>{dead=true;cancelAnimationFrame(frame);observer?.disconnect();cleanupInput();w?.dispose();world.current=null;

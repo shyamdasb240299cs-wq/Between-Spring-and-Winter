@@ -152,3 +152,12 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 @media(max-width:1024px) and (orientation:portrait) and (max-height:700px){.reveal-copy,.book-invitation,.ending-copy{top:calc(86px + env(safe-area-inset-top));bottom:calc(82px + env(safe-area-inset-bottom));padding:18px}.introduction{max-height:calc(100% - 168px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}.introduction h1{font-size:40px}.chapter-label{margin-bottom:9px}.intro-dedication{font-size:18px;margin-top:12px}.reveal-copy h2,.book-invitation h2,.ending-copy h2{font-size:31px;margin-bottom:12px}.story-copy>p:not(.chapter-label),.author-introduction>p:not(.chapter-label){font-size:13px;line-height:1.5;margin-bottom:10px}}
 @media(max-width:900px) and (orientation:landscape){.footer-controls{gap:8px}.ambient-button>span{display:none}.journey-footer{padding-inline:max(16px,env(safe-area-inset-left));padding-bottom:max(8px,env(safe-area-inset-bottom))}.journey-scroll-cue{font-size:10px;letter-spacing:.5px}.reading-instruction{display:none}.journey-header{padding-left:max(4%,env(safe-area-inset-left));padding-right:max(4%,env(safe-area-inset-right))}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.action-line,.journey-header{transition:none}.opening-air,.valley-air,.petal-stream{display:none}.opening-branch,.valley-tree{will-change:auto;transform:none!important}}
+.landscape-guard{display:none}
+@media(max-width:1024px) and (orientation:portrait){
+ html,body{overflow:hidden!important;background:#090a0b}
+ main{visibility:hidden!important;pointer-events:none!important}
+ .landscape-guard{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;background:radial-gradient(ellipse at 50% 45%,#2a1927,#090a0b 65%);color:#f2ded5;outline:0}
+ .landscape-guard svg{width:46px;height:46px;transform:rotate(90deg);stroke-width:1;margin-bottom:28px;color:#dfacb9}
+ .landscape-guard h2{font-family:Georgia,serif;font-weight:400;font-size:27px;line-height:1.3;margin:0 0 12px}
+ .landscape-guard p{font-size:14px;opacity:.75;margin:0}
+}

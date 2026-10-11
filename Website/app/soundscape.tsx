@@ -1,4 +1,5 @@
 "use client";
+import {landscapeBlocked} from './landscape-guard';
 import {useEffect,useRef,useState,type RefObject} from 'react';
 import {Volume2,VolumeX} from 'lucide-react';
 import {soundMix} from './sound-mix';
@@ -99,13 +100,13 @@ export default function Soundscape({position,wind,paused,silenced=false,hidden=f
     let lastFrequency=-1;
     const visibility=()=>{
       const current=engine.current;
-      if(document.hidden){
+      if(document.hidden||landscapeBlocked()){
         if(timer)clearTimeout(timer);
         if(current){for(const layer of [current.music,...current.layers.values()])pausePlayback(layer);for(const source of current.active)source.stop();current.lastVelocity=0;void current.context.suspend();}
       }else{last=performance.now();if(current&&!current.muted){void current.context.resume();startPlayback(current,current.music);}tick();}
     };
     const tick=()=>{
-      if(disposed||document.hidden||!audioHost.current)return;
+      if(disposed||document.hidden||landscapeBlocked()||!audioHost.current)return;
       timer=setTimeout(tick,50);
       const now=performance.now(),seconds=Math.min(.15,(now-last)/1000);last=now;
       const current=engine.current;if(!current||current.muted||!audioHost.current)return;
@@ -139,8 +140,8 @@ export default function Soundscape({position,wind,paused,silenced=false,hidden=f
         current.lastVelocity=motion.velocity;current.clock=motion.time;
       }
     };
-    tick();document.addEventListener('visibilitychange',visibility);
-    return()=>{disposed=true;if(timer)clearTimeout(timer);document.removeEventListener('visibilitychange',visibility);};
+    tick();document.addEventListener('visibilitychange',visibility);window.addEventListener('journey-orientation-change',visibility);
+    return()=>{disposed=true;if(timer)clearTimeout(timer);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('journey-orientation-change',visibility);};
   },[position,wind,enabled]);
   useEffect(()=>()=>{if(engine.current){dispose(engine.current);engine.current=null;}},[]);
   return <div className="sound-control" hidden={hidden}>

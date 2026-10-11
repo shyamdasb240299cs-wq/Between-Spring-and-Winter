@@ -87,11 +87,11 @@ export default function Home(){
   const spread=journeySpreads[index],label=index===0?"A dedication":index===1?"Part One":index===2?"Page 1":index===13?"Page 22":portrait?spread[focus].label:`Pages ${spread.left.number}–${spread.right.number}`;
   const shownPage=reading?spread[focus]:{src:"/manga/cover-front.webp",label:"Between Spring and Winter cover",number:0};
   useEffect(()=>{if(!portrait||!reading)return;const neighbors=focus==="left"?[spread.right,journeySpreads[index-1]?.right]:[journeySpreads[index+1]?.left,journeySpreads[index+1]?.right];for(const page of neighbors){if(page&&page.src!==shownPage.src){const image=new Image();image.src=page.src;}}},[portrait,reading,index,focus,spread,shownPage.src]);
-  return <main className={"manga-journey "+(paused?"motion-paused":"")} data-domain-ready={entered}>
+  return <main className={"manga-journey "+(paused||entered?"motion-paused":"")} data-domain-ready={entered}>
     {accessGranted&&<SanctuaryAudio/>}
     {!accessGranted&&<AccessGate onUnlock={()=>{setAccessGranted(true);requestAnimationFrame(()=>document.querySelector<HTMLButtonElement>(".intro-actions button")?.focus({preventScroll:true}));}}/>}
     <section ref={journey} className="journey-scroll" inert={!accessGranted||entered} style={{height:`${(JOURNEY_LENGTH*SCROLL_SCALE+1)*100}svh`}} aria-label="Between Spring and Winter — a story for Aami">
-      <div ref={stage} className="journey-screen">
+      <div ref={stage} className="journey-screen" style={{display:entered?'none':undefined}}>
         <Scenery position={position} paused={paused||!accessGranted||entered} onWindClock={setSoundWind} shrineLink={shrineLink}/><div className="scene-shade" aria-hidden="true"/>
         {accessGranted&&<ShrineEntry key={entryVersion} link={shrineLink} stage={stage} onCommit={commitShrine} onComplete={completeShrine}/>}
     <header className="journey-header" aria-hidden={reading||entering} inert={reading||entering}>

@@ -15,7 +15,7 @@ export function createPetals(texture: THREE.Texture,reduced: boolean) {
         float x=mix(-5.7,5.7,seed.y)+sin(life*4.+seed.w*6.)*.8+falling*1.2;
         float y=mix(7.5,.065,falling);float camGlobal=anchor.z-anchor.y;
         float span=mix(54.,32.,surface);float z=camGlobal+4.-mod(seed.z*span+camGlobal+4.+5400.,span)+anchor.y+sin(life*5.+seed.y*5.)*.8*(1.-surface);
-        float angle=variety*6.28+time*.7*(1.-landed);float size=.13+variety*.13;
+        float angle=variety*6.28+time*.7*(1.-landed);float size=.04+variety*.045;
         vec3 p=position*size;vec2 spin=mat2(cos(angle),-sin(angle),sin(angle),cos(angle))*p.xy;
         p=landed>.5?vec3(spin.x,0.,spin.y):vec3(spin.x,spin.y*cos(time*.9+seed.z*8.),spin.y*sin(time*.9+seed.z*8.));
         vFade=mix(smoothstep(0.,.08,life)*(1.-smoothstep(.9,1.,life)),1.,surface);gl_Position=projectionMatrix*viewMatrix*vec4(vec3(x,y,z)+p,1.);

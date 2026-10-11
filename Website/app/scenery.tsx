@@ -1,4 +1,6 @@
 "use client";
+import {landscapeBlocked} from './landscape-guard';
+
 import { useEffect, useId, useRef, type CSSProperties, type RefObject } from "react";
 import { CLOSE_START } from "./journey-data";
 import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from "./scenery-layout";
@@ -103,7 +105,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
       frame = 0;
       const dt = Math.min(now - last, 80); last = now;
       if(shrineLink.current.complete||(shrineLink.current.committed&&world.style.visibility==='hidden')){setMotion(false);garden.dataset.running='false';return;}
-      if (document.hidden) { setMotion(false); garden.dataset.running = "false"; return; }
+      if (document.hidden||landscapeBlocked()) { setMotion(false); garden.dataset.running = "false"; return; }
       const p = position.current, sceneryProgress = Math.min(p, 5.25);
       const moved = Math.abs(sceneryProgress - previous) > .0001;
       const active = p < 5.75 || p > CLOSE_START + 2.6;
@@ -235,20 +237,20 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
     };
     const wake = () => {
       awakeUntil=performance.now()+700;
-      if (!frame && !document.hidden) { last=performance.now(); frame=requestAnimationFrame(tick); }
+      if (!frame && !document.hidden && !landscapeBlocked()) { last=performance.now(); frame=requestAnimationFrame(tick); }
     };
     wakeAnimation.current=wake;
     shrineLink.current.setWake(wake);
     const visibilityChanged = () => {
-      if (document.hidden) { setMotion(false); garden.dataset.running = "false"; }
+      if (document.hidden||landscapeBlocked()) { setMotion(false); garden.dataset.running = "false"; }
       last = performance.now();
       wake();
     };
-    document.addEventListener("visibilitychange", visibilityChanged);
+    document.addEventListener("visibilitychange", visibilityChanged);window.addEventListener("journey-orientation-change",visibilityChanged);
     window.addEventListener("scroll",wake,{passive:true});
     reduced.addEventListener("change",wake);
     frame = requestAnimationFrame(tick);
-    return () => { disposed = true; onWindClock?.(null); wakeAnimation.current=null; shrineLink.current.setWake(null); cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener("visibilitychange", visibilityChanged); window.removeEventListener("scroll",wake); reduced.removeEventListener("change",wake); };
+    return () => { disposed = true; onWindClock?.(null); wakeAnimation.current=null; shrineLink.current.setWake(null); cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener("visibilitychange", visibilityChanged);window.removeEventListener("journey-orientation-change",visibilityChanged); window.removeEventListener("scroll",wake); reduced.removeEventListener("change",wake); };
   }, [position,onWindClock,shrineLink]);
 
   return <div className="layered-world" ref={host} aria-hidden="true" data-water-running="false">
