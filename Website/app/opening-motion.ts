@@ -20,7 +20,7 @@ export function horizonBird(time:number,index:number,layout:Layout){
   const y=inverse*inverse*startY+2*inverse*u*controlY+u*u*endY;
   const dx=2*inverse*(controlX-startX)+2*u*(endX-controlX);
   const dy=2*inverse*(controlY-startY)+2*u*(endY-controlY);
-  return {visible,x,y,size:clamp(layout.height*.036,14,26)*(.1+.9*(1-t)**1.3),opacity:1-smooth(t,.91,1),rotation:Math.atan2(dy,dx)*180/Math.PI};
+  return {visible,x,y,size:clamp(layout.height*.064,26,46)*(.055+.945*(1-t)**1.5),opacity:1-smooth(t,.91,1),rotation:Math.atan2(dy,dx)*180/Math.PI};
 }
 
 export type OpeningWind={time:number;start:number;duration:number;strength:number;seed:number;air:number;angle:number;velocity:number};

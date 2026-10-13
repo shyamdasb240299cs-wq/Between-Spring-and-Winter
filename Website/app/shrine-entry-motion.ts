@@ -5,12 +5,12 @@ export const ENTRY_MS=3000;
 export type EntryPhase='idle'|'charging'|'returning'|'rush'|'portal'|'tunnel'|'settling'|'complete';
 export type ShrineAnchor={x:number;y:number;width:number;height:number;viewportWidth:number;viewportHeight:number;visible:boolean};
 export function createShrineLink(){
-  const state={charge:0,committed:false,complete:false,anchor:null as ShrineAnchor|null,sync:null as (()=>void)|null,wake:null as (()=>void)|null};
+  const state={charge:0,committed:false,complete:false,frozen:false,anchor:null as ShrineAnchor|null,sync:null as (()=>void)|null,wake:null as (()=>void)|null};
   return{
-    get charge(){return state.charge;},get committed(){return state.committed;},get complete(){return state.complete;},get anchor(){return state.anchor;},
+    get charge(){return state.charge;},get committed(){return state.committed;},get complete(){return state.complete;},get frozen(){return state.frozen;},get anchor(){return state.anchor;},
     sync(){state.sync?.();},wake(){state.wake?.();},setSync(fn:(()=>void)|null){state.sync=fn;},setWake(fn:(()=>void)|null){state.wake=fn;},
-    reportAnchor(anchor:ShrineAnchor){state.anchor=anchor;state.sync?.();},setCharge(value:number){state.charge=value;},commit(){state.committed=true;},
-    finish(){state.complete=true;state.charge=0;},reset(){state.charge=0;state.committed=false;state.complete=false;},
+    reportAnchor(anchor:ShrineAnchor){state.anchor=anchor;state.sync?.();},setCharge(value:number){state.charge=value;},setFrozen(value:boolean){state.frozen=value;state.wake?.();},commit(){state.committed=true;},
+    finish(){state.complete=true;state.charge=0;},reset(){state.charge=0;state.committed=false;state.complete=false;state.frozen=false;},
   };
 }
 export type ShrineLink=ReturnType<typeof createShrineLink>;

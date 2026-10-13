@@ -7,8 +7,11 @@ import { landscapeLayout, rabbitFrame, visibleFraction, type RabbitClock } from 
 import { waterRoutes, type WaterPlane } from "./water-routes";
 import { advanceWind, createWindClock, type WindClock } from "./wind-motion";
 import {OPENING_BRANCH,FLOCK_SIZE,horizonBird,createOpeningWind,advanceOpeningWind} from './opening-motion';
-import {VALLEY_TREE,PETAL_CAPACITY,createPetalFlow,releaseFlowPetal,advancePetalFlow,flowPetalPose,createFlowEmitter,emitFlowPetals} from './petal-flow';
+import {VALLEY_TREE,createPetalFlow,releaseFlowPetal,advancePetalFlow,createFlowEmitter,emitFlowPetals} from './petal-flow';
 import type {ShrineLink} from './shrine-entry-motion';
+import {createPetalPainter} from './petal-painter';
+import {fogBands,prepareFog} from './landscape-atmosphere';
+import {motionAudit} from './motion-audit';
 
 const art = "/scene/layers/";
 function WindStrokes({paths,viewBox}:{paths:string[];viewBox:string}){
@@ -20,7 +23,7 @@ function WaterRibbons({ plane }: { plane: WaterPlane }) {
   return <div className={`water-ribbons ${plane}-water`}>
     {waterRoutes[plane].map(route => <div key={route.id} className="waterfall-motion" data-plane={plane} data-running="false" style={{
       left: `${route.left * 100}%`, top: `${route.top * 100}%`, width: `${route.width * 100}%`, height: `${route.height * 100}%`,
-      clipPath: route.clip, "--flow-period": `${route.period}s`, "--flow-delay": `${route.delay}s`, "--flow-alpha": route.opacity,
+      clipPath: route.clip, "--flow-period": `${route.period*1.6}s`, "--flow-delay": `${route.delay}s`, "--flow-alpha": route.opacity, "--flow-drift": `${route.drift}%`,
     } as CSSProperties}><div className="water-flow"/><div className="water-foam"/></div>)}
   </div>;
 }
@@ -32,11 +35,17 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
   useEffect(() => { pause.current = paused; wakeAnimation.current?.(); }, [paused]);
   useEffect(() => {
     const world = host.current!;
+    const audit=motionAudit(world);
     const background = world.querySelector<HTMLElement>(".continuous-landscape")!;
     const backgroundLife = world.querySelector<HTMLElement>(".background-life")!;
     const foreground = world.querySelector<HTMLElement>(".foreground-world")!;
     const terrain = world.querySelector<HTMLElement>(".foreground-terrain")!;
     const backgroundWater = world.querySelector<HTMLElement>(".background-water")!;
+    const atmosphere=world.querySelector<HTMLElement>('.landscape-atmosphere')!;
+    const fog=Array.from(atmosphere.querySelectorAll<HTMLElement>('.valley-fog'));
+    const lake=atmosphere.querySelector<HTMLElement>('.lake-life')!;
+    const lakeRipples=lake.querySelector<HTMLElement>('.lake-ripples')!,lakeShine=lake.querySelector<HTMLElement>('.lake-shine')!;
+    prepareFog(fog);
     const waterCurtains = Array.from(world.querySelectorAll<HTMLElement>(".waterfall-motion"));
     let waterBounds: { element: HTMLElement; plane: WaterPlane; left: number; top: number; width: number; height: number }[] = [];
     const rabbit = world.querySelector<HTMLElement>(".house-rabbit")!;
@@ -53,7 +62,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
     const valleyAir=world.querySelector<HTMLElement>('.valley-air')!;
     const valleyAirPaths=Array.from(valleyAir.querySelectorAll<SVGPathElement>('path'));
     const valleyWind={...createOpeningWind(),seed:773,start:.8,duration:5.3,strength:.63};
-    const flow=createPetalFlow(),flowElements=Array.from(world.querySelectorAll<HTMLElement>('.flow-petal'));
+    const flow=createPetalFlow(),petalPainter=createPetalPainter(world);
     const openingEmitter=createFlowEmitter(),valleyEmitter=createFlowEmitter(),roofEmitter=createFlowEmitter(),ambientEmitter=createFlowEmitter();
     const butterflies = Array.from(world.querySelectorAll<HTMLElement>(".garden-butterfly"));
     const garden = world.querySelector<HTMLElement>(".garden-life")!;
@@ -67,7 +76,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
     const wind = createWindClock();
     onWindClock?.(wind);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0, previous = -1, last = performance.now(), flightTime = 0, lastWing = -1;
+    let frame = 0, previous = -1, last = performance.now(), flightTime = 0, fogTime=0, lastWing = -1;
     let rabbitCell = -1, disposed = false, awakeUntil = performance.now()+700;
     let rabbitReady = false;
     const rabbitImage = new Image();
@@ -76,8 +85,9 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
     let layout = landscapeLayout(world.clientWidth, world.clientHeight);
     const size = () => {
       layout = landscapeLayout(world.clientWidth, world.clientHeight);
+      petalPainter.resize(layout.width,layout.height);
       for (const layer of [background, backgroundLife, foreground]) layer.style.height = layout.worldHeight + "px";
-      for (const [element, bounds] of [[background,layout.background], [terrain, layout.foreground], [rabbit, layout.rabbit], [backgroundWater,layout.background]] as const) {
+      for (const [element, bounds] of [[background,layout.background], [terrain, layout.foreground], [rabbit, layout.rabbit], [backgroundWater,layout.background], [atmosphere,layout.background]] as const) {
         element.style.left = bounds.left + "px"; element.style.top = bounds.top + "px";
         element.style.width = bounds.width + "px"; element.style.height = bounds.height + "px";
       }
@@ -101,9 +111,10 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
       if (world.dataset.waterRunning !== value) world.dataset.waterRunning = value;
     };
     const tick = (now: number) => {
+      const auditStart=audit?.start(now)??0;
       frame = 0;
       const dt = Math.min(now - last, 80); last = now;
-      if(shrineLink.current.complete||(shrineLink.current.committed&&world.style.visibility==='hidden')){setMotion(false);garden.dataset.running='false';return;}
+      if(shrineLink.current.frozen||shrineLink.current.complete||(shrineLink.current.committed&&world.style.visibility==='hidden')){setMotion(false);garden.dataset.running='false';return;}
       if (document.hidden||landscapeBlocked()) { setMotion(false); garden.dataset.running = "false"; return; }
       const p = position.current, sceneryProgress = Math.min(p, 5.25);
       const moved = Math.abs(sceneryProgress - previous) > .0001;
@@ -170,15 +181,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
         });
       }
       if((running||charge>0)&&active)advancePetalFlow(flow,dt/1000*(1+charge*3.8));
-      if(moved||running||shrineLink.current.charge>0||reduced.matches)flow.forEach((petal,i)=>{
-        const element=flowElements[i];
-        if(!petal.active||reduced.matches){if(element.style.opacity!=='0')element.style.opacity='0';return;}
-        const pose=flowPetalPose(petal),x=cameraX+layout.background.left+pose.x*scale,y=pose.y*scale-cameraY;
-        if(x<-16||x>layout.width+16||y<-16||y>layout.height+16){if(element.style.opacity!=='0')element.style.opacity='0';return;}
-        const size=petal.size/6*scale*pose.depth;
-        element.style.opacity=String(pose.opacity);element.style.zIndex=String(pose.layer);
-        element.style.transform=`translate3d(${x}px,${y}px,0) rotate(${pose.turn}deg) scale(${size},${size*pose.fold})`;
-      });
+      if(moved||running||shrineLink.current.charge>0||reduced.matches)petalPainter.paint(flow,cameraX,cameraY,layout.background.left,scale,reduced.matches);
       if (gardenVisible && (moved || running || reduced.matches)) {
         butterflies.forEach((butterfly, i) => {
           const t = gardenTime * (.45 + i * .07) + i * 2.2;
@@ -195,13 +198,24 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
         const value = String(running && active && visibleFraction(cameraX + bounds.left, y, bounds.width, bounds.height, layout.width, layout.height) > 0);
         if (bounds.element.dataset.running !== value) bounds.element.dataset.running = value;
       }
-      if (!moved && !active && !skyVisible) return;
+      if (!moved && !active && !skyVisible){audit?.end(auditStart);return;}
+      if((moved||running)&&active&&!pause.current&&!reduced.matches){
+        fogTime+=dt/1000;
+        fog.forEach((element,i)=>{const depth=fogBands[i].depth,phase=sceneryProgress*1.9+i*1.4;
+          element.style.transform=`translate3d(${(Math.sin(phase)*.007+Math.sin(fogTime*.16+i*1.7)*.013)*layout.paintedWidth*depth}px,${(Math.sin(phase*.67)*.0015+Math.sin(fogTime*.12+i)*.0022)*layout.worldHeight*depth}px,0)`;
+        });
+      }
       if (moved) {
         background.style.transform = backgroundLife.style.transform = `translate3d(${cameraX}px,${-cameraY}px,0)`;
         foreground.style.transform = `translate3d(${cameraX}px,${-foregroundY}px,0)`;
         opening.style.transform=`translate3d(${cameraX}px,${-cameraY*1.09}px,0)`;
         valley.style.transform=`translate3d(${cameraX}px,${-valleyY}px,0)`;
         shrine.style.transform=`translate3d(${cameraX}px,${-cameraY}px,0)`;
+        if(!pause.current&&!reduced.matches){
+          lakeRipples.style.transform=`translate3d(${Math.sin(sceneryProgress*2.4)*layout.paintedWidth*.003}px,${Math.sin(sceneryProgress*3)*layout.worldHeight*.00045}px,0)`;
+          lakeShine.style.opacity=String(.1+(.5+.5*Math.sin(sceneryProgress*4.7))*.13);
+          lakeShine.style.transform=`translate3d(${Math.sin(sceneryProgress*1.8)*layout.paintedWidth*.004}px,0,0)`;
+        }
         const x=cameraX+layout.background.left+568*scale,y=1200*scale-cameraY;
         shrineLink.current.reportAnchor({x,y,width:122*scale,height:102*scale,viewportWidth:layout.width,viewportHeight:layout.height,visible:p<4.2&&y>85&&y<layout.height-80&&x>20&&x<layout.width-20});
         world.dataset.scene = p < 1.2 ? "sunset" : p < 2.64 ? "valley" : p < 3.65 ? "shrine" : "waterfall";
@@ -233,6 +247,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
         if (wingTick !== lastWing) (bird.firstElementChild as HTMLElement).style.backgroundPosition = `${(wingTick + i * 2) % 6 / 5 * 100}% 0`;
       });
       lastWing = wingTick;
+      audit?.end(auditStart);
     };
     const wake = () => {
       awakeUntil=performance.now()+700;
@@ -254,8 +269,9 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
 
   return <div className="layered-world" ref={host} aria-hidden="true" data-water-running="false">
     <div className="entry-plane entry-far-plane">
-    <img className="continuous-landscape" src={`${art}continuous-shrine-entry.webp`} srcSet={`${art}continuous-shrine-entry-small.webp 960w, ${art}continuous-shrine-entry.webp 1920w, ${art}continuous-shrine-entry-large.webp 2880w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
+    <img className="continuous-landscape" src={`${art}continuous-shrine-detailed-medium.webp`} srcSet={`${art}continuous-shrine-detailed-small.webp 960w, ${art}continuous-shrine-detailed-medium.webp 1920w, ${art}continuous-shrine-detailed-large.webp 2880w, ${art}continuous-shrine-detailed-4x.webp 3548w`} sizes="(max-width:1024px) and (orientation:portrait) 133vh, max(178vh,100vw)" fetchPriority="high" decoding="async" alt="" />
     <div className="background-life">
+      <div className="landscape-atmosphere">{fogBands.map((band,i)=><div className="valley-fog" key={i} style={{top:`${band.top*100}%`,height:`${band.height*100}%`}}/>)}<div className="lake-life"><div className="lake-ripples"/><div className="lake-shine"/></div></div>
       <WaterRibbons plane="background" />
       {Array.from({length:FLOCK_SIZE},(_,i)=><div key={i} className="bird-flight"><div className="bird-sprite" /></div>)}
     </div>
@@ -264,7 +280,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
     <div className="shrine-world"><div className="shrine-opening-shine"/></div>
     </div>
     <div className="entry-plane entry-tree-plane">
-    <div className="valley-foreground"><img className="valley-tree" src={`${art}valley-cherry-tree.webp`} alt="" decoding="async" style={{left:`${VALLEY_TREE.left/887*100}%`,top:`${VALLEY_TREE.top/1774*100}%`,width:`${VALLEY_TREE.width/887*100}%`,height:`${VALLEY_TREE.height/1774*100}%`}}/><div className="valley-air"><WindStrokes viewBox="0 0 887 1774" paths={[
+    <div className="valley-foreground"><img className="valley-tree" src={`${art}valley-cherry-tree.webp`} alt="" decoding="async" style={{left:`${VALLEY_TREE.left/887*100}%`,top:`${VALLEY_TREE.top/1774*100}%`,width:`${VALLEY_TREE.width/887*100}%`,height:`${VALLEY_TREE.height/1774*100}%`}}/><div className="valley-air"><WindStrokes viewBox="0 900 887 330" paths={[
       'M25 916 C85 983 170 897 220 930 C273 964 243 1008 291 1024 C355 1048 419 1044 500 1126 C546 1172 548 1188 568 1200',
       'M60 962 C165 1026 205 938 293 977 C353 1004 348 1062 396 1087 C456 1118 522 1144 563 1193',
     ]}/></div></div>
@@ -275,7 +291,7 @@ export default function Scenery({ position, paused, onWindClock, shrineLink }: {
       'M180 83 C294 175 387 111 465 148 C519 174 462 205 526 237 C608 278 555 329 570 374 C581 408 587 447 574 492',
     ]}/></div></div>
     </div>
-    <div className="petal-stream">{Array.from({length:PETAL_CAPACITY},(_,i)=><span key={i} className="flow-petal"/>)}</div>
+    <div className="petal-stream">{[1,3,7].map(depth=><canvas key={depth} style={{zIndex:depth}}/>)}</div>
     <div className="entry-plane entry-near-plane">
     <div className="foreground-world">
       <div className="foreground-terrain">

@@ -17,11 +17,16 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 .foreground-terrain{position:absolute}
 .foreground-landscape{display:block;width:100%;height:100%;max-width:none}
 .water-ribbons{position:absolute;inset:0;pointer-events:none}
-.waterfall-motion{position:absolute;overflow:hidden;pointer-events:none;mask-image:linear-gradient(transparent,#000 5% 95%,transparent);mix-blend-mode:screen}
-.water-flow,.water-foam{position:absolute;left:0;top:-100%;width:100%;height:200%;background:url('/scene/layers/water-flow.webp') center top/100% 50% repeat-y;opacity:var(--flow-alpha);filter:brightness(1.3) contrast(1.12);animation:waterfall-down var(--flow-period) linear infinite;animation-delay:var(--flow-delay);animation-play-state:paused}
-.water-foam{background-position:72% top;background-size:145% 50%;opacity:calc(var(--flow-alpha)*.24);filter:brightness(2);animation-duration:calc(var(--flow-period)*.67);animation-delay:calc(var(--flow-delay) - .41s);mask-image:linear-gradient(90deg,transparent,#000 24% 82%,transparent)}
+.landscape-atmosphere{position:absolute;pointer-events:none}
+.valley-fog{position:absolute;left:0;width:100%;background-size:100% 100%;background-repeat:no-repeat;will-change:transform;pointer-events:none}
+.lake-life{position:absolute;left:26%;top:37.4%;width:48%;height:9.2%;overflow:hidden;clip-path:polygon(6% 0,76% 0,74% 11%,67% 24%,82% 33%,87% 53%,100% 75%,70% 95%,46% 100%,43% 77%,29% 70%,17% 54%,10% 26%);mask-image:radial-gradient(ellipse,#000 35%,transparent 72%)}
+.lake-ripples{position:absolute;inset:-8%;opacity:.12;background:repeating-linear-gradient(177deg,transparent 0 10px,#f6d4b080 11px,transparent 12px 22px);will-change:transform}
+.lake-shine{position:absolute;inset:0;opacity:.16;background:radial-gradient(ellipse at 56% 51%,#ffe6ac99,transparent 42%),repeating-linear-gradient(0deg,transparent 0 17px,#ffe2a677 18px,transparent 19px 30px);will-change:transform,opacity}
+.waterfall-motion{position:absolute;overflow:hidden;pointer-events:none;contain:paint;mask-image:linear-gradient(transparent,#000 8% 89%,transparent)}
+.water-flow,.water-foam{position:absolute;left:-15%;top:-100%;width:130%;height:200%;background:url('/scene/layers/water-flow.webp') center top/100% 50% repeat-y;opacity:calc(var(--flow-alpha)*.7);animation:waterfall-down var(--flow-period) linear infinite;animation-delay:var(--flow-delay);animation-play-state:paused}
+.water-foam{background-position:72% top;background-size:145% 50%;opacity:calc(var(--flow-alpha)*.18);animation-duration:calc(var(--flow-period)*.79);animation-delay:calc(var(--flow-delay) - .41s);mask-image:linear-gradient(90deg,transparent,#000 24% 82%,transparent)}
 .layered-world[data-water-running=true] .waterfall-motion[data-running=true] .water-flow,.layered-world[data-water-running=true] .waterfall-motion[data-running=true] .water-foam{animation-play-state:running;will-change:transform}
-@keyframes waterfall-down{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,50%,0)}}
+@keyframes waterfall-down{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--flow-drift,0px),50%,0)}}
 .rabbit-sprite{position:relative;z-index:1;width:100%;height:100%;background:url('/scene/layers/rabbit-polished.webp') 0 0/400% 300% no-repeat;filter:brightness(.93) saturate(.9) blur(.15px);opacity:.96;mask-image:linear-gradient(#000 82.5%,#000b 85.6%,transparent 87.4%)}
 .house-rabbit{position:absolute;aspect-ratio:1;visibility:hidden}
 .house-rabbit:before{content:"";position:absolute;left:18%;top:85%;width:64%;height:3.5%;background:#2b1f13a8;border-radius:50%;filter:blur(.8px)}
@@ -38,8 +43,9 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 .shrine-world{z-index:2}.valley-foreground{z-index:3}
 .shrine-gate,.valley-tree{position:absolute;max-width:none;object-fit:fill}
 .valley-tree{transform-origin:6% 92.105%;will-change:transform}
-.valley-air{position:absolute;inset:0;opacity:0;pointer-events:none}
+.valley-air{position:absolute;left:0;top:50.733%;width:100%;height:18.602%;opacity:0;pointer-events:none}
 .petal-stream{position:absolute;inset:0;pointer-events:none}
+.petal-stream canvas{position:absolute;inset:0;pointer-events:none;contain:strict}
 .flow-petal{position:absolute;left:0;top:0;width:7px;height:9.333px;background:url('/scene/layers/sakura-petal-1.svg') center/contain no-repeat;opacity:0;transform-origin:center;backface-visibility:hidden}
 .flow-petal:nth-child(3n+2){background-image:url('/scene/layers/sakura-petal-2.svg')}.flow-petal:nth-child(3n){background-image:url('/scene/layers/sakura-petal-3.svg')}
 .scene-shade{position:absolute;inset:0;z-index:-3;background:#081713;opacity:var(--scene-shade);pointer-events:none}
@@ -88,6 +94,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #f0d7b9;outline-offset:7p
 .book-invitation>p:last-child{font-size:16px;color:#f3e6d8}
 .journey-book{position:absolute;inset:0;z-index:7;opacity:var(--book-opacity);pointer-events:none}
 .journey-book canvas{width:100%;height:100%;display:block}
+.journey-book:not(.model-loaded) canvas{visibility:hidden}
 .journey-book-fallback{position:absolute;left:63%;top:22%;height:55%;width:auto;transform:perspective(1200px) rotateY(-22deg);box-shadow:18px 12px 32px #0005}
 .model-loaded .journey-book-fallback{display:none}
 .reading-chrome{position:absolute;top:0;left:0;width:100%;height:44px;z-index:13;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:15px;background:linear-gradient(#0b171dda,transparent);opacity:var(--page-opacity);pointer-events:none}

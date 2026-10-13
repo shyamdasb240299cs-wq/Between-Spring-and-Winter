@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
-const source = JSON.parse(fs.readFileSync(path.join(root, 'Assets and working files/waterfall-redesign/water-alignment-paths.json'), 'utf8'));
+const source = JSON.parse(fs.readFileSync(path.join(root, 'Assets and working files/home-smoothness/water-alignment-paths.json'), 'utf8'));
 const round = n => Number(n.toFixed(7));
 const routes = {};
 for (const [plane, definition] of Object.entries(source)) {
@@ -16,6 +16,7 @@ for (const [plane, definition] of Object.entries(source)) {
       clip: `polygon(${points.map(([x, y]) => `${round((x - left) / width * 100)}% ${round((y - top) / height * 100)}%`).join(',')})`,
       period: round(Math.max(.5, Math.min(1.65, height / (plane === 'background' ? 110 : 175)))),
       delay: round(-index * .173), opacity: plane === 'background' ? .4 : .52,
+      drift: round(Math.max(-8, Math.min(8, (points[Math.floor(points.length/2)][0] - points[0][0]) / Math.max(1,width) * 8))),
     };
   });
 }

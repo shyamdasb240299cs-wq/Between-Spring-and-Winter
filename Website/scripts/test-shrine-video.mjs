@@ -13,13 +13,17 @@ const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} must equal ${b}`);
 for(const [width,height] of [[1021,572],[1920,1080],[2560,1080],[390,844],[844,390]]){
   const origin={x:width*.66,y:height*.32,w:width*.14},target=filmLayout(width,height);
   const start=shrineVideoPose(0,origin,width,height),end=shrineVideoPose(SHRINE_FILM.zoomMs,origin,width,height);
-  near(start.scale,1);near(start.tx,0);near(start.ty,0);near(end.plateScale,1);near(end.plateX,0);near(end.plateY,0);near(end.plateOpacity,1);
+  near(start.scale,1);near(start.tx,0);near(start.ty,0);near(end.plateScale,1);near(end.plateX,0);near(end.plateY,0);
+  const held=shrineVideoPose(SHRINE_FILM.zoomDelayMs,origin,width,height);
+  near(held.scale,1);near(held.x,origin.x);near(held.y,origin.y);near(held.travel,0);
   for(let ms=0;ms<=SHRINE_FILM.zoomMs;ms+=10){
     const pose=shrineVideoPose(ms,origin,width,height);
     // Both gate representations share position and apparent roof width throughout.
     near(origin.x*pose.scale+pose.tx,target.x*pose.plateScale+pose.plateX);
     near(origin.y*pose.scale+pose.ty,target.y*pose.plateScale+pose.plateY);
     near(origin.w*pose.scale,target.gateWidth*pose.plateScale);
+    if(ms<=SHRINE_FILM.zoomDelayMs){near(pose.scale,1);near(pose.travel,0);}
+    assert.ok(pose.burnProgress>=0&&pose.burnProgress<=1);
     assert.ok(Number.isFinite(pose.scale));
   }
   assert.ok(target.width>=width-.001&&target.height>=height-.001,'Film fills the viewport without bars');
@@ -29,4 +33,4 @@ for(let t=0;t<=10;t+=1/240){const next=filmBlack(t,10);assert.ok(next>=black);bl
 near(filmBlack(8.7,10),0);near(filmBlack(10,10),1);near(filmBlack(0,NaN),0);
 const short=createEntryClock();beginEntryHold(short);advanceEntry(short,140);cancelEntryHold(short);advanceEntry(short,250);assert.equal(short.phase,'idle');assert.equal(short.committed,false);near(short.charge,0);
 const hold=createEntryClock();beginEntryHold(hold);advanceEntry(hold,699);assert.equal(hold.committed,false);advanceEntry(hold,1);assert.equal(hold.committed,true);assert.equal(beginEntryHold(hold),false);cancelEntryHold(hold);assert.equal(hold.committed,true);
-console.log('Shrine video passed: gate registration at 5 aspect ratios, exact ending plate, monotonic media-clock fade, short-hold cancellation and single commitment.');
+console.log('Shrine video passed: matched first gate, delayed approach, exact registration at five aspect ratios, full-frame ending, media-clock fade and single commitment.');

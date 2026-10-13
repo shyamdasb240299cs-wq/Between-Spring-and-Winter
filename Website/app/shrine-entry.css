@@ -15,7 +15,14 @@
 .entry-effects .entry-flash{z-index:3}
 .entry-effects .entry-glow{inset:auto;left:0;top:0;background:radial-gradient(ellipse,#fff4dce0, #ffb5cc66 22%,#e878ad25 43%,transparent 71%);mix-blend-mode:screen;will-change:transform,opacity}
 .entry-colour-wash{background:radial-gradient(ellipse at 65% 40%,#ffe1e4,#e874a6 60%,#552638);mix-blend-mode:screen;opacity:0}
-.entry-effects .entry-film-plate{z-index:2;background:#000;opacity:0;will-change:transform,opacity;overflow:hidden}
+.entry-effects .entry-film-window{z-index:2;opacity:0;overflow:hidden;contain:paint}
+.entry-effects .entry-film-plate{position:absolute;z-index:2;background:#000;opacity:1;will-change:transform;overflow:hidden}
+.entry-clip-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.entry-effects .entry-washi{z-index:1;opacity:0}
+.entry-effects .entry-burn{z-index:3}
+.entry-effects .entry-retry{position:absolute;inset:auto;left:50%;top:75%;transform:translate(-50%,-50%);z-index:5;padding:14px 22px;pointer-events:auto;background:#2c211cea;border:1px solid #e3c393;border-radius:4px;color:#fff1db;font-size:14px}
+.entry-retry[hidden]{display:none}
+.journey-screen[data-shrine-art=true] .layered-world *{animation-play-state:paused!important}
 .entry-film-plate video,.entry-film-plate img{position:absolute;display:block;max-width:none;object-fit:fill}
 .entry-film-poster{z-index:1}
 .entry-effects .entry-trails{z-index:3}

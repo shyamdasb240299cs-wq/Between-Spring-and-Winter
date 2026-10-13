@@ -39,6 +39,6 @@ Generated imagery and fonts are credited in Website/ASSET-CREDITS.md. The origin
 
 GitHub repository: https://github.com/shyamdasb240299cs-wq/Between-Spring-and-Winter
 
-Live website: https://between-spring-and-winter.vercel.app
+Live website: https://foraami.me
 
-The Vercel project uses Website as its root directory and deploys GitHub main-branch pushes automatically. Custom-domain registration is pending selection of an available name; aami.me is already registered by someone else.
+The Vercel project uses Website as its root directory and deploys GitHub main-branch pushes automatically. Its production custom domain is foraami.me.
