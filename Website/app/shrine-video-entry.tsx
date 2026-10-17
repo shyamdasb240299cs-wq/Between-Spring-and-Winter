@@ -27,7 +27,7 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     let frame=0,last=0,disposed=false,completed=false,locked=false,artTime=0,zoom=0,blackTime=0,lastBlack=0,stallTime=0,previousMedia=0;
     let width=innerWidth,height=screen.clientHeight,origin={x:0,y:0,w:0},phaseOrigin:{x:number;y:number;w:number}|null=null;
     let videoReady=false,presented=false,starting=false,requestedPlayback=false,failed=false,frameCallback:number|null=null,attempts=0,retryAt=0,lastVideoFrame=0,recordedOpening=false;
-    let filmUrl:string|null=null,preloading=false;
+    let waitingSince=0;
     const inertBefore=new Map<HTMLElement,boolean>();
     const oldOverflow=document.documentElement.style.overflow,oldPadding=document.body.style.paddingRight,oldBackground=document.body.style.backgroundColor;
     root.dataset.phase='idle';poster.style.opacity='1';retry.hidden=true;
@@ -53,21 +53,8 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     const lock=()=>{if(locked)return;locked=true;const scrollbar=innerWidth-document.documentElement.clientWidth;if(scrollbar)document.body.style.paddingRight=scrollbar+'px';document.documentElement.style.overflow='hidden';};
     const unlock=()=>{if(!locked)return;document.documentElement.style.overflow=oldOverflow;document.body.style.paddingRight=oldPadding;locked=false;};
     const sound=()=>{video.muted=zoom===0||!getAudioEnabled();video.volume=.55*(1-lastBlack);};
-    const loaded=()=>{if(disposed)return;videoReady=video.readyState>=2;root.dataset.videoReady=String(videoReady);wake();};
-    const videoError=()=>{if(disposed)return;failed=true;starting=false;root.dataset.videoError=String(video.error?.code??'playback');retry.hidden=!clock.committed;wake();};
-    const prepareFilm=async()=>{
-      if(disposed||preloading||filmUrl)return;
-      preloading=true;root.dataset.filmPreload='loading';
-      try{
-        const film=await preloadShrineFilm();
-        if(disposed)return;
-        filmUrl=URL.createObjectURL(film);video.src=filmUrl;video.load();
-        root.dataset.filmPreload='ready';root.dataset.filmBytes=String(film.size);wake();
-      }catch{
-        if(disposed)return;
-        root.dataset.filmPreload='failed';videoError();
-      }finally{preloading=false;}
-    };
+    const loaded=()=>{if(disposed)return;videoReady=video.readyState>=2;root.dataset.videoReady=String(videoReady);if(videoReady)root.dataset.filmPreload='ready';wake();};
+    const videoError=(reason?:Event|string)=>{if(disposed)return;failed=true;starting=false;root.dataset.videoError=typeof reason==='string'?reason:String(video.error?.code??'playback');root.dataset.filmPreload='failed';retry.hidden=!clock.committed;wake();};
     const present=(_now:number,metadata:VideoFrameCallbackMetadata)=>{
       frameCallback=null;if(disposed)return;presented=true;lastVideoFrame=performance.now();poster.style.opacity='0';root.dataset.videoPresented='true';
       root.dataset.mediaTime=metadata.mediaTime.toFixed(3);root.dataset.videoFrames=String(metadata.presentedFrames);
@@ -75,7 +62,7 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     };
     const trackFrames=()=>{if(frameCallback===null&&typeof video.requestVideoFrameCallback==='function')frameCallback=video.requestVideoFrameCallback(present);};
     const playback=()=>{
-      if(disposed||failed||starting||!filmUrl||!requestedPlayback||video.ended||!video.paused||performance.now()<retryAt)return;
+      if(disposed||failed||starting||!requestedPlayback||video.ended||!video.paused||performance.now()<retryAt)return;
       starting=true;attempts++;video.muted=true;trackFrames();
       // Start muted inline playback before the burn exposes its first pixels.
       void video.play().then(()=>{
@@ -83,8 +70,9 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
         videoReady=video.readyState>=2;failed=false;retry.hidden=true;attempts=0;root.dataset.videoError='';
         if(typeof video.requestVideoFrameCallback!=='function'&&videoReady){presented=true;poster.style.opacity='0';}
         wake();
-      }).catch(()=>{
+      }).catch((error:unknown)=>{
         starting=false;if(disposed||!requestedPlayback)return;
+        root.dataset.playbackError=error instanceof Error?error.name:String(error);
         retryAt=performance.now()+500;if(attempts>=3)videoError();else wake();
       });
     };
@@ -111,7 +99,13 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
         paper.style.opacity=String(artwork);glow.style.opacity=String(.65*(1-artwork));
         // Preserve the opening shot for the reveal instead of consuming the
         // approach invisibly during the charge and artwork treatment.
-        if(artTime>=SHRINE_FILM.artMs){requestedPlayback=true;playback();}
+        if(artTime>=SHRINE_FILM.artMs){
+          requestedPlayback=true;playback();
+          if(video.paused||!presented||(typeof video.requestVideoFrameCallback==='function'&&now-lastVideoFrame>1000)){
+            if(!waitingSince)waitingSince=now;
+            if(now-waitingSince>12000&&!failed)videoError('timeout');
+          }else waitingSince=0;
+        }
         // The reveal waits for a presented video frame, never a paused poster.
         const freshFrame=typeof video.requestVideoFrameCallback!=='function'||now-lastVideoFrame<450;
         if(artTime>=SHRINE_FILM.artMs&&videoReady&&presented&&freshFrame&&!failed&&!video.paused)zoom=Math.min(SHRINE_FILM.zoomMs,zoom+dt);
@@ -148,22 +142,22 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     function wake(){if(!frame&&!document.hidden&&!landscapeBlocked()&&!disposed&&!completed){last=performance.now();frame=requestAnimationFrame(tick);}}
     const start=()=>{
       if(hit.hidden||!shrineLink.anchor||!beginEntryHold(clock))return false;sync();lock();screen.dataset.shrineState='charging';
-      requestedPlayback=false;failed=false;retryAt=0;attempts=0;video.currentTime=0;presented=false;poster.style.opacity='1';if(!filmUrl)void prepareFilm();wake();return true;
+      requestedPlayback=false;failed=false;retryAt=0;attempts=0;waitingSince=0;video.currentTime=0;presented=false;poster.style.opacity='1';if(video.error)preloadShrineFilm(video);wake();return true;
     };
     const cancel=()=>{if(clock.committed)return;requestedPlayback=false;video.pause();cancelEntryHold(clock);wake();};
     const input=createShrineInput(hit,start,cancel,()=>clock.committed);
     const clicked=()=>{if(!clock.committed)start();};
     const keyDown=(event:KeyboardEvent)=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();if(!event.repeat)clicked();};
-    const retryFilm=()=>{failed=false;attempts=0;retryAt=0;requestedPlayback=true;retry.hidden=true;if(!filmUrl)void prepareFilm();else if(video.error)video.load();playback();wake();};
+    const retryFilm=()=>{video.pause();failed=false;starting=false;attempts=0;retryAt=0;waitingSince=0;requestedPlayback=true;retry.hidden=true;if(video.error||video.readyState===0)preloadShrineFilm(video);playback();wake();};
     const prevent=(event:Event)=>{if(locked)event.preventDefault();};
     const preventKeys=(event:KeyboardEvent)=>{if(locked&&['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(event.key))event.preventDefault();};
-    const hidden=()=>{if(document.hidden||landscapeBlocked()){input.abort();video.pause();cancelAnimationFrame(frame);frame=0;}else if(clock.phase!=='idle'){retryAt=0;playback();wake();}};
+    const hidden=()=>{waitingSince=0;if(document.hidden||landscapeBlocked()){input.abort();video.pause();cancelAnimationFrame(frame);frame=0;}else if(clock.phase!=='idle'){retryAt=0;playback();wake();}};
     const blur=()=>{if(!clock.committed)input.abort();};
     const mediaWake=()=>{videoReady=video.readyState>=2;wake();};
     video.addEventListener('loadeddata',loaded);video.addEventListener('canplay',loaded);video.addEventListener('error',videoError);
     for(const name of ['playing','pause','ended','waiting','stalled'])video.addEventListener(name,mediaWake);
     window.addEventListener('journey-audio-change',sound);
-    video.muted=true;void prepareFilm();if(video.readyState>=2)loaded();
+    root.dataset.filmPreload='loading';preloadShrineFilm(video);if(video.readyState>=2)loaded();
     hit.addEventListener('pointerdown',input.down);hit.addEventListener('pointerup',input.up);hit.addEventListener('pointercancel',input.up);hit.addEventListener('lostpointercapture',input.lost);
     hit.addEventListener('keydown',keyDown);hit.addEventListener('click',clicked);hit.addEventListener('blur',blur);hit.addEventListener('contextmenu',prevent);retry.addEventListener('click',retryFilm);
     document.addEventListener('wheel',prevent,{passive:false});document.addEventListener('touchmove',prevent,{passive:false});document.addEventListener('keydown',preventKeys);
@@ -171,7 +165,6 @@ export default function ShrineEntry({link,stage,onCommit,onComplete}:{link:RefOb
     const observer=new ResizeObserver(resize);observer.observe(screen);shrineLink.setSync(sync);resize();
     return()=>{
       disposed=true;requestedPlayback=false;cancelAnimationFrame(frame);if(frameCallback!==null)video.cancelVideoFrameCallback(frameCallback);video.pause();video.removeAttribute('src');video.load();
-      if(filmUrl)URL.revokeObjectURL(filmUrl);
       observer.disconnect();shrineLink.setSync(null);shrineLink.reset();input.dispose();
       video.removeEventListener('loadeddata',loaded);video.removeEventListener('canplay',loaded);video.removeEventListener('error',videoError);
       for(const name of ['playing','pause','ended','waiting','stalled'])video.removeEventListener(name,mediaWake);
