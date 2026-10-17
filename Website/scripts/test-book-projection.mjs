@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import {bookViewport} from '../app/book-motion.ts';
-for(const [width,height] of [[1265,712],[1365,634],[1920,1080],[2560,1440],[1025,1700],[854,393],[667,375],[900,500]]){
+import {typescriptUrl} from './load-typescript.mjs';
+const {bookViewport,bookPose}=await import(await typescriptUrl(new URL('../app/book-motion.ts',import.meta.url)));
+const {CLOSE_START,JOURNEY_LENGTH,bookSheets,flipPrint}=await import(await typescriptUrl(new URL('../app/journey-data.ts',import.meta.url)));
+for(const [width,height] of [[1265,712],[1365,634],[1920,1080],[2560,1440],[1025,1700],[854,393],[667,375],[900,500],[390,844],[360,640],[768,1024]]){
   const bounds=bookViewport(width,height,128);
   const camera=new THREE.PerspectiveCamera(9,width/height,2,80);
   const tangent=Math.tan(9*Math.PI/360),distance=Math.max(4.5/(2*tangent*((height-128)/height)),6.06/(2*tangent*((width-22)/height)));
@@ -23,5 +25,21 @@ for(const [width,height] of [[1265,712],[1365,634],[1920,1080],[2560,1440],[1025
       if(px>=0&&px<=width&&py>=0&&py<=height)assert.ok(px>=bounds.left&&px<=bounds.left+bounds.width&&py>=bounds.top&&py<=bounds.top+bounds.height,'Closed cover remains inside the buffer');
     }
   }
+  // Follow the actual left-to-right presentation, including the mid-turn arc.
+  for(let p=CLOSE_START+1.45;p<=JOURNEY_LENGTH;p+=.025){
+    const pose=bookPose(p,width,height),lens=new THREE.PerspectiveCamera(31,width/height,2,80);
+    lens.position.set(pose.cameraX,0,pose.cameraZ);lens.updateMatrixWorld();
+    const model=new THREE.Matrix4().compose(new THREE.Vector3(pose.closedX,pose.closedY+pose.lift,0),new THREE.Quaternion().setFromEuler(new THREE.Euler(pose.pitch,pose.yaw,pose.roll)),new THREE.Vector3().setScalar(pose.scale));
+    for(const x of [-1.5,1.5])for(const y of [-2.25,2.25])for(const z of [-.08,.08]){
+      const point=new THREE.Vector3(x,y,z).applyMatrix4(model).project(lens),px=(point.x+1)*width/2,py=(1-point.y)*height/2;
+      assert.ok(px>=0&&px<=width&&py>=0&&py<=height,`Closed book fits ${width}x${height} at ${p}`);
+      assert.ok(px>=bounds.left&&px<=bounds.left+bounds.width&&py>=bounds.top&&py<=bounds.top+bounds.height,'Both sides of the outro fit the GPU buffer');
+    }
+  }
+  assert.ok(bookPose(CLOSE_START+1.5,width,height).closedX<0,'Close on the left');
+  assert.ok(bookPose(JOURNEY_LENGTH,width,height).closedX>0,'Finish on the right');
+  assert.ok(Math.abs(bookPose(JOURNEY_LENGTH,width,height).yaw-(Math.PI-.1))<1e-6,'Finish with the front cover facing the camera');
 }
-console.log('Book projection passed: identical pixel positions and complete turning/closed-cover bounds at eight viewport shapes.');
+const fs=await import('node:fs/promises');
+for(const sheet of bookSheets)for(const page of [sheet.front,sheet.back])await fs.access(new URL('../public'+flipPrint(page.src),import.meta.url));
+console.log('Book projection passed: preload assets, camera projection and both outro sides at 11 desktop/mobile viewport shapes.');

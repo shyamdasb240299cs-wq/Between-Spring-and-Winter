@@ -3,12 +3,14 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { bookSheets, CLOSE_START, PAGE_STEP, READ_START, TURN_START, smooth, clamp } from "./journey-data";
+import { bookSheets, FLIP_START, TURN_START, flipPrint, smooth, clamp } from "./journey-data";
 import { PrintedPages } from "./printed-pages";
-import { CLOSED_BOOK_CENTER, settleBookYaw, bookViewport } from "./book-motion";
+import { CLOSED_BOOK_CENTER, bookPose, bookViewport } from "./book-motion";
 import {motionAudit} from './motion-audit';
+import type {BookSequence} from './book-sequence';
+import {createBookBinding,updateBookBinding} from './book-binding';
 
-export default function JourneyBook({position,readCursor}:{position:RefObject<number>;readCursor:RefObject<number|null>;paused:boolean}){
+export default function JourneyBook({position,bookPosition,sequence,onSequenceEnd}:{position:RefObject<number>;bookPosition:RefObject<number|null>;sequence:RefObject<BookSequence>;onSequenceEnd:(unit:number)=>void;paused:boolean}){
   const host=useRef<HTMLDivElement>(null);const [loaded,setLoaded]=useState(false);
   useEffect(()=>{
     const parent=host.current!,audit=motionAudit(parent);let renderer:THREE.WebGLRenderer;
@@ -24,10 +26,9 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
     const texture=(src:string,reverse=false)=>{const t=loader.load(src,()=>{dirty=true;});t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());if(reverse){t.repeat.x=-1;t.offset.x=1;}textures.push(t);return t;};
     const cloth=texture("/materials/binding-cloth.webp"),paper=texture("/materials/paper-stock.webp");
     cloth.wrapS=cloth.wrapT=paper.wrapS=paper.wrapT=THREE.RepeatWrapping;cloth.repeat.set(5,7);paper.repeat.set(4,6);
-    // Printed leaves load around the current spread instead of decoding the
-    // entire chapter and uploading every full-resolution page at startup.
+    // Small print textures are decoded and uploaded before the rapid sequence.
+    // Keep them resident so forward and reverse turns never upload mid-flip.
     let uploadFrame=0;
-    const visiblePrints=new Set<string>();
     const uploads:{map:THREE.Texture;resolve:()=>void;reject:(reason:Error)=>void}[]=[];
     function scheduleUpload(){return requestAnimationFrame(uploadNext);}
     const uploadNext=()=>{
@@ -35,15 +36,15 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
       try{renderer.initTexture(item.map);item.resolve();}catch(error){item.reject(error instanceof Error?error:new Error('Page upload failed'));}
       if(uploads.length)uploadFrame=scheduleUpload();
     };
-    const firstPrints=bookSheets.slice(0,3).flatMap(sheet=>[{src:sheet.front.src,reverse:false},{src:sheet.back.src,reverse:true}]);
+    const allPrints=bookSheets.flatMap((sheet,i)=>[{src:flipPrint(sheet.front.src),reverse:false,priority:i},{src:flipPrint(sheet.back.src),reverse:true,priority:i}]);
+    const firstPrints=allPrints.slice(0,6);
     function revealBook(){if(!dead&&programsReady&&!announcedLoaded&&prints.ready(firstPrints)){announcedLoaded=true;dirty=true;setLoaded(true);parent.dataset.loaded='true';}}
-    const prints=new PrintedPages(loader,Math.min(4,renderer.capabilities.getMaxAnisotropy()),src=>{if(visiblePrints.has(src))dirty=true;revealBook();},map=>new Promise<void>((resolve,reject)=>{uploads.push({map,resolve,reject});if(!uploadFrame)uploadFrame=scheduleUpload();}));
+    const prints=new PrintedPages(loader,Math.min(4,renderer.capabilities.getMaxAnisotropy()),src=>{dirty=true;revealBook();},map=>new Promise<void>((resolve,reject)=>{uploads.push({map,resolve,reject});if(!uploadFrame)uploadFrame=scheduleUpload();}));
     const binding=new THREE.MeshPhysicalMaterial({map:cloth,color:0x6b6b6b,bumpMap:cloth,bumpScale:.0009,roughness:.94,sheen:.12,sheenColor:0x3c4455,metalness:0});
     const pageEdges=new THREE.MeshStandardMaterial({color:0xeee6d8,roughness:1,bumpMap:paper,bumpScale:.0005});
-    const closedSpine=new THREE.Mesh(new THREE.CylinderGeometry(.0452,.0452,4.48,32,1,false,0,Math.PI),binding);closedSpine.position.set(-1.43,0,-.02135);closedSpine.visible=false;book.add(closedSpine);
-    // A continuous cloth web joins the original case spine to both boards.
-    // The rounded shells alone leave an open strip at their meeting edge.
-    const bindingWeb=new THREE.Mesh(new THREE.BoxGeometry(.125,4.48,.0905),binding);bindingWeb.position.set(-1.4675,0,-.02135);bindingWeb.castShadow=true;bindingWeb.receiveShadow=true;book.add(bindingWeb);
+    const bindingGeometry=createBookBinding(),bindingShell=new THREE.Mesh(bindingGeometry,binding);
+    bindingShell.castShadow=true;bindingShell.receiveShadow=true;book.add(bindingShell);
+    let bindingPose='';
     // Fill the bound edge and paper block between the boards when shut.
     const closedBlock=new THREE.Mesh(new THREE.BoxGeometry(2.858,4.358,.031),pageEdges);closedBlock.position.set(0,0,-.021);closedBlock.castShadow=true;closedBlock.receiveShadow=true;book.add(closedBlock);
     const sheets=bookSheets.map((sheet,i)=>{
@@ -51,7 +52,7 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
       (geometry.attributes.position as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage);(geometry.attributes.normal as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage);
       const fold={value:0},gutter={value:1};
       const print=(src:string,reverse:boolean,side:THREE.Side)=>{
-        const mat=prints.material(src,reverse,side);
+        const mat=prints.material(flipPrint(src),reverse,side);
         mat.onBeforeCompile=shader=>{shader.uniforms.uFold=fold;shader.uniforms.uGutter=gutter;shader.uniforms.uPaper={value:paper};shader.vertexShader="varying vec2 vSheetUv;\n"+shader.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nvSheetUv=uv;");shader.fragmentShader="uniform float uFold;uniform float uGutter;uniform sampler2D uPaper;varying vec2 vSheetUv;\n"+shader.fragmentShader.replace("#include <opaque_fragment>","outgoingLight *= (0.994 + 0.006*texture2D(uPaper,vSheetUv*vec2(4.,6.)).r) * (1.0 - (0.11+0.15*uGutter)*exp(-vSheetUv.x*18.0) - 0.10*sin(uFold*3.14159265)*pow(abs(vSheetUv.x-.5)*2.0,2.0));\n#include <opaque_fragment>");};
         return mat;
       };
@@ -65,38 +66,26 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
       back.customDepthMaterial=front.customDepthMaterial;
       const shadow=new THREE.Mesh(geometry,new THREE.ShadowMaterial({color:0x1a1814,opacity:.30,side:THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));shadow.receiveShadow=true;shadow.frustumCulled=false;
       const pivot=new THREE.Group();pivot.position.set(-1.43,0,-.014-i*.0012);pivot.add(front,back,edge,shadow);book.add(pivot);
-      return {pivot,front,back,geometry,edgeGeometry,fold,gutter,angles:new Float64Array(64),velocity:new Float64Array(64),lastTurn:-1,direction:1,settled:false,wasVisible:false};
+      return {pivot,front,back,geometry,edgeGeometry,fold,gutter,angles:new Float64Array(64),lastTurn:-1,direction:1,settled:false,wasVisible:false};
     });
-    const preloadSpread=(index:number, target=index)=>{
-      const requests:{src:string;reverse:boolean;priority:number}[]=[];
-      for(const i of new Set([index,index-1,index+1,index+2,index-2,target,target-1,target+1])){
-        const sheet=bookSheets[i];if(!sheet)continue;
-        for(const [page,reverse] of [[sheet.front,false],[sheet.back,true]] as const){
-          requests.push({src:page.src,reverse,priority:(i===index&&!reverse)||(i===index-1&&reverse)?0:Math.abs(i-index)+1});
-        }
-      }
-      prints.prioritize(requests);
-    };
-    preloadSpread(0);
-    let cover:THREE.Object3D|undefined,oldSpine:THREE.Object3D|undefined,joint:THREE.Object3D|undefined,rear:THREE.Group|undefined,frame=0,last=performance.now();
+    prints.preload(allPrints);
+    let cover:THREE.Object3D|undefined,rear:THREE.Group|undefined,frame=0,last=performance.now();
     new GLTFLoader().load("/manga/book-v3.glb",gltf=>{
       if(dead)return;
       gltf.scene.traverse(o=>{if(!(o instanceof THREE.Mesh))return;const m=o.material as THREE.MeshStandardMaterial;
-        if(/PageBlock|PageEdge|TopPageEdge|WovenEndband/.test(o.name))o.visible=false;
+        if(/PageBlock|PageEdge|TopPageEdge|WovenEndband|RoundedSpine|SpineFoil|BindingJoint/.test(o.name))o.visible=false;
         o.castShadow=true;o.receiveShadow=true;
-        if(o.name==="RoundedSpine"){o.scale.z*=.04425/.071;o.position.z-=.02225;}
-        if(o.name.startsWith("SpineFoil")){o.scale.z*=.04425/.071;o.position.z-=.02225;}
-        if(o.name==="BindingJoint")o.position.z-=.0445;
+        if(o.name==='BackBoard'){o.position.x=.02;o.scale.x*=2.90/3;}
+        if(o.name==='BackArt'){o.position.x=.02;o.scale.x*=2.84/2.97;}
         if(/^(FrontBoard|BackBoard|RoundedSpine|BindingJoint)$/.test(o.name)){o.material=binding;}
         if(o.name==="CoverArt"||o.name==="BackArt"){o.material=new THREE.MeshPhysicalMaterial({map:m.map,roughness:.74,clearcoat:.17,clearcoatRoughness:.64,ior:1.46,bumpMap:paper,bumpScale:.0005,side:m.side});m.dispose();}
       });
-      book.add(gltf.scene);cover=gltf.scene.getObjectByName("CoverHinge");oldSpine=gltf.scene.getObjectByName("RoundedSpine");
+      book.add(gltf.scene);cover=gltf.scene.getObjectByName("CoverHinge");
       if(cover){
         cover.position.set(-1.43,0,.0045);cover.children.forEach(child=>{child.position.x=1.45;if(child.name==="FrontBoard")child.scale.x*=2.90/3;if(child.name==="CoverArt")child.scale.x*=2.84/2.92;if(child.name==="InsideCover")child.visible=false;});
         const endpaperGeometry=new THREE.PlaneGeometry(2.88,4.35,64,3);endpaperGeometry.translate(1.44,0,0);const ep=endpaperGeometry.attributes.position;for(let i=0;i<ep.count;i++){const x=ep.getX(i);ep.setZ(i,-.021+.0015*Math.exp(-x*24));}endpaperGeometry.computeVertexNormals();
         const endpaperMaterial=new THREE.MeshBasicMaterial({color:0xf1e7d6,side:THREE.BackSide,toneMapped:false});endpaperMaterial.onBeforeCompile=s=>{s.vertexShader="varying vec2 vEndUv;\n"+s.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nvEndUv=uv;");s.fragmentShader="varying vec2 vEndUv;\n"+s.fragmentShader.replace("#include <opaque_fragment>","outgoingLight *= 1.0 - 0.24*exp(-vEndUv.x*18.0);\n#include <opaque_fragment>");};
         const blank=new THREE.Mesh(endpaperGeometry,endpaperMaterial);cover.add(blank);const blankShadow=new THREE.Mesh(endpaperGeometry,new THREE.ShadowMaterial({color:0x1a1814,side:THREE.BackSide,opacity:.30,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));blankShadow.receiveShadow=true;cover.add(blankShadow);
-        gltf.scene.updateMatrixWorld(true);joint=gltf.scene.getObjectByName("BindingJoint");if(joint)cover.attach(joint);
       }
       rear=new THREE.Group();rear.position.set(-1.43,0,-.049);gltf.scene.add(rear);gltf.scene.updateMatrixWorld(true);
       for(const name of ["BackBoard","BackArt"]){const obj=gltf.scene.getObjectByName(name);if(obj)rear.attach(obj);}
@@ -115,6 +104,7 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
     let reservedHeight=128,viewportWidth=parent.clientWidth,viewportHeight=parent.clientHeight;
     const resize=()=>{
       dirty=true;viewportWidth=parent.clientWidth;viewportHeight=parent.clientHeight;
+      renderer.shadowMap.enabled=viewportWidth>=900;
       const screen=parent.closest('.journey-screen'),footer=screen?.querySelector('.journey-footer')?.getBoundingClientRect().height??56,toolbar=screen?.querySelector('.reading-chrome')?.getBoundingClientRect().height??44;
       reservedHeight=Math.max(128,2*(footer+8),2*(toolbar+8));
       // Retain the full-stage projection and pixel density, but allocate the
@@ -124,69 +114,57 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
       camera.setViewOffset(viewportWidth,viewportHeight,left,top,width,height);
       if(audit){parent.dataset.bufferPixels=String(renderer.domElement.width*renderer.domElement.height);parent.dataset.fullBufferPixels=String(Math.round(viewportWidth*renderer.getPixelRatio())*Math.round(viewportHeight*renderer.getPixelRatio()));}
     };resize();const observer=new ResizeObserver(resize);observer.observe(parent);
-    const portrait=matchMedia("(max-width: 1024px) and (orientation: portrait)");
     const reduced=matchMedia("(prefers-reduced-motion: reduce)");
     const pivotCenter=new THREE.Vector3(),originalCenter=new THREE.Vector3(),presentationRotation=new THREE.Quaternion();
-    let previous=-1,rendered=0,frames=0,preparedSpread='',presentationYaw=-.48,displayRaw=0,lastPose='';
+    let previous=-1,rendered=0,frames=0,lastPose='';
+    let lastDraw=0,drawIntervals=0,drawTime=0,slowDraws=0,maxDrawWork=0;
     const tick=()=>{
       if(dead)return;frame=requestAnimationFrame(tick);const now=performance.now();const dt=Math.min((now-last)/1000,.064);last=now;
       const requestedP=position.current;
-      const p=requestedP>CLOSE_START&&displayRaw<bookSheets.length+1-.0001?CLOSE_START:requestedP,mobile=false,opening=smooth(p,4.72,5.72),zoom=smooth(p,5.52,READ_START),close=smooth(p,CLOSE_START+.12,CLOSE_START+1.2),finish=smooth(p,CLOSE_START+1.2,CLOSE_START+2.15);
-      const moving=Math.abs(p-previous)>.0001,settling=sheets.some(s=>s.pivot.visible&&!s.settled);
-      if(document.hidden||p<4.2||portrait.matches||!programsReady||!announcedLoaded)return;
+      if(document.hidden||!programsReady||!announcedLoaded)return;
       const auditStart=audit?.start(now)??0;
-      const finalTurn=smooth(p,CLOSE_START+2.65,CLOSE_START+3.65);
-      const targetYaw=THREE.MathUtils.lerp(THREE.MathUtils.lerp(-.48,.025,opening),Math.PI-.10,finalTurn);
-      const rotating=Math.abs(presentationYaw-targetYaw)>.0001;
-      const targetRaw=clamp((requestedP-READ_START)/PAGE_STEP,0,bookSheets.length+1);
-      const following=Math.abs(targetRaw-displayRaw)>.0001;
-      if(!dirty&&!moving&&!settling&&!rotating&&!following){audit?.end(auditStart);return;}
-      const proposed=displayRaw+Math.sign(targetRaw-displayRaw)*Math.min(Math.abs(targetRaw-displayRaw),dt*5);
-      const candidate=Math.min(bookSheets.length,Math.floor(proposed)),targetIndex=Math.min(bookSheets.length,Math.floor(targetRaw));
-      const prepareKey=`${candidate}:${targetIndex}`;
-      if(prepareKey!==preparedSpread){preparedSpread=prepareKey;preloadSpread(candidate,targetIndex);}
-      const required:{src:string;reverse:boolean}[]=[];
-      for(const i of [candidate-1,candidate,candidate+1]){const sheet=bookSheets[i];if(sheet)required.push({src:sheet.front.src,reverse:false},{src:sheet.back.src,reverse:true});}
-      const ready=prints.ready(required);
-      parent.dataset.waiting=String(!ready);if(ready)displayRaw=proposed;
-      if(!ready&&!dirty&&!moving&&!settling&&!rotating){audit?.end(auditStart);return;}
+      const ready=prints.ready(allPrints);
+      const completedAt=sequence.current.step(requestedP,dt,ready,reduced.matches);
+      if(completedAt!==null)onSequenceEnd(completedAt);
+      const p=sequence.current.position,displayRaw=sequence.current.cursor;
+      const following=sequence.current.active;
+      if(requestedP<4.2&&!following)return;
+      const poseState=bookPose(p,viewportWidth,viewportHeight,reservedHeight);
+      const {opening,zoom,close,retreat:finish}=poseState;
+      if(bookPosition.current!==p){
+        bookPosition.current=p;window.dispatchEvent(new Event('journey-book-update'));
+      }
+      const moving=Math.abs(p-previous)>.0001;
+      if(!dirty&&!moving&&!following){audit?.end(auditStart);return;}
+      parent.dataset.waiting=String(!ready&&requestedP>=FLIP_START);
+      parent.dataset.preloaded=String(ready);
       const raw=displayRaw,index=Math.min(bookSheets.length,Math.floor(raw)),fraction=raw-index;
-      if(readCursor.current!==raw){readCursor.current=raw;window.dispatchEvent(new Event('journey-book-update'));}
-      if(cover){cover.rotation.y=-Math.PI*opening;cover.position.z=THREE.MathUtils.lerp(.0045,-.049,opening);}closedSpine.visible=opening<.035||close>.7;closedSpine.rotation.y=close>.7?0:Math.PI;closedBlock.visible=opening<.025;bindingWeb.visible=opening<.015;if(oldSpine)oldSpine.visible=opening<.3&&close<=.7;if(joint)joint.visible=opening<.6;
+      if(cover){cover.rotation.y=-Math.PI*opening;cover.position.z=THREE.MathUtils.lerp(.0045,-.049,opening);}
+      closedBlock.visible=opening<.025||close>.975;closedBlock.position.x=-2.86*close;
+      const nextBindingPose=`${opening}:${close}`;
+      if(nextBindingPose!==bindingPose){updateBookBinding(bindingGeometry,opening,close);bindingPose=nextBindingPose;}
       if(rear){rear.rotation.y=-Math.PI*close;rear.position.z=THREE.MathUtils.lerp(-.049,.0063,close);}
       let geometryChanged=false;
-      visiblePrints.clear();
       sheets.forEach((sheet,i)=>{
         // Only the exposed spread and the turning leaf can contribute pixels.
         sheet.pivot.visible=opening>.015&&(i===index-1||i===index||(i===index+1&&fraction>TURN_START));
-        if(sheet.pivot.visible){visiblePrints.add(bookSheets[i].front.src);visiblePrints.add(bookSheets[i].back.src);}
         const turn=raw>=i+1?1:raw<i?0:smooth(raw-i,TURN_START,1),change=turn-sheet.lastTurn;
         if(Math.abs(change)>.00001&&sheet.lastTurn>=0)sheet.direction=Math.sign(change);
         sheet.fold.value=turn;sheet.pivot.position.z=THREE.MathUtils.lerp(-.014-i*.0012,-.0268+i*.0012,turn);
         const gutterDepth=Math.max(.001,sheet.pivot.position.z+.0295);sheet.gutter.value=clamp(gutterDepth/.017);
-        const base=Math.PI*turn,bend=Math.sin(base),dir=sheet.direction,flat=turn===0||turn===1;
+        const base=Math.PI*turn,bend=Math.sin(base),dir=sheet.direction;
         sheet.front.visible=turn!==1||!sheet.settled;sheet.back.visible=turn!==0||!sheet.settled;
         sheet.front.castShadow=sheet.front.visible;sheet.back.castShadow=!sheet.front.visible;
-        if(!sheet.pivot.visible){sheet.angles.fill(base);sheet.velocity.fill(0);sheet.lastTurn=turn;sheet.settled=true;sheet.wasVisible=false;return;}
+        if(!sheet.pivot.visible){sheet.angles.fill(base);sheet.lastTurn=turn;sheet.settled=true;sheet.wasVisible=false;return;}
         if(!sheet.wasVisible){sheet.settled=false;sheet.wasVisible=true;}
         if(sheet.settled&&Math.abs(change)<.00001)return;
-        const forceFlat=flat&&(raw>i+1.16||raw<i-.16||sheet.lastTurn<0);
-        let maxError=0;
-        if(forceFlat){sheet.angles.fill(base);sheet.velocity.fill(0);}
-        else {
-          // Inextensible strips respond to torsion springs; drag lets the free edge settle.
-          const steps=Math.max(1,Math.ceil(dt*120)),step=dt/steps;
-          for(let k=0;k<steps;k++)for(let j=0;j<64;j++){
-            const u=j/63,goal=base-dir*bend*(.55*u-.18*Math.sin(u*2*Math.PI));
-            const neighbor=(sheet.angles[Math.max(0,j-1)]+sheet.angles[Math.min(63,j+1)]-2*sheet.angles[j])*30;
-            sheet.velocity[j]+=(220*(goal-sheet.angles[j])+neighbor-30*sheet.velocity[j])*step;
-            sheet.angles[j]=clamp(sheet.angles[j]+sheet.velocity[j]*step,0,Math.PI);
-            if(j===0){sheet.angles[j]=base;sheet.velocity[j]=0;}
-            maxError=Math.max(maxError,Math.abs(goal-sheet.angles[j]),Math.abs(sheet.velocity[j])*.1);
-          }
-          if(flat&&maxError<.0005){sheet.angles.fill(base);sheet.velocity.fill(0);}
+        // A deterministic curl stays attached to the scroll even at riffle speed.
+        // There is no delayed spring simulation left to catch up after a leaf turns.
+
+        for(let j=0;j<64;j++){
+          const u=j/63;
+          sheet.angles[j]=clamp(base-dir*bend*(.38*u-.12*Math.sin(u*2*Math.PI)),0,Math.PI);
         }
-        if(sheet.settled&&Math.abs(change)<.00001)return;
         const a=sheet.geometry.attributes.position;
         for(let row=0;row<4;row++){
           const y=2.18-row*4.36/3;let x=0,z=0;
@@ -200,40 +178,46 @@ export default function JourneyBook({position,readCursor}:{position:RefObject<nu
         const edgePoint=(dest:number,source:number)=>{for(let face=0;face<2;face++){const off=(face?-.00055:.00055);e.setXYZ(dest+face,a.getX(source)+n.getX(source)*off,a.getY(source)+n.getY(source)*off,a.getZ(source)+n.getZ(source)*off);}};
         for(let col=0;col<65;col++){edgePoint(col*2,col);edgePoint(130+col*2,195+col);}
         for(let row=0;row<4;row++)edgePoint(260+row*2,row*65+64);
-        e.needsUpdate=true;sheet.edgeGeometry.computeVertexNormals();sheet.lastTurn=turn;sheet.settled=forceFlat||maxError<.0005;
+        e.needsUpdate=true;sheet.edgeGeometry.computeVertexNormals();sheet.lastTurn=turn;sheet.settled=true;
         sheet.front.visible=turn!==1||!sheet.settled;sheet.back.visible=turn!==0||!sheet.settled;
         sheet.front.castShadow=sheet.front.visible;sheet.back.castShadow=!sheet.front.visible;
       });
-      let focus=-1.43;
-      if(mobile){focus=index>2?-2.86*(1-smooth(fraction,.3,.43)):0;if(index===bookSheets.length)focus=-2.86;}
-      const nextFov=THREE.MathUtils.lerp(31,9,zoom)*(1-finish)+31*finish;if(camera.fov!==nextFov){camera.fov=nextFov;camera.updateProjectionMatrix();}
-      const tangent=Math.tan(camera.fov*Math.PI/360),fitHeight=4.5/(2*tangent*(Math.max(80,viewportHeight-reservedHeight)/viewportHeight)),fitWidth=(mobile?3.04:6.06)/(2*tangent*((viewportWidth-22)/viewportHeight)),fullZ=Math.max(fitHeight,fitWidth);
-      camera.position.set(THREE.MathUtils.lerp(0,focus,zoom)*(1-finish),0,THREE.MathUtils.lerp(THREE.MathUtils.lerp(12.8,fullZ,zoom),12.8,finish));
-      const startX=mobile?0:2.25,baseYaw=THREE.MathUtils.lerp(-.48,.025,opening);
-      const scale=THREE.MathUtils.lerp(THREE.MathUtils.lerp(mobile?.6:1,1,zoom),.88,finish);
-      // The closing hinges leave the book to the left of its original origin.
-      // Recenter the contents inside a presentation pivot so the final half-turn
-      // rotates through the book's center without swinging across the copy.
-      pivotCenter.set(CLOSED_BOOK_CENTER.x*close,0,CLOSED_BOOK_CENTER.z*close);book.position.copy(pivotCenter).negate();
-      presentation.rotation.set((1-zoom)*.065+finish*.035,baseYaw,.018*(1-opening)-finish*.025);
+      camera.position.set(poseState.cameraX,0,poseState.cameraZ+poseState.flipPullback);
+      // Recenter continuously as the rear board closes onto the left stack.
+      // The subsequent half-turn rotates around the shut book's own center.
+      pivotCenter.set(CLOSED_BOOK_CENTER.x*close,0,CLOSED_BOOK_CENTER.z*close);
+      book.position.copy(pivotCenter).negate();
+      presentation.rotation.set(poseState.pitch,poseState.yaw,poseState.roll);
       presentationRotation.copy(presentation.quaternion);
-      originalCenter.copy(pivotCenter).multiplyScalar(scale).applyQuaternion(presentationRotation);originalCenter.x+=startX*(1-zoom);
-      const finalViewWidth=2*Math.tan(31*Math.PI/360)*12.8*camera.aspect;
-      presentation.position.set(THREE.MathUtils.lerp(originalCenter.x,finalViewWidth*.24,finish),THREE.MathUtils.lerp(originalCenter.y,0,finish),THREE.MathUtils.lerp(originalCenter.z,0,finish));
-      if(p<CLOSE_START+2.3)presentationYaw=baseYaw;
-      else presentationYaw=settleBookYaw(presentationYaw,targetYaw,dt,reduced.matches);
-      presentation.rotation.y=presentationYaw;presentation.scale.setScalar(scale);
+      originalCenter.copy(pivotCenter).multiplyScalar(poseState.scale).applyQuaternion(presentationRotation);
+      originalCenter.x+=poseState.startX;
+      originalCenter.y+=poseState.startY;
+      presentation.position.set(
+        THREE.MathUtils.lerp(originalCenter.x,poseState.closedX,finish),
+        THREE.MathUtils.lerp(originalCenter.y,poseState.closedY,finish)+poseState.lift,
+        originalCenter.z*(1-finish));
+      presentation.scale.setScalar(poseState.scale);
+      parent.dataset.sequence=sequence.current.phase;
+      parent.dataset.phase=close>0?(poseState.crossing>0?'outro-turn':'closing'):raw>0?'flipping':opening>.99?'letter':opening>0?'opening':'closed';
+      parent.dataset.centerX=String(presentation.position.x);
       parent.dataset.spread=String(index);parent.dataset.turn=String(Math.round(fraction*1000)/1000);parent.dataset.left=index===0?"Blank":bookSheets[index-1].back.label;parent.dataset.right=index===bookSheets.length?"Blank":bookSheets[index].front.label;
       parent.dataset.settling=String(sheets.some(sheet=>sheet.pivot.visible&&!sheet.settled));
-      const pose=[opening,zoom,close,finish,presentationYaw,index].map(value=>value.toFixed(5)).join(':');
+      const pose=[opening,zoom,close,finish,poseState.crossing,poseState.yaw,index].map(value=>value.toFixed(5)).join(':');
       if(!dirty&&!geometryChanged&&pose===lastPose){previous=p;audit?.end(auditStart);return;}
       renderer.shadowMap.needsUpdate=geometryChanged||pose!==lastPose;renderer.render(scene,camera);previous=p;dirty=false;lastPose=pose;frames++;
+      if(audit){
+        const interval=now-lastDraw;lastDraw=now;
+        if(interval>0&&interval<100){drawIntervals++;drawTime+=interval;if(interval>25)slowDraws++;}
+        maxDrawWork=Math.max(maxDrawWork,performance.now()-auditStart);
+        parent.dataset.drawFps=drawTime?(1000*drawIntervals/drawTime).toFixed(1):'0';
+        parent.dataset.slowDraws=String(slowDraws);parent.dataset.maxDrawWork=maxDrawWork.toFixed(2);
+      }
       audit?.end(auditStart);
       parent.dataset.rotation=String(presentation.rotation.y);parent.dataset.renders=String(frames);
       if(now-rendered>500){parent.dataset.drawCalls=String(renderer.info.render.calls);parent.dataset.printsLoaded=String(prints.loadedCount);parent.dataset.printsFailed=String(prints.failedCount);rendered=now;}
     };tick();
-    return()=>{dead=true;readCursor.current=null;cancelAnimationFrame(frame);cancelAnimationFrame(uploadFrame);prints.dispose();for(const item of uploads)item.reject(new Error('Book disposed'));uploads.length=0;observer.disconnect();scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();o.customDepthMaterial?.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material]){(m as THREE.MeshStandardMaterial).map?.dispose();m.dispose();}}});textures.forEach(t=>t.dispose());environment.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();};
-  },[position,readCursor]);
+    return()=>{dead=true;bookPosition.current=null;cancelAnimationFrame(frame);cancelAnimationFrame(uploadFrame);prints.dispose();for(const item of uploads)item.reject(new Error('Book disposed'));uploads.length=0;observer.disconnect();scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();o.customDepthMaterial?.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material]){(m as THREE.MeshStandardMaterial).map?.dispose();m.dispose();}}});textures.forEach(t=>t.dispose());environment.dispose();pmrem.dispose();renderer.dispose();renderer.domElement.remove();};
+  },[position,bookPosition,sequence,onSequenceEnd]);
   return <div className={"journey-book "+(loaded?"model-loaded":"")} ref={host} aria-hidden="true"><img src="/manga/cover-front.webp" alt="" className="journey-book-fallback"/></div>;
 }
 

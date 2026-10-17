@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1500" viewBox="0 0 1000 1500">
+  <rect width="1000" height="1500" fill="#f3eadb"/>
+  <g fill="#514c44" font-family="Georgia,serif">
+    <text x="120" y="195" font-family="Arial,sans-serif" font-size="18" letter-spacing="5">FROM SHYAMU, TO AAMI</text>
+    <path d="M120 236H265" stroke="#b59d80" stroke-width="1"/>
+    <text x="120" y="355" font-size="65" font-style="italic">My dearest Aami,</text>
+    <g font-size="35">
+      <text x="120" y="465">If love could fold the miles between us,</text>
+      <text x="120" y="522">I would be at your door before</text>
+      <text x="120" y="579">the morning light.</text>
+      <text x="120" y="690">Until then, I made you a little world</text>
+      <text x="120" y="747">of paper: a day without goodbyes,</text>
+      <text x="120" y="804">where nothing hurries us, and every</text>
+      <text x="120" y="861">small moment has room for you.</text>
+      <text x="120" y="972">For your birthday, and all the days</text>
+      <text x="120" y="1029">after it, this is my heart, asking</text>
+      <text x="120" y="1086">to sit beside yours.</text>
+    </g>
+    <text x="120" y="1235" font-size="47" font-style="italic">Ever yours, Shyamu.</text>
+    <text x="120" y="1365" font-size="24" font-style="italic" fill="#948572">For all the days I dream of us.</text>
+  </g>
+</svg>

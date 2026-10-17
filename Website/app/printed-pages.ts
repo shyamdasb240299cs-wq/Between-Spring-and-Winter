@@ -10,6 +10,7 @@ export class PrintedPages {
   private pending = 0;
   private dead = false;
   private wanted = new Set<string>();
+  private retained: PrintRequest[] = [];
   private timers = new Set<ReturnType<typeof setTimeout>>();
   private decoded = new Map<string, TexImageSource>();
   private bitmaps = new Set<ImageBitmap>();
@@ -43,7 +44,14 @@ export class PrintedPages {
     return requests.every(request => this.entries.get(`${request.src}:${request.reverse}`)?.status === "ready");
   }
 
+  /** Decode and upload a complete lightweight chapter before its first turn. */
+  preload(requests: PrintRequest[]) {
+    this.retained = requests;
+    this.prioritize([]);
+  }
+
   prioritize(requests: PrintRequest[]) {
+    requests = [...this.retained, ...requests];
     this.wanted = new Set(requests.map(request => `${request.src}:${request.reverse}`));
     // Keep only the neighboring spreads resident on the GPU.
     for (const [key,entry] of this.entries) {
