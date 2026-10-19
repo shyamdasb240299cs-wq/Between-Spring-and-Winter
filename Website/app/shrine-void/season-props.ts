@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {groundHeight,islandDistance,random,type SeasonLayout} from './season-layout';
+import {groundHeight,islandDistance,ISLAND_SCALE,random,type SeasonLayout} from './season-layout';
 import type {SeasonId} from './seasons';
 import {createCampfireFlames} from './season-fire';
 import type {GroundMaps} from './season-terrain';
@@ -7,6 +7,7 @@ import {createCoastalPlants} from './season-coastal-plants';
 import {coastalArrangement} from './season-coastal-arrangement';
 import {createBeachFurniture} from './season-beach-furniture';
 import {createScenePickup,type PickupItem} from './scene-pickup';
+import {createExpandedScenery} from './season-expanded-scenery';
 
 export interface PropInteraction {kind:'ball'|'lantern';label:string;point:THREE.Vector3;}
 
@@ -75,7 +76,7 @@ export function createSeasonProps(id:SeasonId,layout:SeasonLayout,models:Record<
     cloth(cx-1.25,cz+1.05,.85,1.65,0x377f92,-.20,true);
     // Loose tide-line clusters, never an evenly spaced row; the scanned bases sit in sand.
     for(let n=0;n<24;n++){
-      const a=random(n+412)*6.28,r=7.1+random(n+29)*1.6,x=Math.cos(a)*r,z=-3+Math.sin(a)*r/.83;
+      const a=random(n+412)*6.28,r=(7.1+random(n+29)*1.6)*ISLAND_SCALE,x=Math.cos(a)*r,z=-3+Math.sin(a)*r/.83;
       if(groundHeight(id,x,z)<.035||Math.hypot(x-cx,z-cz)<2.1)continue;
       const shell=model('shell',x,z,.045+random(n+73)*.075,random(n+53)*6.28,-.005);
       if(shell){const normal=new THREE.Vector3(groundHeight(id,x-.05,z)-groundHeight(id,x+.05,z),.1,groundHeight(id,x,z-.05)-groundHeight(id,x,z+.05)).normalize();shell.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),normal));}
@@ -144,6 +145,7 @@ export function createSeasonProps(id:SeasonId,layout:SeasonLayout,models:Record<
       detail.attach(object);
     }
   }
+  const expanded=createExpandedScenery(id,layout,models);group.add(expanded);solids.push(...expanded.children);
   const ballObstacles=[...layout.obstacles,...contactObstacles];
   // Some scanned pebbles have wider silhouettes than their nominal placement size.
   // Resolve their real bounds once, so the starting arrangement is clear too.

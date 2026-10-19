@@ -30,7 +30,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
   const count=mobile?8500:26000,blades=new THREE.InstancedMesh(geometry,material,count);blades.receiveShadow=true;
   let placed=0;
   for(let n=0;n<count*3&&placed<count;n++){
-    const a=random(n+903)*Math.PI*2,r=Math.sqrt(random(n+661))*15,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
+    const a=random(n+903)*Math.PI*2,r=Math.sqrt(random(n+661))*23,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
     object.position.set(x,groundHeight('spring',x,z)-.004,z);object.rotation.set(0,random(n)*6.28,0);object.scale.setScalar(.8+random(n+90)*.5);object.updateMatrix();blades.setMatrixAt(placed++,object.matrix);
   }
   blades.count=placed;blades.computeBoundingSphere();group.add(blades);
@@ -45,7 +45,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
   const cloverMaterial=new THREE.MeshStandardMaterial({color:0x527f23,roughness:.93,side:THREE.DoubleSide});
   const clover=new THREE.InstancedMesh(cloverGeometry,cloverMaterial,mobile?180:520);clover.receiveShadow=true;placed=0;
   for(let n=0;n<clover.instanceMatrix.count*4&&placed<clover.instanceMatrix.count;n++){
-    const a=random(n+144)*6.28,r=Math.sqrt(random(n+285))*16,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
+    const a=random(n+144)*6.28,r=Math.sqrt(random(n+285))*23,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
     object.position.set(x,groundHeight('spring',x,z)+.015,z);object.rotation.set(0,random(n+11)*6.28,0);object.scale.setScalar(.8+random(n+88)*1.1);object.updateMatrix();clover.setMatrixAt(placed,object.matrix);colour.setHSL(.21+random(n)*.04,.4,.36+random(n+2)*.12);clover.setColorAt(placed++,colour);
   }
   clover.count=placed;clover.computeBoundingSphere();group.add(clover);
@@ -60,7 +60,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
   const flowerCentreMaterial=new THREE.MeshStandardMaterial({color:0xe2b73e,roughness:1});
   const flowerCount=mobile?35:100,flowers=new THREE.InstancedMesh(flowerGeometry,flowerMaterial,flowerCount),centres=new THREE.InstancedMesh(flowerCentreGeometry,flowerCentreMaterial,flowerCount);flowers.receiveShadow=centres.receiveShadow=true;placed=0;
   for(let n=0;n<flowerCount*4&&placed<flowerCount;n++){
-    const a=random(n+562)*6.28,r=Math.sqrt(random(n+851))*16,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
+    const a=random(n+562)*6.28,r=Math.sqrt(random(n+851))*23,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
     object.position.set(x,groundHeight('spring',x,z),z);object.rotation.set((random(n+44)-.5)*.2,random(n+48)*6.28,0);object.scale.setScalar(.75+random(n+29)*.65);object.updateMatrix();flowers.setMatrixAt(placed,object.matrix);centres.setMatrixAt(placed++,object.matrix);
   }
   flowers.count=centres.count=placed;flowers.computeBoundingSphere();centres.computeBoundingSphere();group.add(flowers,centres);
@@ -73,7 +73,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
   const nearbyTrees=layout.trees.filter(tree=>Math.hypot(tree.x,tree.z+3)<30);
   for(let n=0;n<petals.instanceMatrix.count*3&&placed<petals.instanceMatrix.count;n++){
     const a=random(n+503)*6.28,cluster=nearbyTrees.length>0&&random(n+41)<.48,tree=nearbyTrees[n%Math.max(1,nearbyTrees.length)];
-    const r=Math.sqrt(random(n+811))*(cluster?4.6:17),x=(cluster?tree.x:0)+Math.cos(a)*r,z=(cluster?tree.z:-3)+Math.sin(a)*r;if(!clear(x,z))continue;
+    const r=Math.sqrt(random(n+811))*(cluster?4.6:23),x=(cluster?tree.x:0)+Math.cos(a)*r,z=(cluster?tree.z:-3)+Math.sin(a)*r;if(!clear(x,z))continue;
     object.position.set(x,groundHeight('spring',x,z)+.075+random(n+97)*.045,z);object.rotation.set(0,random(n+45)*6.28,0);const size=.023+random(n+6)*.024;object.scale.set(size,size*.7,size*.73);object.updateMatrix();petals.setMatrixAt(placed,object.matrix);colour.setHSL(.95+random(n)*.035,.24,.79+random(n+3)*.14);petals.setColorAt(placed++,colour);
   }
   petals.count=placed;petals.computeBoundingSphere();group.add(petals);

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {Reflector} from 'three/addons/objects/Reflector.js';
-import {groundHeight,groundGLSL,random} from './season-layout';
+import {groundHeight,groundGLSL,ISLAND_SCALE,random} from './season-layout';
 
 /** Analytic world-space swells, shallow surf, and bounded foot-contact waves. */
 const surface=`
@@ -74,7 +74,7 @@ export function createCoastalOcean(scene:THREE.Scene,sky:THREE.Texture,normals:T
   const dropMaterial=new THREE.MeshStandardMaterial({color:0xc4f5ef,roughness:.18,transparent:true,opacity:.64,depthWrite:false});
   dropMaterial.onBeforeCompile=s=>{Object.assign(s.uniforms,uniforms);s.vertexShader=`attribute vec2 spraySeed;${surface}\n`+s.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
     vec4 hit=impacts[int(floor(spraySeed.x*6.))];float age=oceanTime-hit.z;vec2 centre=hit.xy;float power=1.+spraySeed.y*.6;
-    if(spraySeed.x<.65){float angle=spraySeed.y*6.2831853;float edge=1.+sin(angle*3.+.6)*.045+sin(angle*5.-1.2)*.025;float radius=9.65+(spraySeed.x-.325)*1.7;centre=vec2(cos(angle)*radius*edge,-3.+sin(angle)*radius*edge/.83);float phase=(radius-7.95)*1.65+oceanTime*1.30+sin(centre.y*.37+centre.x*.21)*.65;age=fract(oceanTime*.8+spraySeed.x*41.)*1.25;power=sin(phase)>.45?2.25:0.;}
+    if(spraySeed.x<.65){float angle=spraySeed.y*6.2831853;float edge=1.+sin(angle*3.+.6)*.045+sin(angle*5.-1.2)*.025;float radius=9.65+(spraySeed.x-.325)*1.7;centre=vec2(cos(angle)*radius*edge*${ISLAND_SCALE.toFixed(2)},-3.+sin(angle)*radius*edge*${ISLAND_SCALE.toFixed(2)}/.83);float phase=(radius-7.95)*1.65+oceanTime*1.30+sin(centre.y*.37+centre.x*.21)*.65;age=fract(oceanTime*.8+spraySeed.x*41.)*1.25;power=sin(phase)>.45?2.25:0.;}
     float t=clamp(age,0.,.6),h=power*t-4.9*t*t;float alive=step(0.,age)*step(.001,h);transformed*=alive;transformed+=vec3(centre.x+cos(spraySeed.y*40.)*t*.5,.06+max(0.,h),centre.y+sin(spraySeed.y*40.)*t*.5);`);};
   const spray=new THREE.Mesh(dropGeometry,dropMaterial);spray.frustumCulled=false;spray.userData.skipOceanReflection=true;scene.add(spray);
   let slot=0,lastStep=0,lastX=0,lastZ=0;

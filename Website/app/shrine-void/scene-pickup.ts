@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {groundHeight,type SeasonLayout} from './season-layout';
+import {groundHeight,islandDistance,ISLAND_SCALE,WALK_RADIUS,type SeasonLayout} from './season-layout';
 import type {SeasonId} from './seasons';
 
 export interface PickupItem{object:THREE.Object3D;label:string;onLift?:()=>void;onDrop?:()=>void;}
@@ -28,7 +28,7 @@ export function createScenePickup(id:SeasonId,layout:SeasonLayout,items:PickupIt
     // another prop, a tree, deep water, or beyond the reachable walking circle.
     for(const distance of [1.05+radius,1.4+radius,1.8+radius])for(const angle of [0,-.28,.28,-.6,.6,-.95,.95]){
       const x=camera.position.x-Math.sin(yaw+angle)*distance,z=camera.position.z-Math.cos(yaw+angle)*distance;
-      if(Math.hypot(x,z+3)+radius>8.45)continue;
+      if(id==='summer'?islandDistance(x,z)+radius/ISLAND_SCALE>10.2:Math.hypot(x,z+3)+radius>WALK_RADIUS-.25)continue;
       const heights:number[]=[];for(const sx of [-1,-.5,0,.5,1])for(const sz of [-1,-.5,0,.5,1])heights.push(supportHeight(x+sx*item.half.x,z+sz*item.half.z));
       const y=Math.max(...heights)+.008;
       if(y<(id==='summer'?.075:id==='autumn'?-.04:-Infinity)||Math.max(...heights)-Math.min(...heights)>.16)continue;

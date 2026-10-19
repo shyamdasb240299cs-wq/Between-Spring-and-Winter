@@ -10,9 +10,21 @@ const {createSeasonProps}=await import('../app/shrine-void/season-props.ts');
 const {createSeasonLayout,groundHeight}=await import('../app/shrine-void/season-layout.ts');
 const {createScenePickup}=await import('../app/shrine-void/scene-pickup.ts');
 const kit=JSON.parse(await fs.readFile('public/seasons/kit/catalog.json','utf8')),loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder),models={};
-for(const key of ['basket','picnic-basket','apple','plate','thermos','ball','shell','rock','coral','campfire','bench','camp-thermos','lantern','log']){const b=await fs.readFile('public'+kit.models[key==='rock'?'pebble':key].variants[0].lods.near.url);models[key]=(await loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')).scene;}
+for(const key of ['basket','picnic-basket','apple','plate','thermos','ball','shell','rock','coral','campfire','bench','camp-thermos','lantern','log','boulder','beach-chair','umbrella']){const b=await fs.readFile('public'+kit.models[key==='boulder'?'rock':key==='rock'?'pebble':key].variants[0].lods.near.url);models[key]=(await loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')).scene;}
 for(const id of ['spring','summer','autumn','winter']){
  const props=createSeasonProps(id,createSeasonLayout(id),models);props.group.updateMatrixWorld(true);
+ const layout=createSeasonLayout(id),expanded=props.group.getObjectByName('Expanded trails, resting places and rock outcrops');
+ assert.ok(expanded);assert.equal(expanded.children.length,layout.landmarks.length,'Every shared landmark placement has its actual glTF model');
+ for(let i=0;i<expanded.children.length;i++)for(let j=i+1;j<expanded.children.length;j++){const a=expanded.children[i],b=expanded.children[j];if(a.userData.landmark.kind==='umbrella'||b.userData.landmark.kind==='umbrella')continue;assert.equal(new THREE.Box3().setFromObject(a).intersectsBox(new THREE.Box3().setFromObject(b)),false,`${id}: new ground scenery must not intersect: ${a.name}, ${b.name}`);}
+ for(const root of expanded.children){
+   const p=root.userData.landmark,b=new THREE.Box3().setFromObject(root);
+   assert.ok(root.children.length&&b.max.y>b.min.y,'Every new feature has real 3D geometry');
+   root.traverse(o=>{if(!(o instanceof THREE.Mesh)||p.kind==='umbrella')return;const a=o.geometry.attributes.position,v=new THREE.Vector3();for(let i=0;i<a.count;i++){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);assert.ok(Math.hypot(v.x-p.x,v.z-p.z)<=p.radius+.04,`${id}: the walking collider encloses ${p.kind}`);}});
+   if(p.kind==='bench'||p.kind==='beach-chair'){
+     const contacts=[Infinity,Infinity,Infinity,Infinity];root.traverse(o=>{if(!(o instanceof THREE.Mesh))return;const a=o.geometry.attributes.position,v=new THREE.Vector3(),local=new THREE.Vector3();for(let i=0;i<a.count;i++){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);local.copy(v);root.worldToLocal(local);const slot=Number(local.x>0)*2+Number(local.z>0);contacts[slot]=Math.min(contacts[slot],v.y-groundHeight(id,v.x,v.z));}});
+     assert.ok(contacts.every(h=>h>-.04&&h<.08),`${id}: all seat feet meet the sloped terrain: ${contacts}`);
+   }
+ }
  const objects=props.pickup.items.map(e=>e.object),collisions=[];
  for(let i=0;i<objects.length;i++)for(let j=i+1;j<objects.length;j++){const a=objects[i],b=objects[j];if(a.getObjectById(b.id)||b.getObjectById(a.id))continue;const ba=new THREE.Box3().setFromObject(a).expandByScalar(-.008),bb=new THREE.Box3().setFromObject(b).expandByScalar(-.008);if(ba.intersectsBox(bb))collisions.push([a.name,b.name,ba.getCenter(new THREE.Vector3()).toArray(),bb.getCenter(new THREE.Vector3()).toArray()]);}
  assert.deepEqual(collisions,[],`${id}: loose props must begin without intersecting bounds`);

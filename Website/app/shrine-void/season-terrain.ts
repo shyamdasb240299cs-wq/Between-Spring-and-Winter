@@ -77,7 +77,7 @@ export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile
         normal=normalize(normal+mat3(viewMatrix)*vec3(surfaceBump.x,0.,surfaceBump.y)*.3);
         ${id==='winter'?'normal=normalize(normal+mat3(viewMatrix)*vec3(snowPrint.y,0.,snowPrint.z)*.014);':''}`);
   };
-  const extent=id==='summer'?32:112;
+  const extent=id==='summer'?48:112;
   for(let z=-extent;z<extent;z+=16)for(let x=-extent;x<extent;x+=16){
     const distance=Math.hypot(x+8,z+11),segments=distance<32?(mobile?24:40):distance<65?12:6;
     const geometries=[segments].map(segments=>{

@@ -95,7 +95,7 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
     scene.add(new THREE.HemisphereLight(definition.ambient,definition.ground,id==='winter'?.85:1.25));
     sun=new THREE.DirectionalLight(definition.sun,definition.sunPower);sun.target.position.set(0,0,-3);sun.position.copy(new THREE.Vector3(...definition.sunDirection).normalize().multiplyScalar(90)).add(sun.target.position);scene.add(sun,sun.target);
     renderer.shadowMap.type=THREE.PCFShadowMap;
-    sun.castShadow=true;sun.shadow.mapSize.setScalar(mobile||qualityController.constrained?2048:4096);Object.assign(sun.shadow.camera,{left:-28,right:28,top:30,bottom:-30,near:1,far:190});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.035;sun.shadow.bias=-.0001;sun.shadow.autoUpdate=false;sun.shadow.needsUpdate=true;
+    sun.castShadow=true;sun.shadow.mapSize.setScalar(mobile||qualityController.constrained?2048:4096);Object.assign(sun.shadow.camera,{left:-42,right:42,top:44,bottom:-44,near:1,far:190});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.035;sun.shadow.bias=-.0001;sun.shadow.autoUpdate=false;sun.shadow.needsUpdate=true;
     progress('Sculpting the path and settling the light…');
     const baseKey=id==='winter'?'snow_02':id==='summer'?'sand_03':id==='autumn'?'brown_mud_leaves_01':'leafy_grass';
     const [base,path,sky]=await Promise.all([maps(baseKey),maps(id==='winter'?'snow_02':id==='summer'?'sand_03':'rocky_trail'),texture(kit.skies[id].url,true)]);check();
@@ -107,7 +107,7 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
     const grassSource=id!=='winter'?await model(kit.models.grass.variants[2].lods.near.url):undefined;
     cover=createGroundCover(id,layout,mobile,grassSource,groundMotion);cover.group.userData.skipOceanReflection=true;scene.add(cover.group);
     if(id==='spring'){meadow=createMeadowDetail(layout,mobile,groundMotion);scene.add(meadow.group);}
-    const propKeys=id==='spring'?['basket','picnic-basket','apple','plate','thermos','rock']:id==='summer'?['ball','thermos','shell','rock','coastal-shrub','coral']:id==='winter'?['campfire','log','lantern','camp-thermos','bench','rock']:['bench','rock','apple','thermos'];
+    const propKeys=[...new Set((id==='spring'?['basket','picnic-basket','apple','plate','thermos','rock']:id==='summer'?['ball','thermos','shell','rock','coastal-shrub','coral','beach-chair','umbrella']:id==='winter'?['campfire','log','lantern','camp-thermos','bench','rock']:['bench','rock','apple','thermos']).concat(['boulder','bench','log']))];
     const propModels:Record<string,THREE.Object3D>={};
     const sharedAssets=await preloadVoidAssets();
     for(const key of propKeys){
@@ -116,7 +116,7 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
         for(const t of [material.map,material.normalMap,material.roughnessMap])if(t)shared.add(t);
         root.add(new THREE.Mesh(part.geometry.clone(),material));sources.push(root);propModels[key]=root;continue;
       }
-      const entry=kit.models[key==='rock'&&id==='summer'?'pebble':key];if(!entry)throw new Error(`The selected ${key} asset is not available.`);propModels[key]=await model(entry.variants[0].lods.near.url);
+      const entry=kit.models[key==='boulder'?'rock':key==='rock'&&id==='summer'?'pebble':key];if(!entry)throw new Error(`The selected ${key} asset is not available.`);propModels[key]=await model(entry.variants[0].lods.near.url);
     }
     const trees:ModelPart[][][]=[];
     const blossomAssets=id==='spring'?await preloadVoidAssets():null;
@@ -202,8 +202,9 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
         if(d>145)continue;
         sphere.set(new THREE.Vector3(t.x,t.y+t.height*.5,t.z),t.height*.62);if(!all&&!frustum.intersectsSphere(sphere))continue;
         const variant=t.variant%trees.length;
-        // Fixed scenic LODs avoid visible tree changes inside the small walking circle.
-        const level=mobile&&id!=='summer'&&t.lod===0?1:((id==='autumn'&&d<45)||id==='winter'&&d<42)&&t.lod===2?1:t.lod;
+        // Detailed models follow the visitor through the larger world; distant
+        // forest rings stay instanced at their smallest authored mesh budget.
+        const level=all?t.lod:Math.max(t.lod===0?0:1,d>(mobile?26:36)?2:d>(mobile?10:18)?1:mobile?1:0);
         const scale=t.height/heights[variant];matrix.position.set(t.x,t.y,t.z);matrix.rotation.set(0,t.yaw,id==='summer'?(random(t.seed)-.5)*.14:0);matrix.scale.setScalar(scale);matrix.updateMatrix();
         const batch=batches.find(b=>b.variant===variant&&b.level===level)!;
         for(const mesh of batch.meshes){const slot=mesh.count++;mesh.setMatrixAt(slot,matrix.matrix);if(mesh.material instanceof THREE.MeshStandardMaterial&&/foliage|leaf|leav|twig|needle|frond/i.test(mesh.material.name))mesh.setColorAt(slot,new THREE.Color().setHSL(id==='autumn'?.012+random(t.seed)*.13:id==='spring'?.92+random(t.seed)*.065:.25,id==='autumn'?.64:id==='spring'?.34+random(t.seed+1)*.19:.06,id==='autumn'?.64:id==='spring'?.71+random(t.seed+3)*.13:.88));}
