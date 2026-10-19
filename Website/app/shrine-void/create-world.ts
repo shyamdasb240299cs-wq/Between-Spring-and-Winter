@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import { createWater } from './water';
 import { createFoliageGroup } from './foliage';
 import { createPetals } from './particles';
@@ -12,8 +11,11 @@ import {createCrystal} from './crystal';
 import {createWaterSteps} from './water-steps';
 import {sanctuaryStep} from './sanctuary-audio';
 import {createLanternLight} from './lantern-light';
+import {createSeasonCrystalJourney,SEASON_CRYSTALS} from './season-crystal-journey';
+import {createSeasonCrystals} from './season-crystals';
+import {createMemoryMonumentGeometry} from './memory-monument';
 
-export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
+export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets,preview=false) {
   const scene=new THREE.Scene(),proxy=new THREE.Scene();
   scene.background=new THREE.Color(0x000000);scene.fog=new THREE.FogExp2(0x08040b,.014);
   proxy.background=new THREE.Color(0x010104);proxy.fog=new THREE.FogExp2(0x08040b,.018);
@@ -26,6 +28,8 @@ export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const lanternLight=createLanternLight();scene.add(lanternLight.mesh);proxy.add(lanternLight.reflection);
   const awakening=createAwakening(reduced),crystal=createCrystal(assets);scene.add(crystal.group);proxy.add(crystal.reflection);
+  const seasonJourney=createSeasonCrystalJourney(reduced),seasonCrystals=createSeasonCrystals(assets);scene.add(seasonCrystals.group);proxy.add(seasonCrystals.reflection);
+  if(preview){awakening.state.phase='awake';travel.state.distance=FIRST_MEMORY-7;}
   const steps=createWaterSteps(reduced,sanctuaryStep);scene.add(steps.group);let stepTime=0,bob=0;
   let overlayBlocked=false,inputBlocked=false;
   const petals=createPetals(assets.petal,reduced);scene.add(petals.mesh);
@@ -33,21 +37,12 @@ export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
   const materials:THREE.Material[]=[],geometries:THREE.BufferGeometry[]=[],batches:THREE.InstancedMesh[]=[];
   const stoneMat=new THREE.MeshStandardMaterial({map:assets.stone,normalMap:assets.stoneNormal,normalScale:new THREE.Vector2(.85,.85),color:0xc3b7b0,roughness:.92,vertexColors:true});materials.push(stoneMat);
   // Chipped, rounded photo columns are deliberately front-facing (+Z).
-  const pieces:THREE.BufferGeometry[]=[];
-  function box(w:number,h:number,d:number,x:number,y:number,z:number){const g=new RoundedBoxGeometry(w,h,d,2,.055);g.translate(x,y,z);pieces.push(g);}
-  box(1.64,3.62,.4,0,2.45,-.2);
-  // Individual stones give silhouette, joints and recessed framing real depth.
-  for(let course=0;course<7;course++)for(const side of [-1,1])box(.34,.5,.62,side*.77,.94+course*.49,-.1);
-  box(2.1,.32,.8,0,4.36,-.1);box(1.58,.26,.62,0,3.81,-.08);box(1.58,.24,.62,0,1.03,-.08);
-  for(let course=0;course<2;course++)for(let i=0;i<4;i++)box(.56,.26,.91,(i-1.5)*.56,.3+course*.255,-.08);
-  const pillarGeometry=mergeGeometries(pieces)!;pieces.forEach(p=>p.dispose());
-  const p=pillarGeometry.attributes.position,colors=new Float32Array(p.count*3);
-  for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i);const chip=Math.sin(x*14+y*5)*Math.cos(z*17+y*3)*.035;p.setXYZ(i,x+chip,y+chip*.7,z+chip*.3);const shade=.72+.2*(Math.sin(x*4+y*5)*.5+.5);colors[i*3]=shade;colors[i*3+1]=shade;colors[i*3+2]=shade;}
-  pillarGeometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
-  pillarGeometry.computeVertexNormals();geometries.push(pillarGeometry);
+  const pillarGeometry=createMemoryMonumentGeometry(),plainPillarGeometry=createMemoryMonumentGeometry(false);geometries.push(pillarGeometry,plainPillarGeometry);
   const pillars=new THREE.InstancedMesh(pillarGeometry,stoneMat,9);pillars.frustumCulled=false;scene.add(pillars);batches.push(pillars);
+  const plainPillars=new THREE.InstancedMesh(plainPillarGeometry,stoneMat,9);plainPillars.frustumCulled=false;scene.add(plainPillars);batches.push(plainPillars);
   const reflectedStoneMat=new THREE.MeshBasicMaterial({map:assets.stone,color:0x61554f,vertexColors:true});materials.push(reflectedStoneMat);
   const reflectedPillars=new THREE.InstancedMesh(pillarGeometry,reflectedStoneMat,9);reflectedPillars.frustumCulled=false;proxy.add(reflectedPillars);batches.push(reflectedPillars);
+  const reflectedPlainPillars=new THREE.InstancedMesh(plainPillarGeometry,reflectedStoneMat,9);reflectedPlainPillars.frustumCulled=false;proxy.add(reflectedPlainPillars);batches.push(reflectedPlainPillars);
   const frameParts:THREE.BufferGeometry[]=[];
   for(const [w,h,x,y] of [[.09,2.15,-.64,2.36],[.09,2.15,.64,2.36],[1.38,.09,0,1.3],[1.38,.09,0,3.42]]){const g=new THREE.BoxGeometry(w,h,.06);g.translate(x,y,.202);frameParts.push(g);}
   const frameGeometry=mergeGeometries(frameParts)!;frameParts.forEach(p=>p.dispose());geometries.push(frameGeometry);
@@ -89,6 +84,7 @@ export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
     const key=firstTree*1000+firstMonument;
     if(key===lastPool&&scene.userData.origin===origin)return;
     lastPool=key;scene.userData.origin=origin;batches.forEach(m=>m.count=0);lanternOwners.length=0;lanternLight.reset();
+    seasonCrystals.place(firstMonument,origin,FIRST_MEMORY);
     for(let n=Math.max(0,firstTree-1);n<firstTree+15;n++)for(const side of [-1,1]){
       const z=origin-n*9-2,x=side*5.8;
       const near=Math.abs(z-(origin-travel.state.distance))<20,target=near?lanternBatches:farLanterns,slot=target[0].count;
@@ -100,8 +96,8 @@ export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
     }
     for(let slot=0;slot<9;slot++){
       const n=firstMonument+slot,z=origin-FIRST_MEMORY-n*18;
-      set(pillars,0,0,z,1,1,1);set(reflectedPillars,0,0,z,1,1,1);set(frames,0,0,z,1,1,1);placeRocks(0,z,true,n);
       const entry=assets.manifest.photos[n%assets.manifest.photos.length],tex=assets.photos.get(entry.src);
+      set(entry.season?pillars:plainPillars,0,0,z,1,1,1);set(entry.season?reflectedPillars:reflectedPlainPillars,0,0,z,1,1,1);set(frames,0,0,z,1,1,1);placeRocks(0,z,true,n);
       const photo=photos[slot];(photo.material as THREE.MeshBasicMaterial).map=tex||null;(photo.material as THREE.MeshBasicMaterial).needsUpdate=true;
       const image=tex?.image as {width:number;height:number}|undefined,aspect=image?image.width/image.height:2/3;
       photo.scale.set(Math.min(1.19,2.03*aspect),Math.min(2.03,1.19/aspect),1);photo.position.set(0,2.36,z+.219);
@@ -113,8 +109,9 @@ export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
     if(!paused)time+=dt;
     stepTime+=dt;
     awakening.advance(dt);
+    seasonJourney.advance(dt);
     let pose=awakening.pose();
-    const shouldBlock=overlayBlocked||!pose.movement;
+    const shouldBlock=overlayBlocked||!pose.movement||seasonJourney.state.active;
     if(shouldBlock!==inputBlocked){travel.block(shouldBlock);inputBlocked=shouldBlock;}
     travel.setCollisions(pose.phase==='awake');
     // Preserve walking speed at irregular frame rates without a giant physics step.
@@ -122,29 +119,37 @@ export function createWorld(renderer: THREE.WebGLRenderer,assets: VoidAssets) {
     origin=Math.floor(travel.state.distance/72)*72;
     if(pose.phase==='seeking')travel.state.distance=Math.min(CRYSTAL_DISTANCE-1.9,travel.state.distance);
     awakening.contact(travel.state.distance,travel.state.x,travel.state.yaw);pose=awakening.pose();
+    seasonJourney.contact(travel.state.distance,travel.state.x,travel.state.yaw,FIRST_MEMORY,assets.manifest.photos,pose.phase==='awake'&&!overlayBlocked);
     const targetBob=steps.update(stepTime,travel.state.x,travel.state.distance,travel.state.yaw,origin,pose.movement&&!overlayBlocked);
     bob+=(targetBob-bob)*(1-Math.exp(-dt*18));steps.group.visible=pose.movement;
     camera.position.set(travel.state.x,1.63+bob,origin-travel.state.distance);
     camera.rotation.set(travel.state.pitch,travel.state.yaw,0,'YXZ');
     foliage.place(travel.state.distance,origin,quality.constrained,camera);foliage.update(time,pose.reveal);recycle();
     const visible=pose.reveal>.001;
-    for(const mesh of [pillars,frames,reflectedPillars,...photos,...reflectionPhotos,...rockBatches,...farRocks,...reflectedRocks])mesh.visible=visible;
+    for(const mesh of [pillars,plainPillars,frames,reflectedPillars,reflectedPlainPillars,...photos,...reflectionPhotos,...rockBatches,...farRocks,...reflectedRocks])mesh.visible=visible;
     petals.mesh.visible=visible;petals.update(time,camera.position.z,origin,pose.reveal);
     [...lanternBatches,...farLanterns,...reflectedLanterns,lanternLight.mesh,lanternLight.reflection].forEach(m=>m.visible=pose.phase==='lanterns'||pose.phase==='awake');
     for(let slot=0;slot<lanternOwners.length;slot++){const lamp=lanternOwners[slot],level=awakening.lantern(lamp.index,lamp.side);lanternLight.light(slot,level);lampColour.setScalar(level);for(const m of lamp.near?lanternBatches:farLanterns)m.setColorAt(lamp.slot,lampColour);for(const m of reflectedLanterns)m.setColorAt(slot,lampColour);}
     [...lanternBatches,...farLanterns,...reflectedLanterns].forEach(m=>{if(m.instanceColor)m.instanceColor.needsUpdate=true;});
     ambient.intensity=.85*pose.reveal;key.intensity=2.4*pose.reveal;rim.intensity=1.5*pose.reveal;
+    const gate=seasonJourney.pose(),gateColour=new THREE.Color(gate.season?SEASON_CRYSTALS[gate.season].colour:0xffffff),tint=gate.glow*.85;
+    ambient.color.set(0xddc1cb).lerp(gateColour,tint);key.color.set(0xffdec3).lerp(gateColour,tint);rim.color.set(0xffa1ba).lerp(gateColour,tint);
+    for(const photo of photos)(photo.material as THREE.MeshBasicMaterial).color.set(0xffffff).lerp(gateColour,gate.glow*.65);
+    seasonCrystals.group.visible=seasonCrystals.reflection.visible=visible;seasonCrystals.update(time,camera,gate,seasonJourney.candidate,pose.reveal);
     starMaterial.opacity=.38*pose.reveal;stars.position.z=camera.position.z;stars.visible=visible;
     crystal.update(time,pose.crystalPower,pose.phase==='charging',origin,reduced);
     water.update(time,camera,quality.reflectionRate,quality.reflectionSize);
     warm.intensity=6*pose.reveal;warm.position.set(.8,1.1,origin-FIRST_MEMORY-Math.max(0,Math.round((travel.state.distance-FIRST_MEMORY)/18))*18+1.4);
   }
-  const pulseProjection=new THREE.Vector3();
-  return {scene,camera,travel,quality,update,get cinematic(){return awakening.pose();},get pulseOrigin(){camera.updateMatrixWorld();pulseProjection.set(0,1.75,origin-CRYSTAL_DISTANCE).project(camera);return{x:(pulseProjection.x+1)/2,y:(1-pulseProjection.y)/2};},touchCrystal(){return awakening.touch(travel.state.distance);},blockOverlay(value:boolean){overlayBlocked=value;travel.resetInput();},
+  const pulseProjection=new THREE.Vector3(),crystalRay=new THREE.Raycaster(),crystalPointer=new THREE.Vector2();
+  return {scene,camera,travel,quality,update,get cinematic(){return awakening.pose();},get seasonCrystal(){return seasonJourney.candidate;},get seasonPassage(){return seasonJourney.pose();},
+    takeSeasonCrystal(){const id=seasonJourney.take();if(id)travel.block(true);return id;},resetSeasonCrystal(){seasonJourney.reset();},
+    isSeasonCrystalHit(x:number,y:number){const target=seasonJourney.candidate;if(!target)return false;camera.updateMatrixWorld();crystalPointer.set(x,y);crystalRay.setFromCamera(crystalPointer,camera);return seasonCrystals.hit(crystalRay,target.index);},
+    get pulseOrigin(){camera.updateMatrixWorld();pulseProjection.set(0,1.75,origin-CRYSTAL_DISTANCE).project(camera);return{x:(pulseProjection.x+1)/2,y:(1-pulseProjection.y)/2};},touchCrystal(){return awakening.touch(travel.state.distance);},blockOverlay(value:boolean){overlayBlocked=value;travel.resetInput();},
     async compile(){const saved=[...scene.children,...proxy.children].map(o=>[o,o.visible] as const);saved.forEach(([o])=>o.visible=true);try{await renderer.compileAsync(scene,camera);await renderer.compileAsync(proxy,camera);}finally{saved.forEach(([o,v])=>o.visible=v);}},
     warmRender(draw:()=>void){const saved=[...scene.children,...proxy.children].map(o=>[o,o.visible] as const);saved.forEach(([o])=>o.visible=true);try{draw();}finally{saved.forEach(([o,v])=>o.visible=v);}},
     resize(w:number,h:number){camera.aspect=w/h;camera.fov=w<h?62:55;camera.updateProjectionMatrix();},
-    dispose(){quality.dispose();lanternLight.dispose();travel.dispose();steps.dispose();crystal.dispose();foliage.dispose();petals.dispose();water.dispose();batches.forEach(m=>m.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());scene.clear();proxy.clear();}
+    dispose(){quality.dispose();lanternLight.dispose();travel.dispose();steps.dispose();crystal.dispose();seasonCrystals.dispose();foliage.dispose();petals.dispose();water.dispose();batches.forEach(m=>m.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());scene.clear();proxy.clear();}
   };
 }
 export type VoidWorld=ReturnType<typeof createWorld>;

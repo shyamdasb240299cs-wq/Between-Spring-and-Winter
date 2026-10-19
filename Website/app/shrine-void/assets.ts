@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import type { SeasonId } from './seasons';
 
-export interface PhotoEntry { id: string; src: string; caption: string; aspectRatio?: number }
+export interface PhotoEntry { id: string; src: string; caption: string; aspectRatio?: number; season?: SeasonId }
 export interface PhotoManifest { photos: PhotoEntry[]; replay: 'once' | 'loop' }
 export interface ModelPart { geometry: THREE.BufferGeometry; material: THREE.MeshStandardMaterial; name: string }
 export interface VoidAssets {

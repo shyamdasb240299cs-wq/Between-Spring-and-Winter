@@ -1,0 +1,656 @@
+{
+  "version": 3,
+  "models": [
+    {
+      "id": "cherry",
+      "variant": "0",
+      "level": "near",
+      "triangles": 23494,
+      "bytes": 1922664
+    },
+    {
+      "id": "cherry",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 9114,
+      "bytes": 666332
+    },
+    {
+      "id": "cherry",
+      "variant": "0",
+      "level": "far",
+      "triangles": 5916,
+      "bytes": 340256
+    },
+    {
+      "id": "cherry",
+      "variant": "1",
+      "level": "near",
+      "triangles": 23206,
+      "bytes": 1963596
+    },
+    {
+      "id": "cherry",
+      "variant": "1",
+      "level": "mid",
+      "triangles": 7465,
+      "bytes": 611872
+    },
+    {
+      "id": "cherry",
+      "variant": "1",
+      "level": "far",
+      "triangles": 4265,
+      "bytes": 285668
+    },
+    {
+      "id": "cherry",
+      "variant": "2",
+      "level": "near",
+      "triangles": 23500,
+      "bytes": 1928252
+    },
+    {
+      "id": "cherry",
+      "variant": "2",
+      "level": "mid",
+      "triangles": 9756,
+      "bytes": 691784
+    },
+    {
+      "id": "cherry",
+      "variant": "2",
+      "level": "far",
+      "triangles": 6568,
+      "bytes": 365964
+    },
+    {
+      "id": "palm",
+      "variant": "0",
+      "level": "near",
+      "triangles": 6630,
+      "bytes": 1816076
+    },
+    {
+      "id": "palm",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 1992,
+      "bytes": 1650848
+    },
+    {
+      "id": "palm",
+      "variant": "0",
+      "level": "far",
+      "triangles": 492,
+      "bytes": 1584596
+    },
+    {
+      "id": "maple",
+      "variant": "0",
+      "level": "near",
+      "triangles": 22352,
+      "bytes": 4361216
+    },
+    {
+      "id": "maple",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 5279,
+      "bytes": 2232572
+    },
+    {
+      "id": "maple",
+      "variant": "0",
+      "level": "far",
+      "triangles": 1828,
+      "bytes": 1729692
+    },
+    {
+      "id": "maple",
+      "variant": "1",
+      "level": "near",
+      "triangles": 22365,
+      "bytes": 4367156
+    },
+    {
+      "id": "maple",
+      "variant": "1",
+      "level": "mid",
+      "triangles": 5417,
+      "bytes": 2242020
+    },
+    {
+      "id": "maple",
+      "variant": "1",
+      "level": "far",
+      "triangles": 1701,
+      "bytes": 1720724
+    },
+    {
+      "id": "maple",
+      "variant": "2",
+      "level": "near",
+      "triangles": 22431,
+      "bytes": 4385312
+    },
+    {
+      "id": "maple",
+      "variant": "2",
+      "level": "mid",
+      "triangles": 5338,
+      "bytes": 2235836
+    },
+    {
+      "id": "maple",
+      "variant": "2",
+      "level": "far",
+      "triangles": 1686,
+      "bytes": 1717372
+    },
+    {
+      "id": "fir",
+      "variant": "0",
+      "level": "near",
+      "triangles": 21410,
+      "bytes": 2774476
+    },
+    {
+      "id": "fir",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 7887,
+      "bytes": 2088100
+    },
+    {
+      "id": "fir",
+      "variant": "0",
+      "level": "far",
+      "triangles": 2386,
+      "bytes": 1796748
+    },
+    {
+      "id": "fir",
+      "variant": "1",
+      "level": "near",
+      "triangles": 16880,
+      "bytes": 2481288
+    },
+    {
+      "id": "fir",
+      "variant": "1",
+      "level": "mid",
+      "triangles": 7357,
+      "bytes": 1931232
+    },
+    {
+      "id": "fir",
+      "variant": "1",
+      "level": "far",
+      "triangles": 2441,
+      "bytes": 1688988
+    },
+    {
+      "id": "fir",
+      "variant": "2",
+      "level": "near",
+      "triangles": 16559,
+      "bytes": 2484024
+    },
+    {
+      "id": "fir",
+      "variant": "2",
+      "level": "mid",
+      "triangles": 7455,
+      "bytes": 2067708
+    },
+    {
+      "id": "fir",
+      "variant": "2",
+      "level": "far",
+      "triangles": 2419,
+      "bytes": 1826592
+    },
+    {
+      "id": "bench",
+      "variant": "0",
+      "level": "near",
+      "triangles": 8998,
+      "bytes": 206296
+    },
+    {
+      "id": "bench",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 2248,
+      "bytes": 62944
+    },
+    {
+      "id": "bench",
+      "variant": "0",
+      "level": "far",
+      "triangles": 826,
+      "bytes": 30672
+    },
+    {
+      "id": "campfire",
+      "variant": "0",
+      "level": "near",
+      "triangles": 14565,
+      "bytes": 3604008
+    },
+    {
+      "id": "campfire",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 10206,
+      "bytes": 3378748
+    },
+    {
+      "id": "campfire",
+      "variant": "0",
+      "level": "far",
+      "triangles": 9749,
+      "bytes": 3356100
+    },
+    {
+      "id": "basket",
+      "variant": "0",
+      "level": "near",
+      "triangles": 6500,
+      "bytes": 635532
+    },
+    {
+      "id": "basket",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 2260,
+      "bytes": 516060
+    },
+    {
+      "id": "basket",
+      "variant": "0",
+      "level": "far",
+      "triangles": 1742,
+      "bytes": 494356
+    },
+    {
+      "id": "rock",
+      "variant": "0",
+      "level": "near",
+      "triangles": 216,
+      "bytes": 675020
+    },
+    {
+      "id": "rock",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 216,
+      "bytes": 675020
+    },
+    {
+      "id": "rock",
+      "variant": "0",
+      "level": "far",
+      "triangles": 216,
+      "bytes": 675020
+    },
+    {
+      "id": "shell",
+      "variant": "0",
+      "level": "near",
+      "triangles": 2000,
+      "bytes": 472792
+    },
+    {
+      "id": "shell",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 700,
+      "bytes": 438384
+    },
+    {
+      "id": "shell",
+      "variant": "0",
+      "level": "far",
+      "triangles": 606,
+      "bytes": 435368
+    },
+    {
+      "id": "log",
+      "variant": "0",
+      "level": "near",
+      "triangles": 4990,
+      "bytes": 756824
+    },
+    {
+      "id": "log",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 1750,
+      "bytes": 678280
+    },
+    {
+      "id": "log",
+      "variant": "0",
+      "level": "far",
+      "triangles": 500,
+      "bytes": 645744
+    },
+    {
+      "id": "grass",
+      "variant": "0",
+      "level": "near",
+      "triangles": 800,
+      "bytes": 821656
+    },
+    {
+      "id": "grass",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 300,
+      "bytes": 802804
+    },
+    {
+      "id": "grass",
+      "variant": "0",
+      "level": "far",
+      "triangles": 187,
+      "bytes": 798508
+    },
+    {
+      "id": "grass",
+      "variant": "1",
+      "level": "near",
+      "triangles": 79,
+      "bytes": 792716
+    },
+    {
+      "id": "grass",
+      "variant": "1",
+      "level": "mid",
+      "triangles": 79,
+      "bytes": 792716
+    },
+    {
+      "id": "grass",
+      "variant": "1",
+      "level": "far",
+      "triangles": 79,
+      "bytes": 792716
+    },
+    {
+      "id": "grass",
+      "variant": "2",
+      "level": "near",
+      "triangles": 28,
+      "bytes": 790584
+    },
+    {
+      "id": "grass",
+      "variant": "2",
+      "level": "mid",
+      "triangles": 28,
+      "bytes": 790584
+    },
+    {
+      "id": "grass",
+      "variant": "2",
+      "level": "far",
+      "triangles": 28,
+      "bytes": 790584
+    },
+    {
+      "id": "coastal-shrub",
+      "variant": "0",
+      "level": "near",
+      "triangles": 3124,
+      "bytes": 346216
+    },
+    {
+      "id": "coastal-shrub",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 1796,
+      "bytes": 301908
+    },
+    {
+      "id": "coastal-shrub",
+      "variant": "0",
+      "level": "far",
+      "triangles": 689,
+      "bytes": 258172
+    },
+    {
+      "id": "coral",
+      "variant": "0",
+      "level": "near",
+      "triangles": 817,
+      "bytes": 45564
+    },
+    {
+      "id": "coral",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 817,
+      "bytes": 45564
+    },
+    {
+      "id": "coral",
+      "variant": "0",
+      "level": "far",
+      "triangles": 816,
+      "bytes": 45532
+    },
+    {
+      "id": "pebble",
+      "variant": "0",
+      "level": "near",
+      "triangles": 2394,
+      "bytes": 436216
+    },
+    {
+      "id": "pebble",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 1000,
+      "bytes": 404956
+    },
+    {
+      "id": "pebble",
+      "variant": "0",
+      "level": "far",
+      "triangles": 360,
+      "bytes": 390620
+    },
+    {
+      "id": "picnic-basket",
+      "variant": "0",
+      "level": "near",
+      "triangles": 4500,
+      "bytes": 527864
+    },
+    {
+      "id": "picnic-basket",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 2024,
+      "bytes": 465808
+    },
+    {
+      "id": "picnic-basket",
+      "variant": "0",
+      "level": "far",
+      "triangles": 900,
+      "bytes": 436244
+    },
+    {
+      "id": "apple",
+      "variant": "0",
+      "level": "near",
+      "triangles": 1800,
+      "bytes": 173640
+    },
+    {
+      "id": "apple",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 810,
+      "bytes": 147340
+    },
+    {
+      "id": "apple",
+      "variant": "0",
+      "level": "far",
+      "triangles": 832,
+      "bytes": 148052
+    },
+    {
+      "id": "plate",
+      "variant": "0",
+      "level": "near",
+      "triangles": 1298,
+      "bytes": 166888
+    },
+    {
+      "id": "plate",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 584,
+      "bytes": 150216
+    },
+    {
+      "id": "plate",
+      "variant": "0",
+      "level": "far",
+      "triangles": 260,
+      "bytes": 141764
+    },
+    {
+      "id": "thermos",
+      "variant": "0",
+      "level": "near",
+      "triangles": 1900,
+      "bytes": 194332
+    },
+    {
+      "id": "thermos",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 860,
+      "bytes": 164920
+    },
+    {
+      "id": "thermos",
+      "variant": "0",
+      "level": "far",
+      "triangles": 868,
+      "bytes": 165256
+    },
+    {
+      "id": "camp-thermos",
+      "variant": "0",
+      "level": "near",
+      "triangles": 2728,
+      "bytes": 362244
+    },
+    {
+      "id": "camp-thermos",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 2732,
+      "bytes": 362364
+    },
+    {
+      "id": "camp-thermos",
+      "variant": "0",
+      "level": "far",
+      "triangles": 2718,
+      "bytes": 361996
+    },
+    {
+      "id": "ball",
+      "variant": "0",
+      "level": "near",
+      "triangles": 192,
+      "bytes": 14120
+    },
+    {
+      "id": "ball",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 192,
+      "bytes": 14120
+    },
+    {
+      "id": "ball",
+      "variant": "0",
+      "level": "far",
+      "triangles": 192,
+      "bytes": 14120
+    },
+    {
+      "id": "beach-chair",
+      "variant": "0",
+      "level": "near",
+      "triangles": 2598,
+      "bytes": 309928
+    },
+    {
+      "id": "beach-chair",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 1170,
+      "bytes": 262276
+    },
+    {
+      "id": "beach-chair",
+      "variant": "0",
+      "level": "far",
+      "triangles": 822,
+      "bytes": 249436
+    },
+    {
+      "id": "lantern",
+      "variant": "0",
+      "level": "near",
+      "triangles": 3274,
+      "bytes": 238012
+    },
+    {
+      "id": "lantern",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 3274,
+      "bytes": 238012
+    },
+    {
+      "id": "lantern",
+      "variant": "0",
+      "level": "far",
+      "triangles": 3274,
+      "bytes": 238012
+    },
+    {
+      "id": "umbrella",
+      "variant": "0",
+      "level": "near",
+      "triangles": 214,
+      "bytes": 18516
+    },
+    {
+      "id": "umbrella",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 214,
+      "bytes": 18516
+    },
+    {
+      "id": "umbrella",
+      "variant": "0",
+      "level": "far",
+      "triangles": 214,
+      "bytes": 18516
+    }
+  ]
+}

@@ -1,0 +1,1358 @@
+{
+  "version": 1,
+  "coordinateSystem": "Y_UP_METRES",
+  "models": {
+    "basket": {
+      "name": "wicker basket 01",
+      "source": "https://polyhaven.com/a/wicker_basket_01",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.1916121244430542,
+              0,
+              -0.14750760793685913
+            ],
+            "max": [
+              0.1916121244430542,
+              0.1174229308962822,
+              0.14750760793685913
+            ]
+          },
+          "height": 0.1174229308962822,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/basket-0-near.glb",
+              "triangles": 6500,
+              "bytes": 635532
+            },
+            "mid": {
+              "url": "/seasons/kit/models/basket-0-mid.glb",
+              "triangles": 2260,
+              "bytes": 516060
+            },
+            "far": {
+              "url": "/seasons/kit/models/basket-0-far.glb",
+              "triangles": 1742,
+              "bytes": 494356
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Prepared from official glTF; embedded WebP textures."
+      ]
+    },
+    "rock": {
+      "name": "coast rocks 03",
+      "source": "https://polyhaven.com/a/coast_rocks_03",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.2685023248195648,
+              0,
+              -0.2811264395713806
+            ],
+            "max": [
+              0.2685023248195648,
+              0.8999999761581421,
+              0.2811264395713806
+            ]
+          },
+          "height": 0.8999999761581421,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/rock-0-near.glb",
+              "triangles": 216,
+              "bytes": 675020
+            },
+            "mid": {
+              "url": "/seasons/kit/models/rock-0-mid.glb",
+              "triangles": 216,
+              "bytes": 675020
+            },
+            "far": {
+              "url": "/seasons/kit/models/rock-0-far.glb",
+              "triangles": 216,
+              "bytes": 675020
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Prepared from official glTF; embedded WebP textures."
+      ]
+    },
+    "shell": {
+      "name": "lambis shell",
+      "source": "https://polyhaven.com/a/lambis_shell",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.0697411447763443,
+              0,
+              -0.037271492183208466
+            ],
+            "max": [
+              0.0697411447763443,
+              0.04651167243719101,
+              0.037271492183208466
+            ]
+          },
+          "height": 0.04651167243719101,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/shell-0-near.glb",
+              "triangles": 2000,
+              "bytes": 472792
+            },
+            "mid": {
+              "url": "/seasons/kit/models/shell-0-mid.glb",
+              "triangles": 700,
+              "bytes": 438384
+            },
+            "far": {
+              "url": "/seasons/kit/models/shell-0-far.glb",
+              "triangles": 606,
+              "bytes": 435368
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Prepared from official glTF; embedded WebP textures."
+      ]
+    },
+    "log": {
+      "name": "dead tree trunk",
+      "source": "https://polyhaven.com/a/dead_tree_trunk",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -1.5255074501037598,
+              0,
+              -0.13876375555992126
+            ],
+            "max": [
+              1.5255074501037598,
+              0.29043155908584595,
+              0.13876375555992126
+            ]
+          },
+          "height": 0.29043155908584595,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/log-0-near.glb",
+              "triangles": 4990,
+              "bytes": 756824
+            },
+            "mid": {
+              "url": "/seasons/kit/models/log-0-mid.glb",
+              "triangles": 1750,
+              "bytes": 678280
+            },
+            "far": {
+              "url": "/seasons/kit/models/log-0-far.glb",
+              "triangles": 500,
+              "bytes": 645744
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Prepared from official glTF; embedded WebP textures."
+      ]
+    },
+    "grass": {
+      "name": "Grass Medium 01",
+      "source": "https://polyhaven.com/a/grass_medium_01",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.0924200564622879,
+              0,
+              -0.08115652203559875
+            ],
+            "max": [
+              0.0924200564622879,
+              0.14042668044567108,
+              0.08115652203559875
+            ]
+          },
+          "height": 0.14042668044567108,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/grass-0-near.glb",
+              "triangles": 800,
+              "bytes": 821656
+            },
+            "mid": {
+              "url": "/seasons/kit/models/grass-0-mid.glb",
+              "triangles": 300,
+              "bytes": 802804
+            },
+            "far": {
+              "url": "/seasons/kit/models/grass-0-far.glb",
+              "triangles": 187,
+              "bytes": 798508
+            }
+          }
+        },
+        {
+          "id": "1",
+          "bounds": {
+            "min": [
+              -0.033673882484436035,
+              0,
+              -0.036884378641843796
+            ],
+            "max": [
+              0.033673882484436035,
+              0.11245334148406982,
+              0.036884378641843796
+            ]
+          },
+          "height": 0.11245334148406982,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/grass-1-near.glb",
+              "triangles": 79,
+              "bytes": 792716
+            },
+            "mid": {
+              "url": "/seasons/kit/models/grass-1-mid.glb",
+              "triangles": 79,
+              "bytes": 792716
+            },
+            "far": {
+              "url": "/seasons/kit/models/grass-1-far.glb",
+              "triangles": 79,
+              "bytes": 792716
+            }
+          }
+        },
+        {
+          "id": "2",
+          "bounds": {
+            "min": [
+              -0.011784911155700684,
+              0,
+              -0.01719936728477478
+            ],
+            "max": [
+              0.011784911155700684,
+              0.060208480805158615,
+              0.01719936728477478
+            ]
+          },
+          "height": 0.060208480805158615,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/grass-2-near.glb",
+              "triangles": 28,
+              "bytes": 790584
+            },
+            "mid": {
+              "url": "/seasons/kit/models/grass-2-mid.glb",
+              "triangles": 28,
+              "bytes": 790584
+            },
+            "far": {
+              "url": "/seasons/kit/models/grass-2-far.glb",
+              "triangles": 28,
+              "bytes": 790584
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Individual authored tufts extracted from the source display lineup."
+      ]
+    },
+    "fir": {
+      "name": "Fir Tree 01",
+      "source": "https://polyhaven.com/a/fir_tree_01",
+      "author": "Rico Cilliers, Rob Tuytel",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "height": 14,
+          "bounds": {
+            "min": [
+              -2.5634348392486572,
+              0,
+              -2.455866575241089
+            ],
+            "max": [
+              2.5634348392486572,
+              14,
+              2.455866575241089
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/fir-0-near.glb",
+              "bytes": 2774476,
+              "triangles": 21410
+            },
+            "mid": {
+              "url": "/seasons/kit/models/fir-0-mid.glb",
+              "bytes": 2088100,
+              "triangles": 7887
+            },
+            "far": {
+              "url": "/seasons/kit/models/fir-0-far.glb",
+              "bytes": 1796748,
+              "triangles": 2386
+            }
+          }
+        },
+        {
+          "id": "1",
+          "height": 15,
+          "bounds": {
+            "min": [
+              -3.183917999267578,
+              0,
+              -3.388587474822998
+            ],
+            "max": [
+              3.183917999267578,
+              15,
+              3.388587474822998
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/fir-1-near.glb",
+              "bytes": 2481288,
+              "triangles": 16880
+            },
+            "mid": {
+              "url": "/seasons/kit/models/fir-1-mid.glb",
+              "bytes": 1931232,
+              "triangles": 7357
+            },
+            "far": {
+              "url": "/seasons/kit/models/fir-1-far.glb",
+              "bytes": 1688988,
+              "triangles": 2441
+            }
+          }
+        },
+        {
+          "id": "2",
+          "height": 16,
+          "bounds": {
+            "min": [
+              -3.490950107574463,
+              0,
+              -3.3015637397766113
+            ],
+            "max": [
+              3.490950107574463,
+              16,
+              3.3015637397766113
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/fir-2-near.glb",
+              "bytes": 2484024,
+              "triangles": 16559
+            },
+            "mid": {
+              "url": "/seasons/kit/models/fir-2-mid.glb",
+              "bytes": 2067708,
+              "triangles": 7455
+            },
+            "far": {
+              "url": "/seasons/kit/models/fir-2-far.glb",
+              "bytes": 1826592,
+              "triangles": 2419
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Three original selected-source tree variants. Source LOD2 twigs sampled as complete components and bark simplified offline. Embedded WebP textures.",
+        "Restored scanned stems with independent 3200/1400/480-triangle budgets. Original bark atlas UVs and surface normals retained."
+      ]
+    },
+    "palm": {
+      "name": "Coconut Palm",
+      "author": "evolveduk",
+      "source": "https://sketchfab.com/3d-models/26e787f2ff2e4c0fb004c3b0210805a3",
+      "license": "CC-BY-4.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -5.0099382400512695,
+              0,
+              -3.201068878173828
+            ],
+            "max": [
+              5.0099382400512695,
+              10,
+              3.201068878173828
+            ]
+          },
+          "height": 10,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/palm-0-near.glb",
+              "triangles": 6630,
+              "bytes": 1816076
+            },
+            "mid": {
+              "url": "/seasons/kit/models/palm-0-mid.glb",
+              "triangles": 1992,
+              "bytes": 1650848
+            },
+            "far": {
+              "url": "/seasons/kit/models/palm-0-far.glb",
+              "triangles": 492,
+              "bytes": 1584596
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Downloaded through authenticated official download; normalized and simplified."
+      ]
+    },
+    "maple": {
+      "name": "Maple Trees",
+      "author": "Jagobo",
+      "source": "https://sketchfab.com/3d-models/9f51e08e56cd4e44b35fd02a3ad8d3a6",
+      "license": "CC-BY-4.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -4.541024208068848,
+              0,
+              -4.302886486053467
+            ],
+            "max": [
+              4.541024208068848,
+              10,
+              4.302886486053467
+            ]
+          },
+          "height": 10,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/maple-0-near.glb",
+              "triangles": 22352,
+              "bytes": 4361216
+            },
+            "mid": {
+              "url": "/seasons/kit/models/maple-0-mid.glb",
+              "triangles": 5279,
+              "bytes": 2232572
+            },
+            "far": {
+              "url": "/seasons/kit/models/maple-0-far.glb",
+              "triangles": 1828,
+              "bytes": 1729692
+            }
+          }
+        },
+        {
+          "id": "1",
+          "bounds": {
+            "min": [
+              -3.8279874324798584,
+              0,
+              -2.8921866416931152
+            ],
+            "max": [
+              3.8279874324798584,
+              10,
+              2.8921866416931152
+            ]
+          },
+          "height": 10,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/maple-1-near.glb",
+              "triangles": 22365,
+              "bytes": 4367156
+            },
+            "mid": {
+              "url": "/seasons/kit/models/maple-1-mid.glb",
+              "triangles": 5417,
+              "bytes": 2242020
+            },
+            "far": {
+              "url": "/seasons/kit/models/maple-1-far.glb",
+              "triangles": 1701,
+              "bytes": 1720724
+            }
+          }
+        },
+        {
+          "id": "2",
+          "bounds": {
+            "min": [
+              -5.461491584777832,
+              0,
+              -5.3096089363098145
+            ],
+            "max": [
+              5.461491584777832,
+              10,
+              5.3096089363098145
+            ]
+          },
+          "height": 10,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/maple-2-near.glb",
+              "triangles": 22431,
+              "bytes": 4385312
+            },
+            "mid": {
+              "url": "/seasons/kit/models/maple-2-mid.glb",
+              "triangles": 5338,
+              "bytes": 2235836
+            },
+            "far": {
+              "url": "/seasons/kit/models/maple-2-far.glb",
+              "triangles": 1686,
+              "bytes": 1717372
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Downloaded through authenticated official download; normalized and simplified."
+      ]
+    },
+    "bench": {
+      "name": "Classic Park Bench",
+      "author": "ananduhrt",
+      "source": "https://sketchfab.com/3d-models/4e20ea09d6444254b19ce6d16ec3df53",
+      "license": "CC-BY-4.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.8477307558059692,
+              0,
+              -0.42498958110809326
+            ],
+            "max": [
+              0.8477307558059692,
+              0.949999988079071,
+              0.42498958110809326
+            ]
+          },
+          "height": 0.95,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/bench-0-near.glb",
+              "triangles": 8998,
+              "bytes": 206296
+            },
+            "mid": {
+              "url": "/seasons/kit/models/bench-0-mid.glb",
+              "triangles": 2248,
+              "bytes": 62944
+            },
+            "far": {
+              "url": "/seasons/kit/models/bench-0-far.glb",
+              "triangles": 826,
+              "bytes": 30672
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Downloaded through authenticated official download; normalized and simplified."
+      ]
+    },
+    "campfire": {
+      "name": "Glowing Campfire With Stones, Coal and Logs",
+      "author": "Dennis (dennis.hafemann)",
+      "source": "https://sketchfab.com/3d-models/glowing-campfire-with-stones-coal-and-logs-d3448f8b13314bb7a7d0f7e20350360a",
+      "license": "CC-BY-4.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.8246473073959351,
+              0,
+              -0.8452695608139038
+            ],
+            "max": [
+              0.8278502225875854,
+              0.545372486114502,
+              0.8470518589019775
+            ]
+          },
+          "height": 0.545372486114502,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/campfire-0-near.glb",
+              "triangles": 14565,
+              "bytes": 3604008
+            },
+            "mid": {
+              "url": "/seasons/kit/models/campfire-0-mid.glb",
+              "triangles": 10206,
+              "bytes": 3378748
+            },
+            "far": {
+              "url": "/seasons/kit/models/campfire-0-far.glb",
+              "triangles": 9749,
+              "bytes": 3356100
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Official authenticated download. Geometry simplified offline, PBR and emissive textures retained. Recentered and scaled to a 1.7 metre stone ring; animated flame and ember layer added at runtime."
+      ]
+    },
+    "cherry": {
+      "name": "Cherry Blossom Trees",
+      "author": "Jagobo",
+      "license": "CC-BY-4.0",
+      "source": "https://sketchfab.com/3d-models/cherry-blossom-trees-f69be55d2e4f4f73b568ebb185bd8496",
+      "notes": [
+        "Season-specific whole-card LODs. Shared sanctuary bark/blossom textures bound by material name."
+      ],
+      "variants": [
+        {
+          "id": "0",
+          "height": 6.518129348754883,
+          "bounds": {
+            "min": [
+              -4.706544876098633,
+              1.946218490600586,
+              -4.66540002822876
+            ],
+            "max": [
+              4.670312404632568,
+              8.464347839355469,
+              4.270940780639648
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/cherry-0-near.glb",
+              "triangles": 23494,
+              "bytes": 1922664
+            },
+            "mid": {
+              "url": "/seasons/kit/models/cherry-0-mid.glb",
+              "triangles": 9114,
+              "bytes": 666332
+            },
+            "far": {
+              "url": "/seasons/kit/models/cherry-0-far.glb",
+              "triangles": 5916,
+              "bytes": 340256
+            }
+          }
+        },
+        {
+          "id": "1",
+          "height": 6.687536716461182,
+          "bounds": {
+            "min": [
+              -5.664309024810791,
+              1.8124632835388184,
+              -4.812187194824219
+            ],
+            "max": [
+              5.729422569274902,
+              8.5,
+              5.02373743057251
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/cherry-1-near.glb",
+              "triangles": 23206,
+              "bytes": 1963596
+            },
+            "mid": {
+              "url": "/seasons/kit/models/cherry-1-mid.glb",
+              "triangles": 7465,
+              "bytes": 611872
+            },
+            "far": {
+              "url": "/seasons/kit/models/cherry-1-far.glb",
+              "triangles": 4265,
+              "bytes": 285668
+            }
+          }
+        },
+        {
+          "id": "2",
+          "height": 6.984718203544617,
+          "bounds": {
+            "min": [
+              -4.936361789703369,
+              1.5415183305740356,
+              -4.760335445404053
+            ],
+            "max": [
+              4.9744768142700195,
+              8.526236534118652,
+              4.432862281799316
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/cherry-2-near.glb",
+              "triangles": 23500,
+              "bytes": 1928252
+            },
+            "mid": {
+              "url": "/seasons/kit/models/cherry-2-mid.glb",
+              "triangles": 9756,
+              "bytes": 691784
+            },
+            "far": {
+              "url": "/seasons/kit/models/cherry-2-far.glb",
+              "triangles": 6568,
+              "bytes": 365964
+            }
+          }
+        }
+      ]
+    },
+    "apple": {
+      "name": "food apple 01",
+      "source": "https://polyhaven.com/a/food_apple_01",
+      "author": "Oliver Harries",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.057500001043081284,
+              0,
+              -0.0565219521522522
+            ],
+            "max": [
+              0.057500001043081284,
+              0.10065318644046783,
+              0.0565219521522522
+            ]
+          },
+          "height": 0.10065318644046783,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/apple-0-near.glb",
+              "triangles": 1800,
+              "bytes": 173640
+            },
+            "mid": {
+              "url": "/seasons/kit/models/apple-0-mid.glb",
+              "triangles": 810,
+              "bytes": 147340
+            },
+            "far": {
+              "url": "/seasons/kit/models/apple-0-far.glb",
+              "triangles": 832,
+              "bytes": 148052
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual official source scan geometry, centered and grounded in Y-up metres; simplified offline with embedded WebP PBR textures."
+      ]
+    },
+    "plate": {
+      "name": "carved wooden plate",
+      "source": "https://polyhaven.com/a/carved_wooden_plate",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.14499999582767487,
+              0,
+              -0.1433723270893097
+            ],
+            "max": [
+              0.14499999582767487,
+              0.04065781086683273,
+              0.1433723270893097
+            ]
+          },
+          "height": 0.04065781086683273,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/plate-0-near.glb",
+              "triangles": 1298,
+              "bytes": 166888
+            },
+            "mid": {
+              "url": "/seasons/kit/models/plate-0-mid.glb",
+              "triangles": 584,
+              "bytes": 150216
+            },
+            "far": {
+              "url": "/seasons/kit/models/plate-0-far.glb",
+              "triangles": 260,
+              "bytes": 141764
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual official source scan geometry, centered and grounded in Y-up metres; simplified offline with embedded WebP PBR textures."
+      ]
+    },
+    "thermos": {
+      "name": "plastic thermos",
+      "source": "https://polyhaven.com/a/plastic_thermos",
+      "author": "Poly Haven contributors",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.17000000178813934,
+              0,
+              -0.13218125700950623
+            ],
+            "max": [
+              0.17000000178813934,
+              0.7750152349472046,
+              0.13218125700950623
+            ]
+          },
+          "height": 0.7750152349472046,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/thermos-0-near.glb",
+              "triangles": 1900,
+              "bytes": 194332
+            },
+            "mid": {
+              "url": "/seasons/kit/models/thermos-0-mid.glb",
+              "triangles": 860,
+              "bytes": 164920
+            },
+            "far": {
+              "url": "/seasons/kit/models/thermos-0-far.glb",
+              "triangles": 868,
+              "bytes": 165256
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual official source scan geometry, centered and grounded in Y-up metres; simplified offline with embedded WebP PBR textures."
+      ]
+    },
+    "camp-thermos": {
+      "name": "modified thermos",
+      "source": "https://polyhaven.com/a/modified_thermos",
+      "author": "Alex Weber",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.1550000011920929,
+              0,
+              -0.10980353504419327
+            ],
+            "max": [
+              0.1550000011920929,
+              0.6653544306755066,
+              0.10980353504419327
+            ]
+          },
+          "height": 0.6653544306755066,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/camp-thermos-0-near.glb",
+              "triangles": 2728,
+              "bytes": 362244
+            },
+            "mid": {
+              "url": "/seasons/kit/models/camp-thermos-0-mid.glb",
+              "triangles": 2732,
+              "bytes": 362364
+            },
+            "far": {
+              "url": "/seasons/kit/models/camp-thermos-0-far.glb",
+              "triangles": 2718,
+              "bytes": 361996
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual official source scan geometry, centered and grounded in Y-up metres; simplified offline with embedded WebP PBR textures."
+      ]
+    },
+    "ball": {
+      "name": "Beach ball",
+      "source": "https://poly.pizza/m/4IwPTeOmq6c",
+      "author": "the_ normalgamer",
+      "license": "CC-BY-3.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.2683505713939667,
+              0,
+              -0.2676372230052948
+            ],
+            "max": [
+              0.2683505713939667,
+              0.5400000214576721,
+              0.2676372230052948
+            ]
+          },
+          "height": 0.54,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/ball-0-near.glb",
+              "triangles": 192,
+              "bytes": 14120
+            },
+            "mid": {
+              "url": "/seasons/kit/models/ball-0-mid.glb",
+              "triangles": 192,
+              "bytes": 14120
+            },
+            "far": {
+              "url": "/seasons/kit/models/ball-0-far.glb",
+              "triangles": 192,
+              "bytes": 14120
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Downloaded source mesh, normalized to 54 cm diameter, smooth normals and vinyl roughness adapted."
+      ]
+    },
+    "beach-chair": {
+      "name": "plastic monobloc chair 01",
+      "source": "https://polyhaven.com/a/plastic_monobloc_chair_01",
+      "author": "Kuutti Siitonen",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.36000001430511475,
+              0,
+              -0.35199683904647827
+            ],
+            "max": [
+              0.36000001430511475,
+              0.9869512319564819,
+              0.35199683904647827
+            ]
+          },
+          "height": 0.9869512319564819,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/beach-chair-0-near.glb",
+              "triangles": 2598,
+              "bytes": 309928
+            },
+            "mid": {
+              "url": "/seasons/kit/models/beach-chair-0-mid.glb",
+              "triangles": 1170,
+              "bytes": 262276
+            },
+            "far": {
+              "url": "/seasons/kit/models/beach-chair-0-far.glb",
+              "triangles": 822,
+              "bytes": 249436
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual official source scan geometry, centered and grounded in Y-up metres; simplified offline with embedded WebP PBR textures."
+      ]
+    },
+    "picnic-basket": {
+      "name": "wicker basket 02",
+      "source": "https://polyhaven.com/a/wicker_basket_02",
+      "author": "Kuutti Siitonen",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.3100000023841858,
+              0,
+              -0.227373406291008
+            ],
+            "max": [
+              0.3100000023841858,
+              0.358252614736557,
+              0.227373406291008
+            ]
+          },
+          "height": 0.358252614736557,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/picnic-basket-0-near.glb",
+              "triangles": 4500,
+              "bytes": 527864
+            },
+            "mid": {
+              "url": "/seasons/kit/models/picnic-basket-0-mid.glb",
+              "triangles": 2024,
+              "bytes": 465808
+            },
+            "far": {
+              "url": "/seasons/kit/models/picnic-basket-0-far.glb",
+              "triangles": 900,
+              "bytes": 436244
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual official source scan geometry, centered and grounded in Y-up metres; simplified offline with embedded WebP PBR textures."
+      ]
+    },
+    "lantern": {
+      "name": "Textured Lantern",
+      "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Lantern",
+      "author": "Microsoft / sbtron",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.10999970883131027,
+              0,
+              -0.10999999940395355
+            ],
+            "max": [
+              0.10999970883131027,
+              0.5381008386611938,
+              0.10999999940395355
+            ]
+          },
+          "height": 0.5381008386611938,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/lantern-0-near.glb",
+              "triangles": 3274,
+              "bytes": 238012
+            },
+            "mid": {
+              "url": "/seasons/kit/models/lantern-0-mid.glb",
+              "triangles": 3274,
+              "bytes": 238012
+            },
+            "far": {
+              "url": "/seasons/kit/models/lantern-0-far.glb",
+              "triangles": 3274,
+              "bytes": 238012
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Original lantern mesh and PBR/emission maps; pole and chain removed, normalized and textures compressed."
+      ]
+    },
+    "umbrella": {
+      "name": "Red/White Beach Umbrella",
+      "source": "https://poly.pizza/m/2li3sdSkmCI",
+      "author": "S. Paul Michael",
+      "license": "CC-BY-3.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -1.125,
+              0,
+              -1.0048822164535522
+            ],
+            "max": [
+              1.125,
+              2.669297933578491,
+              1.0048822164535522
+            ]
+          },
+          "height": 2.669297933578491,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/umbrella-0-near.glb",
+              "triangles": 214,
+              "bytes": 18516
+            },
+            "mid": {
+              "url": "/seasons/kit/models/umbrella-0-mid.glb",
+              "triangles": 214,
+              "bytes": 18516
+            },
+            "far": {
+              "url": "/seasons/kit/models/umbrella-0-far.glb",
+              "triangles": 214,
+              "bytes": 18516
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Actual downloaded source geometry; normalized scale, PBR fabric roughness and two-sided canopy."
+      ]
+    },
+    "coastal-shrub": {
+      "name": "Othonna Cerarioides",
+      "source": "https://polyhaven.com/a/othonna_cerarioides",
+      "author": "James Ray Cock, Jenelle van Heerden",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "height": 0.9307401180267334,
+          "bounds": {
+            "min": [
+              -0.5,
+              0,
+              -0.4377370774745941
+            ],
+            "max": [
+              0.5,
+              0.9307401180267334,
+              0.4377370774745941
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/coastal-shrub-0-near.glb",
+              "triangles": 3124,
+              "bytes": 346216
+            },
+            "mid": {
+              "url": "/seasons/kit/models/coastal-shrub-0-mid.glb",
+              "triangles": 1796,
+              "bytes": 301908
+            },
+            "far": {
+              "url": "/seasons/kit/models/coastal-shrub-0-far.glb",
+              "triangles": 689,
+              "bytes": 258172
+            }
+          }
+        }
+      ],
+      "notes": [
+        "One original scanned shrub selected from the seven-plant lineup; original leaves and UVs retained."
+      ]
+    },
+    "coral": {
+      "name": "Weathered coral fragment",
+      "source": "https://poly.pizza/m/4KUXdtDdgHR",
+      "author": "Poly by Google",
+      "license": "CC-BY-3.0",
+      "variants": [
+        {
+          "id": "0",
+          "height": 0.9853155016899109,
+          "bounds": {
+            "min": [
+              -0.41282492876052856,
+              0,
+              -0.5
+            ],
+            "max": [
+              0.41282492876052856,
+              0.9853155016899109,
+              0.5
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/coral-0-near.glb",
+              "triangles": 817,
+              "bytes": 45564
+            },
+            "mid": {
+              "url": "/seasons/kit/models/coral-0-mid.glb",
+              "triangles": 817,
+              "bytes": 45564
+            },
+            "far": {
+              "url": "/seasons/kit/models/coral-0-far.glb",
+              "triangles": 816,
+              "bytes": 45532
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Original Google Poly geometry adapted to a small pale, dry shoreline fragment."
+      ]
+    },
+    "pebble": {
+      "name": "Weathered sandy pebbles",
+      "source": "https://polyhaven.com/a/rock_boulder_dry",
+      "author": "Dimitrios Savva, Rico Cilliers",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "height": 0.6462377905845642,
+          "bounds": {
+            "min": [
+              -0.49926939606666565,
+              0,
+              -0.5
+            ],
+            "max": [
+              0.49926939606666565,
+              0.6462377905845642,
+              0.5
+            ]
+          },
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/pebble-0-near.glb",
+              "triangles": 2394,
+              "bytes": 436216
+            },
+            "mid": {
+              "url": "/seasons/kit/models/pebble-0-mid.glb",
+              "triangles": 1000,
+              "bytes": 404956
+            },
+            "far": {
+              "url": "/seasons/kit/models/pebble-0-far.glb",
+              "triangles": 360,
+              "bytes": 390620
+            }
+          }
+        }
+      ],
+      "notes": [
+        "Original scanned geometry and PBR textures, scaled into small low-profile shoreline stones."
+      ]
+    }
+  },
+  "textures": {
+    "sand_03": {
+      "source": "https://polyhaven.com/a/sand_03",
+      "license": "CC0-1.0",
+      "sizeMetres": 2,
+      "color": "/seasons/kit/textures/sand_03-color.webp",
+      "normal": "/seasons/kit/textures/sand_03-normal.webp",
+      "roughness": "/seasons/kit/textures/sand_03-roughness.webp"
+    },
+    "rocky_trail": {
+      "source": "https://polyhaven.com/a/rocky_trail",
+      "license": "CC0-1.0",
+      "sizeMetres": 2,
+      "color": "/seasons/kit/textures/rocky_trail-color.webp",
+      "normal": "/seasons/kit/textures/rocky_trail-normal.webp",
+      "roughness": "/seasons/kit/textures/rocky_trail-roughness.webp"
+    },
+    "leafy_grass": {
+      "source": "https://polyhaven.com/a/leafy_grass",
+      "license": "CC0-1.0",
+      "sizeMetres": 2,
+      "color": "/seasons/kit/textures/leafy_grass-color.webp",
+      "normal": "/seasons/kit/textures/leafy_grass-normal.webp",
+      "roughness": "/seasons/kit/textures/leafy_grass-roughness.webp"
+    },
+    "snow_02": {
+      "source": "https://polyhaven.com/a/snow_02",
+      "license": "CC0-1.0",
+      "sizeMetres": 2,
+      "color": "/seasons/kit/textures/snow_02-color.webp",
+      "normal": "/seasons/kit/textures/snow_02-normal.webp",
+      "roughness": "/seasons/kit/textures/snow_02-roughness.webp"
+    },
+    "brown_mud_leaves_01": {
+      "source": "https://polyhaven.com/a/brown_mud_leaves_01",
+      "license": "CC0-1.0",
+      "sizeMetres": 2,
+      "color": "/seasons/kit/textures/brown_mud_leaves_01-color.webp",
+      "normal": "/seasons/kit/textures/brown_mud_leaves_01-normal.webp",
+      "roughness": "/seasons/kit/textures/brown_mud_leaves_01-roughness.webp"
+    },
+    "granite_tile_03": {
+      "source": "https://polyhaven.com/a/granite_tile_03",
+      "license": "CC0-1.0",
+      "sizeMetres": 2,
+      "color": "/seasons/kit/textures/granite_tile_03-color.webp",
+      "normal": "/seasons/kit/textures/granite_tile_03-normal.webp",
+      "roughness": "/seasons/kit/textures/granite_tile_03-roughness.webp"
+    }
+  },
+  "skies": {
+    "spring": {
+      "url": "/seasons/kit/skies/kloppenheim_06_puresky.webp",
+      "source": "https://polyhaven.com/a/kloppenheim_06_puresky",
+      "license": "CC0-1.0"
+    },
+    "summer": {
+      "url": "/seasons/kit/textures/sunset-sky.webp",
+      "source": "https://polyhaven.com/a/qwantani_sunset_puresky",
+      "license": "CC0-1.0",
+      "notes": "Official HDRI tonemapped to 2048 by 1024 WebP."
+    },
+    "autumn": {
+      "url": "/seasons/kit/skies/industrial_sunset_puresky.webp",
+      "source": "https://polyhaven.com/a/industrial_sunset_puresky",
+      "license": "CC0-1.0"
+    },
+    "winter": {
+      "url": "/seasons/kit/textures/sunset-sky.webp",
+      "source": "https://polyhaven.com/a/qwantani_sunset_puresky",
+      "license": "CC0-1.0",
+      "notes": "Official HDRI tonemapped to 2048 by 1024 WebP."
+    }
+  },
+  "blockedSources": []
+}

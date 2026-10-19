@@ -8,22 +8,26 @@
     {
       "id": "photo-2",
       "src": "/manga/part-1.webp",
-      "caption": "Part One · Spring — Where our season begins"
+      "caption": "Part One · Spring — Where our season begins",
+      "season": "spring"
     },
     {
       "id": "photo-3",
-      "src": "/manga/page-001.webp",
-      "caption": "A quiet morning, holding hands by the riverbank"
+      "src": "/manga/part-2.webp",
+      "caption": "Part Two · Summer — The warmth in the little things",
+      "season": "summer"
     },
     {
       "id": "photo-4",
-      "src": "/manga/page-002.webp",
-      "caption": "The gentle light that reaches us across the miles"
+      "src": "/manga/part-3.webp",
+      "caption": "Part Three · Autumn — There is beauty in change",
+      "season": "autumn"
     },
     {
       "id": "photo-5",
-      "src": "/manga/cover-back.webp",
-      "caption": "Wherever you are, the best of me is already with you"
+      "src": "/manga/part-4.webp",
+      "caption": "Part Four · Winter — Light is never far away",
+      "season": "winter"
     }
   ],
   "replay": "loop",
