@@ -13,7 +13,7 @@ async function sourceModule(filename){
 // Canvas rendering is exercised in browser QA. This neutral context isolates scene geometry,
 // state-driven pivots, target world transforms and disposal without a WebGL implementation.
 const paint=new Proxy({},{get:()=>()=>{}});globalThis.document={createElement:()=>({getContext:()=>paint})};globalThis.Path2D=class{};
-const [{createSummerWorld},{createSummerState},{createSummerSwim},{createSeasonTravel},{createSeasonLayout},layout]=await Promise.all([
+const [{createSummerWorld},{createSummerState},{createSummerSwim,SUMMER_SWIM_CAPSULE},{createSeasonTravel},{createSeasonLayout},layout]=await Promise.all([
   sourceModule(path.join(root,'app/shrine-void/summer-world.ts')).then(url=>import(url)),
   sourceModule(path.join(root,'app/shrine-void/summer-state.ts')).then(url=>import(url)),
   sourceModule(path.join(root,'app/shrine-void/summer-swim.ts')).then(url=>import(url)),
@@ -49,7 +49,7 @@ function reachableInteraction(id,submerged=false){
   proxy(id).getWorldPosition(point);const centre=point.clone();
   for(const radius of [.8,1.4,2,2.6,3])for(let direction=0;direction<24;direction++)for(const lift of submerged?[.25,.7,1.3]:[0]){
     const angle=direction/24*Math.PI*2,x=centre.x+Math.cos(angle)*radius,z=centre.z+Math.sin(angle)*radius;
-    const surface=walk.height(x,z),y=submerged?Math.max(centre.y+lift,layout.summerGroundHeight(x,z)+1.30):(surface??-999)+1.63;
+    const surface=walk.height(x,z),y=submerged?Math.max(centre.y+lift,layout.summerSolidGroundHeight(x,z)+SUMMER_SWIM_CAPSULE.eyeToFoot+SUMMER_SWIM_CAPSULE.bedClearance+.15):(surface??-999)+1.63;
     if(submerged?!swim.canOccupy(x,y,z):surface===null||![[.28,0],[-.28,0],[0,.28],[0,-.28]].every(([dx,dz])=>walk.height(x+dx,z+dz)!==null))continue;
     camera.position.set(x,y,z);camera.lookAt(centre);if(world.target(camera)?.id===id)return true;
   }

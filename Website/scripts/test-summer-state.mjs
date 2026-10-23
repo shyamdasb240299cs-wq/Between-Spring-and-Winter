@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {typescriptUrl} from './load-typescript.mjs';
 
-const {createSummerState,validateSummerSave,SUMMER_SAVE_KEY,summerDepartureMissing,summerDiveMissing,summerJournal}=await import(await typescriptUrl(new URL('../app/shrine-void/summer-state.ts',import.meta.url)));
+const {createSummerState,validateSummerSave,SUMMER_SAVE_KEY,summerDepartureMissing,summerDiveMissing,summerJournal,summerObjective}=await import(await typescriptUrl(new URL('../app/shrine-void/summer-state.ts',import.meta.url)));
 const memory=()=>{const saves=new Map();return {saves,getItem:key=>saves.get(key)??null,setItem:(key,value)=>saves.set(key,value)};};
 const act=(game,action,value)=>assert.equal(game.act(action,value),true,`${action}: ${game.message}`);
 const chart={pieces:[{tray:0,turn:0,x:0,y:0},{tray:1,turn:0,x:0,y:0}],north:0};
@@ -89,4 +89,33 @@ const legacy=memory();const legacyKey='between-seasons-relic-summer-v1';legacy.s
 let reader=createSummerState(legacy);assert.equal(reader.state.bookUnlocked,true);assert.equal(reader.state.legacyBookUnlocked,true);assert.equal(reader.state.caseRecovered,false);assert.deepEqual(reader.state.plates,[]);act(reader,'preferences',{reducedMotion:true,sound:false});act(reader,'reset');reader=createSummerState(legacy);assert.equal(reader.state.bookUnlocked,true);assert.equal(reader.state.chartAssembled,false);assert.deepEqual(reader.state.preferences,{reducedMotion:true,sound:false});assert.equal(legacy.saves.get('between-seasons-spring-v1'),'untouched');assert.equal(JSON.parse(legacy.saves.get(legacyKey)).bookTaken,true);
 act(game,'reset');assert.equal(game.state.bookUnlocked,true,'Restarting the trail preserves already earned reader access');assert.equal(game.state.caseRecovered,false);assert.equal(game.state.chartAssembled,false);assert.deepEqual(game.state.plates,[]);
 for(const id of ['chart','preparation','observation','current','cable','cassette']){for(let i=0;i<4;i++)act(game,'hint',id);assert.equal(game.state.hints[id],3);assert.ok(game.message);}
-console.log('Summer state passed: eight-act progression, invalid/duplicate actions, interrupted endpoints, all stable checkpoints, permanent inventory/recovery, corruption/storage/migration/reset and hints.');
+
+// Follow the surfaced next clue through a complete visit with interrupted dives.
+// Saved puzzle milestones must not send a player on shore straight to the wreck.
+const guided=createSummerState();
+assert.match(summerObjective(guided.state).detail,/beach table/);
+act(guided,'take-chart',0);assert.match(summerObjective(guided.state).detail,/lookout/);
+act(guided,'take-chart',1);assert.match(summerObjective(guided.state).detail,/shelter table/);
+act(guided,'assemble-chart',chart);assert.match(summerObjective(guided.state).detail,/dry bag/);
+for(const action of prep)act(guided,action);
+assert.match(summerObjective(guided.state).detail,/Board/);dive(guided);
+assert.match(summerObjective(guided.state).detail,/bottle/);act(guided,'read-bottle');
+assert.match(summerObjective(guided.state).detail,/reef garden/);garden(guided);
+assert.equal(summerObjective(guided.state).title,'The captain’s passage');
+act(guided,'recover','boat');assert.match(summerObjective(guided.state).detail,/Enter beside the descent rope/);
+act(guided,'enter-water');act(guided,'set-mode','swimming');rest(guided);
+assert.equal(summerObjective(guided.state).title,'The cargo windlass');lift(guided);
+assert.equal(summerObjective(guided.state).title,'Put the day together');
+act(guided,'reset-cable');assert.equal(summerObjective(guided.state).title,'The cargo windlass','Unpinned keeper access directs back to the winch even with all three plates');
+lift(guided);act(guided,'recover','island');act(guided,'remove-gear');
+assert.match(summerObjective(guided.state).detail,/wetsuit/,'After an early return the next clue first restores worn gear');
+act(guided,'wear-wetsuit');assert.match(summerObjective(guided.state).detail,/Board/);
+dive(guided);act(guided,'release-cassette',solvedTiles);
+assert.match(summerObjective(guided.state).detail,/Clip/);act(guided,'recover-case');
+assert.match(summerObjective(guided.state).detail,/ascend beside the boat/);
+act(guided,'recover','island');assert.match(summerObjective(guided.state).detail,/equipment to the shelter/);
+act(guided,'remove-gear');assert.match(summerObjective(guided.state).detail,/beach table/);
+act(guided,'place-case');assert.match(summerObjective(guided.state).detail,/latches/);
+for(const index of [0,1])act(guided,'open-latch',index);act(guided,'open-case');act(guided,'read-letter');
+assert.equal(summerObjective(guided.state).stage,8);assert.match(summerObjective(guided.state).detail,/blue Summer book/);
+console.log('Summer state passed: full guided eight-act progression, interrupted dives, keeper reset guidance, invalid/duplicate actions, stable checkpoints, inventory/recovery, saves/migration/reset and hints.');

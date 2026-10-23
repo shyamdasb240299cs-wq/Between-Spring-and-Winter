@@ -30,10 +30,10 @@ export type SummerAnchorId = keyof typeof SUMMER_ANCHORS;
 export const SUMMER_ROUTE = [SUMMER_LANDMARKS.training, SUMMER_LANDMARKS.observation, SUMMER_LANDMARKS.fork, SUMMER_LANDMARKS.rest, SUMMER_LANDMARKS.winch, SUMMER_LANDMARKS.case] as const;
 export const SUMMER_ROUTE_POSTS = {
   training: { x: 106, y: -4.8, z: -24, yaw: -Math.PI / 2 },
-  observation: { x: 126, y: -8, z: -37, yaw: -Math.PI / 2 },
-  fork: { x: 151, y: -12.8, z: -17, yaw: -Math.PI / 2 },
-  rest: { x: 157, y: -13.6, z: -17, yaw: -Math.PI / 2 },
-  winch: { x: 173, y: -18.2, z: -28, yaw: -Math.PI / 2 },
+  observation: { x: 126, y: -7.3, z: -37, yaw: -Math.PI / 2 },
+  fork: { x: 151, y: -12.3, z: -17, yaw: -Math.PI / 2 },
+  rest: { x: 157, y: -12.9, z: -17, yaw: -Math.PI / 2 },
+  winch: { x: 173, y: -17.8, z: -28, yaw: -Math.PI / 2 },
   case: { x: 181, y: -20, z: -28, yaw: Math.PI / 2 },
 } as const;
 export type SummerRoutePostId = keyof typeof SUMMER_ROUTE_POSTS;
@@ -87,6 +87,34 @@ export function summerGroundHeight(x: number, z: number) {
   h+=(basin-h)*(1-smooth(1.20,1.40,pond));
   const ripple = (Math.sin(x * .48 + z * .21) * Math.sin(z * .37) * .055) * smooth(1.1, 1.35, d);
   return h + ripple;
+}
+/** Shared with the rendered tiles so solid seabed follows their actual triangles. */
+export function summerTerrainSegments(tileX: number, tileZ: number, mobile: boolean) {
+  const distance=Math.hypot(tileX+8,tileZ+11);
+  return distance<32?(mobile?24:40):distance<65?12:6;
+}
+const terrainVertexHeights=new Map<string,number>();
+export function summerRenderedGroundHeight(x: number, z: number, mobile=false) {
+  if(!Number.isFinite(x)||!Number.isFinite(z))return NaN;
+  const tileX=Math.floor(x/16)*16,tileZ=Math.floor(z/16)*16,segments=summerTerrainSegments(tileX,tileZ,mobile),cell=16/segments;
+  const px=(x-tileX)/cell,pz=(z-tileZ)/cell,ix=Math.min(segments-1,Math.floor(px)),iz=Math.min(segments-1,Math.floor(pz)),u=px-ix,v=pz-iz;
+  const vertex=(dx:number,dz:number)=>{
+    const key=`${tileX}:${tileZ}:${segments}:${ix+dx}:${iz+dz}`;
+    let height=terrainVertexHeights.get(key);
+    if(height===undefined){
+      // PlaneGeometry stores its local coordinates and final heights in Float32.
+      const wx=tileX+8+Math.fround(-8+(ix+dx)*cell),wz=tileZ+8+Math.fround(-8+(iz+dz)*cell);
+      height=Math.fround(summerGroundHeight(wx,wz));terrainVertexHeights.set(key,height);
+    }
+    return height;
+  };
+  // PlaneGeometry splits each cell along its bottom-left/top-right diagonal.
+  return u+v<=1?vertex(0,0)*(1-u-v)+vertex(1,0)*u+vertex(0,1)*v:vertex(1,1)*(u+v-1)+vertex(0,1)*(1-u)+vertex(1,0)*(1-v);
+}
+export function summerSolidGroundHeight(x:number,z:number) {
+  const analytic=summerGroundHeight(x,z),desktop=summerRenderedGroundHeight(x,z);
+  const tileX=Math.floor(x/16)*16,tileZ=Math.floor(z/16)*16;
+  return Math.max(analytic,desktop,summerTerrainSegments(tileX,tileZ,false)===summerTerrainSegments(tileX,tileZ,true)?desktop:summerRenderedGroundHeight(x,z,true));
 }
 /** Exact CPU counterpart for ocean, contact particles and terrain material shaders. */
 export const SUMMER_GROUND_GLSL = `

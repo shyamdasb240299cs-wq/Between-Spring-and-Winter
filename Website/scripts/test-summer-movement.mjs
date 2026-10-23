@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import * as THREE from 'three';
 import {typescriptUrl} from './load-typescript.mjs';
 const load=async name=>import(await typescriptUrl(new URL(`../app/shrine-void/${name}.ts`,import.meta.url)));
-const [{createSummerBoat,SUMMER_BOAT_SOCKETS},{createSummerSwim},{createSummerMovement,createSummerDeck},layout]=await Promise.all(['summer-boat','summer-swim','summer-movement','summer-layout'].map(load));
-const {SUMMER_ANCHORS,SUMMER_ROUTE_POSTS,SUMMER_BOUNDS,summerGroundHeight}=layout;
+const [{createSummerBoat,SUMMER_BOAT_SOCKETS},{createSummerSwim,SUMMER_SWIM_CAPSULE},{createSummerMovement,createSummerDeck},layout]=await Promise.all(['summer-boat','summer-swim','summer-movement','summer-layout'].map(load));
+const {SUMMER_ANCHORS,SUMMER_ROUTE_POSTS,SUMMER_BOUNDS,summerGroundHeight,summerRenderedGroundHeight,summerSolidGroundHeight,summerTerrainSegments}=layout;
+const footClearance=SUMMER_SWIM_CAPSULE.eyeToFoot+SUMMER_SWIM_CAPSULE.bedClearance;
 const tick=(controller,seconds,hz=60)=>{for(let i=0;i<Math.round(seconds*hz);i++)controller.update(1/hz);};
 const openBoat=()=>createSummerBoat({groundHeight:()=>-12,colliders:[]});
 const openSwim=()=>createSummerSwim({groundHeight:()=>-30,colliders:[]});
@@ -29,8 +31,46 @@ for(let i=1;i<boatRoute.length;i++){
 const posts=Object.values(SUMMER_ROUTE_POSTS);
 for(let i=1;i<posts.length;i++){
   const a=posts[i-1],b=posts[i];
-  for(let step=0;step<=100;step++){const t=step/100,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t,y=Math.max(a.y+(b.y-a.y)*t,summerGroundHeight(x,z)+1.55);assert.ok(swim.canOccupy(x,y,z),`Main sand corridor must admit the swimmer on leg ${i} at ${step}%`);}
+  for(let step=0;step<=100;step++){const t=step/100,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t,y=Math.max(a.y+(b.y-a.y)*t,summerSolidGroundHeight(x,z)+footClearance+.2);assert.ok(swim.canOccupy(x,y,z),`Main sand corridor must admit the swimmer on leg ${i} at ${step}%`);}
 }
+
+// Swim the outbound and return route using the same analogue and depth inputs
+// as the game. Occupancy samples alone would miss a controller stuck on sand.
+const voyage=createSummerSwim();
+for(const destination of [...posts.slice(1),...posts.slice(0,-1).reverse()]){
+  const start={...voyage.state},legX=destination.x-start.x,legZ=destination.z-start.z,legLength=legX*legX+legZ*legZ;
+  let reached=false;
+  for(let frame=0;frame<80*60;frame++){
+    const dx=destination.x-voyage.state.x,dz=destination.z-voyage.state.z,distance=Math.hypot(dx,dz);
+    const t=Math.max(0,Math.min(1,((voyage.state.x-start.x)*legX+(voyage.state.z-start.z)*legZ)/legLength));
+    const height=Math.max(start.y+(destination.y-start.y)*t,summerSolidGroundHeight(voyage.state.x,voyage.state.z)+footClearance+.18),dy=height-voyage.state.y;
+    if(distance<.4&&Math.abs(dy)<.3){reached=true;break;}
+    const speed=Math.min(1,distance/.8),direction=distance>0?speed/distance:0,sin=Math.sin(voyage.state.yaw),cos=Math.cos(voyage.state.yaw);
+    voyage.joystick((cos*dx-sin*dz)*direction,(sin*dx+cos*dz)*direction);voyage.vertical(dy>.08,dy<-.08);voyage.update(1/60);
+    assert.ok(voyage.canOccupy(voyage.state.x,voyage.state.y,voyage.state.z),'The travelled swimmer remains outside terrain, reef and wreck solids');
+  }
+  assert.ok(reached,`Held movement and depth controls reach the route stop at ${destination.x},${destination.z}`);voyage.resetInput();
+}
+
+// Compare collision sampling to actual Three.js triangle hits on both terrain
+// tessellations. A smooth height function alone does not match the visible bed.
+const ray=new THREE.Raycaster(new THREE.Vector3(),new THREE.Vector3(0,-1,0));
+let meshDifference=0;
+for(const mobile of [false,true])for(const [tileX,tileZ]of [[16,-16],[48,-32],[96,-32],[112,-48],[144,-32],[176,-32]]){
+  const segments=summerTerrainSegments(tileX,tileZ,mobile),geometry=new THREE.PlaneGeometry(16,16,segments,segments);geometry.rotateX(-Math.PI/2);
+  const positions=geometry.attributes.position;
+  for(let i=0;i<positions.count;i++){const x=tileX+8+positions.getX(i),z=tileZ+8+positions.getZ(i);positions.setXYZ(i,x,summerGroundHeight(x,z),z);}
+  const material=new THREE.MeshBasicMaterial(),terrain=new THREE.Mesh(geometry,material);terrain.updateMatrixWorld(true);
+  for(const [u,v]of [[.123,.286],[.367,.891],[.759,.231],[.941,.748]]){
+    const x=tileX+16*u,z=tileZ+16*v;ray.ray.origin.set(x,20,z);const hit=ray.intersectObject(terrain,false)[0];assert.ok(hit);
+    const solid=summerSolidGroundHeight(x,z),rendered=summerRenderedGroundHeight(x,z,mobile);
+    assert.ok(Math.abs(rendered-hit.point.y)<.00002,'The collision height matches the rendered terrain triangle');
+    assert.ok(solid>=hit.point.y-.00002,'The solid floor never lies below the visible terrain');
+    meshDifference=Math.max(meshDifference,Math.abs(hit.point.y-summerGroundHeight(x,z)));
+  }
+  geometry.dispose();material.dispose();
+}
+assert.ok(meshDifference>.005,'The audit covers a place where smooth and rendered terrain really differ');
 
 // The same held input should move the same distance at common display rates.
 const boatPos=[],swimPos=[];
@@ -52,7 +92,17 @@ for(const hz of [10,30,60,120]){
   assert.ok(b.pose.z>=-14+.015+2.95-1e-6,`${hz} Hz hull cannot tunnel through wall`);assert.ok(b.state.boundary);
 }
 const ceiling=openSwim();ceiling.vertical(true,false);tick(ceiling,25);assert.ok(ceiling.state.y<=.22);assert.ok(ceiling.state.y>-1);
-const floor=createSummerSwim({groundHeight:()=>-8,colliders:[]});floor.vertical(false,true);tick(floor,15);assert.ok(floor.state.y>=-8+1.28-1e-5,'The full capsule stays above the seabed');
+for(const hz of [10,30,60,120]){
+  const floor=createSummerSwim({groundHeight:()=>-8,colliders:[]});floor.vertical(false,true);tick(floor,15,hz);
+  assert.ok(Math.abs(floor.state.y-(-8+footClearance))<.0001,`${hz} Hz descending stops with boots and fins clear of the seabed`);
+  floor.vertical(true,false);tick(floor,2,hz);assert.ok(floor.state.y>-8+footClearance+.9,'A grounded swimmer can immediately ascend again');
+}
+const slope=createSummerSwim({groundHeight:x=>-8+x*.2,colliders:[]});assert.ok(slope.setPose({x:0,y:-6,z:0,yaw:-Math.PI/2}));slope.vertical(false,true);tick(slope,2);slope.key('w',true);tick(slope,6);
+assert.ok(slope.state.x>7,'Forward swimming follows a gentle sand slope without sticking');assert.ok(slope.state.y>=-8+(slope.state.x+.34)*.2+footClearance-1e-6);
+const keyboardDepth=openSwim();const keyboardStart=keyboardDepth.state.y;assert.ok(keyboardDepth.key(' ',true));tick(keyboardDepth,2);keyboardDepth.key(' ',false);assert.ok(keyboardDepth.state.y>keyboardStart+1);assert.ok(keyboardDepth.key('Control',true));tick(keyboardDepth,4);keyboardDepth.key('Control',false);assert.ok(keyboardDepth.state.y<keyboardStart-.8,'Space and Control provide independent, usable ascent and descent');
+for(const [id,p]of Object.entries(SUMMER_ROUTE_POSTS)){
+  const floor=createSummerSwim({checkpoint:id});floor.vertical(false,true);tick(floor,35);assert.ok(floor.state.y-SUMMER_SWIM_CAPSULE.eyeToFoot>=summerRenderedGroundHeight(floor.state.x,floor.state.z)+SUMMER_SWIM_CAPSULE.bedClearance-1e-5,`Sustained descent at ${id} never enters the visible seabed`);assert.ok(floor.canOccupy(floor.state.x,floor.state.y,floor.state.z));
+}
 const dry=createSummerBoat({groundHeight:(x)=>x>52?0:-12,colliders:[]});dry.setPose({x:49,z:-8,yaw:-Math.PI/2});dry.release();dry.key('w',true);tick(dry,8);assert.ok(dry.pose.x<=52-2.95+.001,'The bow cannot ride onto dry land');
 const unknownBed=createSummerBoat({groundHeight:x=>x>50?NaN:-12,colliders:[]});assert.equal(unknownBed.canOccupy(49,-8,-Math.PI/2),false,'Missing edge samples cannot be treated as clear water');
 

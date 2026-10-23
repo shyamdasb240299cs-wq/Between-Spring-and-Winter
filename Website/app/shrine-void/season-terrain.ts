@@ -4,7 +4,7 @@ import type {GroundMotion} from './season-ground-motion';
 import type {SeasonId} from './seasons';
 import {springPathDistance,springClearance} from './spring-treasure-layout';
 import {groundHeight,random,smooth,autumnPathDistance,autumnLakeDistance,AUTUMN_LAKE_LEVEL,lakeShapeGLSL,type SeasonLayout} from './season-layout';
-import {SUMMER_GROUND_GLSL} from './summer-layout';
+import {SUMMER_GROUND_GLSL,summerTerrainSegments} from './summer-layout';
 
 export interface GroundMaps {color:THREE.Texture;normal:THREE.Texture;roughness:THREE.Texture;sizeMetres:number;}
 function mapleLeaf(c:CanvasRenderingContext2D,x:number,y:number,size:number,angle:number,colour:string){
@@ -101,7 +101,7 @@ export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile
   };
   const extent=id==='summer'?96:112;
   for(let z=-extent;z<extent;z+=16)for(let x=id==='summer'?-80:-extent;x<(id==='summer'?240:extent);x+=16){
-    const distance=Math.hypot(x+8,z+11),segments=distance<32?(mobile?24:40):distance<65?12:6;
+    const distance=Math.hypot(x+8,z+11),segments=id==='summer'?summerTerrainSegments(x,z,mobile):distance<32?(mobile?24:40):distance<65?12:6;
     const geometries=[segments].map(segments=>{
       const geometry=new THREE.PlaneGeometry(16,16,segments,segments);geometry.rotateX(-Math.PI/2);
       const positions=geometry.attributes.position;

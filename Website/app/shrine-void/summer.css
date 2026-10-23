@@ -24,3 +24,4 @@
 
 .summer-next-stop{margin:0 0 22px;padding:20px 22px;border:1px solid #a8c7b849;border-radius:16px;background:linear-gradient(135deg,#28433b72,#172e2e45)}
 .summer-next-stop>span{font-size:10px;letter-spacing:.16em;color:#466353}.summer-next-stop h3{margin:10px 0 7px;font-size:22px}.summer-next-stop p{margin:0 0 16px;line-height:1.65}.summer-next-stop progress{width:100%;height:5px;accent-color:#c7ac72}
+.summer-hud-buttons .summer-slate-button{display:block;line-height:1.25}.summer-slate-button small{display:block;margin-top:3px;font-size:8px;letter-spacing:.5px;color:#d3ddbd}

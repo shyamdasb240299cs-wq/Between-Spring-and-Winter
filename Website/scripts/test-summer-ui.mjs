@@ -36,6 +36,7 @@ assert.equal(find(game,'Dock at the island jetty')?.disabled,false,'An underway 
 assert.ok(find(game,'Moor beside the dive buoy'));assert.equal(find(game,'Step onto the jetty'),undefined,'The helm cannot disembark at sea');
 act(game,'moor');assert.equal(find(game,'Lower the stern ladder')?.disabled,true);act(game,'stop-engine');assert.equal(find(game,'Lower the stern ladder')?.disabled,false);
 const hud=()=>renderToStaticMarkup(createElement(SummerHUD,{controller:game,onOpen(){},depth:6,heading:90}));
+assert.ok(hud().includes('Next clue'),'The slate explains where to get the next clue without a desktop-only tooltip');
 assert.equal(hud().includes('View through fitted diving mask'),false);
 act(game,'fit-mask');assert.ok(hud().includes('View through fitted diving mask'),'Fitting the mask adds the optical viewport frame');
 for(const action of ['lower-ladder','fit-mask','fit-fins','inspect-gear','enter-water'])act(game,action);act(game,'set-mode','swimming');
