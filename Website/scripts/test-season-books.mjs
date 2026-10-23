@@ -8,6 +8,7 @@ import {NodeIO} from '@gltf-transform/core';
 import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
 registerHooks({resolve(s,c,n){try{return n(s,c);}catch(e){if(e.code==='ERR_MODULE_NOT_FOUND'&&s.startsWith('.'))return n(s+'.ts',c);throw e;}}});
 const {createRelicState,relicSaveKey}=await import('../app/shrine-void/season-relic-state.ts');
+const {createSpringTreasureState}=await import('../app/shrine-void/spring-treasure-state.ts');
 const {seasonBook,clampBookPage}=await import('../app/shrine-void/season-book-data.ts');
 const {createSeasonLayout,groundHeight}=await import('../app/shrine-void/season-layout.ts');
 const {createSeasonTravel}=await import('../app/shrine-void/season-navigation.ts');
@@ -28,8 +29,9 @@ for(const id of ['spring','summer','autumn','winter'])for(const reduced of [fals
  assert.equal(relic.read(),true);assert.equal(relic.read(),false);advance(relic,reduced?.9:3.1,hz);assert.equal(relic.pose().readerReady,true);assert.equal(relic.pose().opening,1);
  assert.equal(relic.close(),true);advance(relic,1,hz);assert.equal(relic.pose().busy,false);assert.equal(relic.pose().opening,0);assert.ok(relic.pose().hasBook,'Closing the reader keeps the carried book');
  relic.read();advance(relic,.15,hz);const partial=relic.pose();relic.close();assert.ok(Math.abs(relic.pose().present-partial.present)<1e-8,'Cancelling an opening cannot jump to a fully open pose');advance(relic,1,hz);
- const chapter=seasonBook(id);assert.equal(chapter.pages.length,id==='spring'?22:25);assert.ok(chapter.pages.every((p,i)=>p.number===i+1));
- if(id!=='spring')assert.ok(chapter.pages.every(p=>p.blank&&p.src==='/manga/blank.webp'),'Every unfinished season has exactly 25 blank pages');
+ const chapter=seasonBook(id);assert.equal(chapter.pages.length,id==='spring'?22:id==='summer'?0:25);assert.ok(chapter.pages.every((p,i)=>p.number===i+1));
+ if(id==='summer'){assert.equal(chapter.available,false,'Unprovided Summer artwork is explicitly unavailable');assert.deepEqual(chapter.pages,[],'Summer must not offer blank pages as its earned chapter');}
+ else if(id!=='spring')assert.ok(chapter.pages.every(p=>p.blank&&p.src==='/manga/blank.webp'),'Other unfinished seasons retain their existing fallback pages');
  await fs.access(new URL('../public'+chapter.cover,import.meta.url));
 }
 assert.equal(clampBookPage(999,25),24);assert.equal(clampBookPage(-20,25),0);assert.equal(clampBookPage(NaN,25),0);
@@ -47,7 +49,9 @@ const stoneNode=stoneDocument.getRoot().listNodes().find(n=>n.getMesh()),primiti
 for(const [attribute,name]of [['POSITION','position'],['NORMAL','normal'],['TEXCOORD_0','uv']]){const accessor=primitive.getAttribute(attribute);if(accessor)stoneGeometry.setAttribute(name,new THREE.BufferAttribute(accessor.getArray().slice(),accessor.getElementSize()));}
 if(primitive.getIndices())stoneGeometry.setIndex(new THREE.BufferAttribute(primitive.getIndices().getArray().slice(),1));stoneGeometry.applyMatrix4(new THREE.Matrix4().fromArray(stoneNode.getWorldMatrix()));
 const surfaces={wood:new THREE.Texture(),cloth:new THREE.Texture(),paper:new THREE.Texture(),stone:{geometry:stoneGeometry,material:new THREE.MeshStandardMaterial({map:new THREE.Texture()}),name:'real scanned rock'}};
-for(const id of ['spring','summer','autumn','winter']){
+// Summer's physical key/chest route has been replaced by the case trail. Its
+// legacy save controller above remains covered for reader migration.
+for(const id of ['spring','autumn','winter']){
  const layout=createSeasonLayout(id),nav=layout.navigation,travel=createSeasonTravel(nav),placement=relicPlacement(id,layout.prop),relic=createSeasonRelics(id,layout,gltf.scene,cover,false,makeStorage(),surfaces);
  assert.equal(relic.chest.scale.x,CHEST_SCALE);relic.chest.updateMatrixWorld(true);
  const unturned=relic.chest.clone(true);unturned.quaternion.identity();unturned.position.set(0,0,0);
@@ -99,5 +103,31 @@ for(const id of ['spring','summer','autumn','winter']){
  assert.ok(meshes<30,'Book decorations and chest details have a bounded draw count');assert.ok(triangles<30000,'The treasure arrangement has bounded geometry');
  relic.dispose();console.log(`${id}: chest/key routes, real 3D book, unlock/take/carry/read/close; ${meshes} meshes, ${triangles} source triangles`);
 }
+// Restarting the Spring trail must reset its physical relic as well as its saved discoveries.
+const springLayout=createSeasonLayout('spring');
+for(const milestone of ['cabinet','box','book']){
+ const quest=createSpringTreasureState(makeStorage());
+ const questStorage={getItem:()=>JSON.stringify({version:1,keyFound:quest.state.cabinetOpen,unlocked:quest.state.boxOpen,bookTaken:quest.state.bookFound}),setItem(){}};
+ const relic=createSeasonRelics('spring',springLayout,gltf.scene,cover,true,questStorage,surfaces,true);
+ const tick=(frames=1)=>{for(let i=0;i<frames;i++){const q=quest.state;relic.syncQuest(q.cabinetOpen,q.boxOpen,q.bookFound,q.digStage===3);relic.update(1/60,i/60,camera);}};
+ const findBox=()=>{quest.act('take-spade');for(let n=0;n<3;n++)quest.act('dig');quest.act('open-box');tick(30);};
+ quest.act('open-cabinet',['sun','leaf','ripple']);tick();
+ if(milestone!=='cabinet')findBox();
+ if(milestone==='book'){quest.act('take-book');tick(20);}
+ assert.equal(quest.act('reset'),true);tick();
+ const hud=relic.status(camera);
+ assert.equal(hud.hasKey,false,`${milestone}: restart clears the held key`);
+ assert.equal(hud.hasBook,false,`${milestone}: restart clears the carried book`);
+ assert.equal(hud.busy,false,`${milestone}: restart leaves a stable pose`);
+ assert.equal(relic.chest.visible,false,`${milestone}: restart buries the box`);
+ assert.equal(relic.key.visible,false,`${milestone}: restart hides the undiscovered key`);
+ assert.equal(relic.book.visible,false,`${milestone}: restart hides the undiscovered book`);
+ assert.equal(relic.read(),false,`${milestone}: restart cannot read the previous book`);
+ quest.act('open-cabinet',['sun','leaf','ripple']);tick();findBox();quest.act('take-book');tick(20);
+ assert.equal(relic.status(camera).hasBook,true,`${milestone}: the restarted trail can be completed`);
+ assert.equal(relic.read(),true,`${milestone}: the newly found book can be opened`);
+ relic.dispose();
+}
+console.log('Spring trail restart passed after cabinet, box and book discovery, including completing the trail again.');
 cover.dispose();stoneGeometry.dispose();surfaces.stone.material.map.dispose();surfaces.stone.material.dispose();surfaces.wood.dispose();surfaces.cloth.dispose();surfaces.paper.dispose();
-console.log('Season books passed: 4 independent inventories; persistence and corrupt/blocked storage; 30/60/120 Hz and reduced motion; sequential Spring pages and 25 blank pages per unfinished season.');
+console.log('Season books passed: legacy save inventories, current physical relic routes, reader carry/restart, storage and refresh rates; supplied Spring pages and explicit missing Summer content.');

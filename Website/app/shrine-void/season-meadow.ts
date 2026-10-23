@@ -1,7 +1,9 @@
+import {partitionInstances} from './spatial-instances';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {groundHeight,random,type SeasonLayout} from './season-layout';
 import type {GroundMotion} from './season-ground-motion';
+import {springClearance} from './spring-treasure-layout';
 
 /** Small near-ground detail complements the scanned meadow without a large triangle budget. */
 export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:GroundMotion){
@@ -9,6 +11,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
   group.name='Short meadow, clover and fallen cherry petals';
   const object=new THREE.Object3D(),colour=new THREE.Color();
   const clear=(x:number,z:number)=>{
+    if(springClearance(x,z))return false;
     if(Math.abs(x-layout.prop.x)<1.83&&Math.abs(z-layout.prop.z)<1.48)return false;
     return !layout.obstacles.some(o=>(x-o.x)**2+(z-o.z)**2<(o.radius+.06)**2);
   };
@@ -42,7 +45,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
     g.rotateY(angle);g.translate(Math.sin(angle)*.024,.045,Math.cos(angle)*.024);g.computeVertexNormals();cloverParts.push(g);
   }
   const cloverGeometry=mergeGeometries(cloverParts)!;cloverParts.forEach(g=>g.dispose());
-  const cloverMaterial=new THREE.MeshStandardMaterial({color:0x527f23,roughness:.93,side:THREE.DoubleSide});
+  const cloverMaterial=new THREE.MeshStandardMaterial({color:0x638d30,roughness:.88,side:THREE.DoubleSide});
   const clover=new THREE.InstancedMesh(cloverGeometry,cloverMaterial,mobile?180:520);clover.receiveShadow=true;placed=0;
   for(let n=0;n<clover.instanceMatrix.count*4&&placed<clover.instanceMatrix.count;n++){
     const a=random(n+144)*6.28,r=Math.sqrt(random(n+285))*23,x=Math.cos(a)*r,z=-3+Math.sin(a)*r;if(!clear(x,z))continue;
@@ -77,6 +80,7 @@ export function createMeadowDetail(layout:SeasonLayout,mobile:boolean,motion?:Gr
     object.position.set(x,groundHeight('spring',x,z)+.075+random(n+97)*.045,z);object.rotation.set(0,random(n+45)*6.28,0);const size=.023+random(n+6)*.024;object.scale.set(size,size*.7,size*.73);object.updateMatrix();petals.setMatrixAt(placed,object.matrix);colour.setHSL(.95+random(n)*.035,.24,.79+random(n+3)*.14);petals.setColorAt(placed++,colour);
   }
   petals.count=placed;petals.computeBoundingSphere();group.add(petals);
-  const fullBlades=blades.count,fullPetals=petals.count;
-  return {group,update(time:number,density=1){clock.value=time;blades.count=Math.floor(fullBlades*Math.max(.6,density));petals.count=Math.floor(fullPetals*Math.max(.55,density));}};
+  // Keep the exact density, colour and transforms; cull only whole off-screen cells.
+  for(const source of [blades,clover,flowers,centres,petals])for(const tile of partitionInstances(source))group.add(tile);
+  return {group,update(time:number,_density=1){clock.value=time;}};
 }

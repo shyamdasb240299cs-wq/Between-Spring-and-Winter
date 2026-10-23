@@ -60,6 +60,7 @@
 .void-joystick>span{left:27px;top:27px}
 .void-preview-tools{top:10px;left:12px;right:12px;max-width:none;justify-content:center;flex-wrap:nowrap;gap:5px;overflow-x:auto;padding:2px}
 .void-preview-tools button{white-space:nowrap;flex-shrink:0}
+.void-preview-tools select{background:#15121de8;border:1px solid #eadfe640;border-radius:16px;padding:7px 10px;font-size:11px;color:#eadfe6;max-width:155px;flex-shrink:0;cursor:pointer}
 .void-scene-wrapper[data-preview=true] .void-hud{--hud-top:68px}
 @media(max-width:700px){
  .void-object-actions{width:126px;top:calc(var(--hud-top) + 60px)}.void-object-actions button{padding:9px 10px;font-size:11px;gap:6px}
@@ -79,3 +80,5 @@
  .void-caption{right:190px;max-width:520px}.void-caption p{font-size:9px;margin:3px 0 0}.void-caption a{margin-top:3px}.void-sound{bottom:var(--hud-bottom);right:76px}
  .void-scene-wrapper[data-preview=true] .void-hud{--hud-top:54px}.void-scene-wrapper[data-preview=true] .void-object-actions{flex-direction:row;width:auto;top:calc(var(--hud-top) + 52px)}.void-scene-wrapper[data-preview=true] .void-object-actions button{grid-template-columns:17px auto;min-height:38px}
 }
+
+.void-crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:24px/1 monospace;color:#fff;pointer-events:none;z-index:12;text-shadow:0 1px 2px #000,1px 0 2px #000;opacity:.85}

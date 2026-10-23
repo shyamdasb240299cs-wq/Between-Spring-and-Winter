@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {groundHeight,islandDistance,ISLAND_SCALE,WALK_RADIUS,type SeasonLayout} from './season-layout';
+import {groundHeight,islandDistance,ISLAND_SCALE,seasonWalkRadius,type SeasonLayout} from './season-layout';
 import type {SeasonId} from './seasons';
 
 export interface PickupItem{object:THREE.Object3D;label:string;onLift?:()=>void;onDrop?:()=>void;}
@@ -11,6 +11,7 @@ export function createScenePickup(id:SeasonId,layout:SeasonLayout,items:PickupIt
   const entries:Item[]=items.map(item=>{item.object.updateWorldMatrix(true,true);box.setFromObject(item.object);return {...item,restQ:item.object.getWorldQuaternion(new THREE.Quaternion()),offset:box.getCenter(new THREE.Vector3()).sub(item.object.getWorldPosition(new THREE.Vector3())),half:box.getSize(new THREE.Vector3()).multiplyScalar(.5)};});
   let held:Item|null=null,settling:{item:Item;from:THREE.Vector3;to:THREE.Vector3;fromQ:THREE.Quaternion;age:number}|null=null;
   const supportRay=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0);
+  const targetSphere=new THREE.Sphere(),nearby:THREE.Object3D[]=[],targetHits:THREE.Intersection[]=[];
   function supportHeight(x:number,z:number){let height=groundHeight(id,x,z);if(supports.length){supportRay.set(new THREE.Vector3(x,height+3,z),down);for(const object of supports)object.updateWorldMatrix(true,true);const hit=supportRay.intersectObjects(supports,true)[0];if(hit)height=Math.max(height,hit.point.y);}return height;}
   const worldPosition=(object:THREE.Object3D,p:THREE.Vector3)=>{object.parent?.updateWorldMatrix(true,false);object.position.copy(object.parent?object.parent.worldToLocal(p.clone()):p);object.updateWorldMatrix(false,true);};
   const worldRotation=(object:THREE.Object3D,q:THREE.Quaternion)=>{const parentQ=object.parent?.getWorldQuaternion(new THREE.Quaternion());object.quaternion.copy(parentQ?parentQ.invert().multiply(q):q);};
@@ -28,7 +29,7 @@ export function createScenePickup(id:SeasonId,layout:SeasonLayout,items:PickupIt
     // another prop, a tree, deep water, or beyond the reachable walking circle.
     for(const distance of [1.05+radius,1.4+radius,1.8+radius])for(const angle of [0,-.28,.28,-.6,.6,-.95,.95]){
       const x=camera.position.x-Math.sin(yaw+angle)*distance,z=camera.position.z-Math.cos(yaw+angle)*distance;
-      if(id==='summer'?islandDistance(x,z)+radius/ISLAND_SCALE>10.2:Math.hypot(x,z+3)+radius>WALK_RADIUS-.25)continue;
+      if(id==='summer'?islandDistance(x,z)+radius/ISLAND_SCALE>10.2:Math.hypot(x,z+3)+radius>seasonWalkRadius(id)-.25)continue;
       const heights:number[]=[];for(const sx of [-1,-.5,0,.5,1])for(const sz of [-1,-.5,0,.5,1])heights.push(supportHeight(x+sx*item.half.x,z+sz*item.half.z));
       const y=Math.max(...heights)+.008;
       if(y<(id==='summer'?.075:id==='autumn'?-.04:-Infinity)||Math.max(...heights)-Math.min(...heights)>.16)continue;
@@ -38,7 +39,10 @@ export function createScenePickup(id:SeasonId,layout:SeasonLayout,items:PickupIt
   }
   function targetItem(camera:THREE.Camera,ray:THREE.Raycaster,strict=false){
     if(held||settling)return null;
-    const hits=ray.intersectObjects(entries.map(e=>e.object),true);
+    // Broad phase avoids raycasting distant scanned props at every HUD refresh.
+    nearby.length=0;targetHits.length=0;
+    for(const item of entries){item.object.getWorldPosition(targetSphere.center).add(item.offset);targetSphere.radius=item.half.length()+.02;if(camera.position.distanceTo(targetSphere.center)-targetSphere.radius<=2.8&&ray.ray.intersectsSphere(targetSphere))nearby.push(item.object);}
+    const hits=ray.intersectObjects(nearby,true,targetHits);
     for(const hit of hits){if(hit.distance>2.8)break;let object:THREE.Object3D|null=hit.object;while(object){const entry=entries.find(e=>e.object===object);if(entry)return entry;object=object.parent;}}
     if(strict)return null;
     forward.set(0,0,-1).applyQuaternion(camera.quaternion).setY(0).normalize();

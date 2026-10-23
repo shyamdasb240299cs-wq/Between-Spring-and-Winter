@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "prepared": "2026-10-20",
+  "units": "metres",
+  "upAxis": "Y",
+  "models": {
+    "desk": {
+      "name": "SchoolDesk 01",
+      "url": "/seasons/kit/spring/desk.glb",
+      "source": "https://polyhaven.com/a/SchoolDesk_01",
+      "author": "Ethan Place",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 240700,
+      "sha256": "0898094da8b7bd37570ea18d5d6b4cf1fac2aee8d36dd5f8a6d5ac972475c841",
+      "triangles": 4162,
+      "materials": 1,
+      "textures": [
+        {
+          "name": "SchoolDesk_01_nor_gl",
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 57860
+        },
+        {
+          "name": "SchoolDesk_01_diff",
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 45858
+        },
+        {
+          "name": "SchoolDesk_01_metallic-SchoolDesk_01_roughness",
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 101038
+        }
+      ],
+      "height": 0.76,
+      "bounds": {
+        "min": [
+          -0.3064400120243095,
+          0,
+          -0.23506027110659736
+        ],
+        "max": [
+          0.3064400120243095,
+          0.7599999904632568,
+          0.23506027110659736
+        ]
+      },
+      "normalization": {
+        "sourceBounds": {
+          "min": [
+            -0.35588786005973816,
+            -0.00047916985931806266,
+            -0.27762702107429504
+          ],
+          "max": [
+            0.35588815808296204,
+            0.8821507096290588,
+            0.2683405578136444
+          ]
+        },
+        "uniformScale": 0.8610630771309711
+      },
+      "notes": [
+        "Original source proportions preserved with uniform scaling; baked static hierarchy; X/Z centered and Y grounded; actual metres.",
+        "Embedded WebP PBR images and Meshopt compression; no external buffers or texture fetches.",
+        "Original source diffuse, AO/roughness/metalness and normal imagery retained."
+      ]
+    },
+    "spade": {
+      "name": "rusted spade 01",
+      "url": "/seasons/kit/spring/spade.glb",
+      "source": "https://polyhaven.com/a/rusted_spade_01",
+      "author": "Blemonade",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 748536,
+      "sha256": "795b79fe26c7b4873c57caf769c91743bd768a23e099f7511ec662a72fc9798d",
+      "triangles": 4200,
+      "materials": 1,
+      "textures": [
+        {
+          "name": "rusted_spade_01_nor_gl",
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 263764
+        },
+        {
+          "name": "rusted_spade_01_diff",
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 216392
+        },
+        {
+          "name": "rusted_spade_01_metal-rusted_spade_01_rough",
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 236192
+        }
+      ],
+      "height": 1.1,
+      "bounds": {
+        "min": [
+          -0.08399304360033961,
+          0,
+          -0.02276070486052369
+        ],
+        "max": [
+          0.08399304360033961,
+          1.100000023841858,
+          0.02276070486052369
+        ]
+      },
+      "normalization": {
+        "sourceBounds": {
+          "min": [
+            -0.08405739068984985,
+            -0.5032017230987549,
+            -0.022995803505182266
+          ],
+          "max": [
+            0.08405742049217224,
+            0.5977030396461487,
+            0.022568460553884506
+          ]
+        },
+        "uniformScale": 0.9991781643830411
+      },
+      "notes": [
+        "Original source proportions preserved with uniform scaling; baked static hierarchy; X/Z centered and Y grounded; actual metres.",
+        "Embedded WebP PBR images and Meshopt compression; no external buffers or texture fetches.",
+        "Original source diffuse, AO/roughness/metalness and normal imagery retained."
+      ]
+    },
+    "plant": {
+      "name": "Potted trailing pothos",
+      "url": "/seasons/kit/spring/plant.glb",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/potted-trailing-pothos-bfe0ed29",
+      "author": "Innerscene",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "bytes": 103984,
+      "sha256": "ee0d1e986c504016c37147f8de534dcbc7ff8d09b59f171655af4f1493abcae3",
+      "triangles": 6194,
+      "materials": 4,
+      "textures": [
+        {
+          "name": "25ba38051da27d7d",
+          "mime": "image/webp",
+          "size": [
+            64,
+            64
+          ],
+          "bytes": 76
+        },
+        {
+          "name": "leaf-color",
+          "mime": "image/webp",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 8270
+        },
+        {
+          "name": "leaf-normal",
+          "mime": "image/webp",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 10770
+        },
+        {
+          "name": "leaf-arm",
+          "mime": "image/webp",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 17486
+        }
+      ],
+      "height": 0.4,
+      "bounds": {
+        "min": [
+          -0.31211718916893005,
+          -0.000001193602702787011,
+          -0.30574472908549205
+        ],
+        "max": [
+          0.31211718916893005,
+          0.39999565108553237,
+          0.30574472908549205
+        ]
+      },
+      "normalization": {
+        "sourceBounds": {
+          "min": [
+            -0.23603419959545135,
+            0,
+            -0.2293066382408142
+          ],
+          "max": [
+            0.24401986598968506,
+            0.3076114356517792,
+            0.24095116555690765
+          ]
+        },
+        "uniformScale": 1.3003417742011585
+      },
+      "notes": [
+        "Original source proportions preserved with uniform scaling; baked static hierarchy; X/Z centered and Y grounded; actual metres.",
+        "Embedded WebP PBR images and Meshopt compression; no external buffers or texture fetches.",
+        "Original heart-shaped species geometry retained. Leaf UVs individually remapped; newly authored 512px green/gold variegation, midrib/vein normal and roughness textures. Source was not photogrammetry."
+      ]
+    }
+  }
+}

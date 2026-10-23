@@ -1,0 +1,13 @@
+{
+  "release": "summer-reef-2026-10-23",
+  "fishSpecies": 12,
+  "habitatPatches": 24,
+  "puzzleActs": 8,
+  "features": [
+    "resident anemone pairs",
+    "species-specific schools",
+    "reef grazers",
+    "rooted marine vegetation",
+    "saved next-discovery guide"
+  ]
+}

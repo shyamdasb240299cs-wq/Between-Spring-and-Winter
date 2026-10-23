@@ -25,6 +25,7 @@ export default function SeasonMangaReader({season,onClose}:{season:SeasonId;onCl
   },[mode,record]);
   useEffect(()=>{setFailed(false);const nextPage=chapter.pages[page+1];if(nextPage){const img=new Image();img.src=nextPage.src;img.decode?.().catch(()=>{});}},[page,season]);
   const current=chapter.pages[page],last=page===chapter.pages.length-1&&!cover;
+  if(season==='summer'&&!chapter.available)return <DialogPrimitive.Root open onOpenChange={open=>{if(!open)onClose();}}><DialogPrimitive.Portal><DialogPrimitive.Overlay className="season-reader-backdrop"/><DialogPrimitive.Content className="season-reader-shell"><DialogPrimitive.Title>The Summer chapter hasn’t been added yet</DialogPrimitive.Title><DialogPrimitive.Description>Your letter and completed Summer trail are saved. The chapter will use the original pages when they are added.</DialogPrimitive.Description><button onClick={onClose}>Return to the two chairs</button></DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root>;
   return <DialogPrimitive.Root open onOpenChange={open=>{if(!open)onClose();}}><DialogPrimitive.Portal>
     <DialogPrimitive.Overlay className="season-reader-backdrop"/>
     <DialogPrimitive.Content className="season-reader-shell" onCloseAutoFocus={event=>{event.preventDefault();document.querySelector<HTMLCanvasElement>('.void-render canvas')?.focus();}} onPointerDownOutside={event=>event.preventDefault()}>

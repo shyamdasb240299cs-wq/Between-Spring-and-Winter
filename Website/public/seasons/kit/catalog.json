@@ -472,13 +472,13 @@
             },
             "mid": {
               "url": "/seasons/kit/models/maple-0-mid.glb",
-              "triangles": 5279,
-              "bytes": 2232572
+              "triangles": 6882,
+              "bytes": 2342908
             },
             "far": {
               "url": "/seasons/kit/models/maple-0-far.glb",
-              "triangles": 1828,
-              "bytes": 1729692
+              "triangles": 3682,
+              "bytes": 1862996
             }
           }
         },
@@ -505,13 +505,13 @@
             },
             "mid": {
               "url": "/seasons/kit/models/maple-1-mid.glb",
-              "triangles": 5417,
-              "bytes": 2242020
+              "triangles": 6261,
+              "bytes": 2304096
             },
             "far": {
               "url": "/seasons/kit/models/maple-1-far.glb",
-              "triangles": 1701,
-              "bytes": 1720724
+              "triangles": 3061,
+              "bytes": 1824280
             }
           }
         },
@@ -538,13 +538,13 @@
             },
             "mid": {
               "url": "/seasons/kit/models/maple-2-mid.glb",
-              "triangles": 5338,
-              "bytes": 2235836
+              "triangles": 7199,
+              "bytes": 2373756
             },
             "far": {
               "url": "/seasons/kit/models/maple-2-far.glb",
-              "triangles": 1686,
-              "bytes": 1717372
+              "triangles": 3999,
+              "bytes": 1894132
             }
           }
         }
@@ -673,13 +673,13 @@
             },
             "mid": {
               "url": "/seasons/kit/models/cherry-0-mid.glb",
-              "triangles": 9114,
-              "bytes": 666332
+              "triangles": 9437,
+              "bytes": 682636
             },
             "far": {
               "url": "/seasons/kit/models/cherry-0-far.glb",
-              "triangles": 5916,
-              "bytes": 340256
+              "triangles": 6235,
+              "bytes": 356472
             }
           }
         },
@@ -706,13 +706,13 @@
             },
             "mid": {
               "url": "/seasons/kit/models/cherry-1-mid.glb",
-              "triangles": 7465,
-              "bytes": 611872
+              "triangles": 8927,
+              "bytes": 696112
             },
             "far": {
               "url": "/seasons/kit/models/cherry-1-far.glb",
-              "triangles": 4265,
-              "bytes": 285668
+              "triangles": 5727,
+              "bytes": 365080
             }
           }
         },
@@ -739,13 +739,13 @@
             },
             "mid": {
               "url": "/seasons/kit/models/cherry-2-mid.glb",
-              "triangles": 9756,
-              "bytes": 691784
+              "triangles": 9945,
+              "bytes": 701696
             },
             "far": {
               "url": "/seasons/kit/models/cherry-2-far.glb",
-              "triangles": 6568,
-              "bytes": 365964
+              "triangles": 6745,
+              "bytes": 375356
             }
           }
         }
@@ -1277,6 +1277,138 @@
       ],
       "notes": [
         "Original scanned geometry and PBR textures, scaled into small low-profile shoreline stones."
+      ]
+    },
+    "woodland-rock": {
+      "name": "boulder 01",
+      "source": "https://polyhaven.com/a/boulder_01",
+      "author": "Rico Cilliers",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.3475145697593689,
+              0,
+              -0.5
+            ],
+            "max": [
+              0.3475145697593689,
+              0.5484409332275391,
+              0.5
+            ]
+          },
+          "height": 0.5484409332275391,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/woodland-rock-0-near.glb",
+              "triangles": 18000,
+              "bytes": 4101252
+            },
+            "mid": {
+              "url": "/seasons/kit/models/woodland-rock-0-mid.glb",
+              "triangles": 7200,
+              "bytes": 3720828
+            },
+            "far": {
+              "url": "/seasons/kit/models/woodland-rock-0-far.glb",
+              "triangles": 2700,
+              "bytes": 3576128
+            }
+          }
+        }
+      ],
+      "notes": [
+        "New photogrammetry source. Uniform scaling retains the natural silhouette; original colour, normal and AO/roughness maps embedded."
+      ]
+    },
+    "coastal-rock": {
+      "name": "coast rocks 05",
+      "source": "https://polyhaven.com/a/coast_rocks_05",
+      "author": "Rob Tuytel",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.5,
+              0,
+              -0.4639688730239868
+            ],
+            "max": [
+              0.5,
+              0.32948505878448486,
+              0.4639688730239868
+            ]
+          },
+          "height": 0.32948505878448486,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/coastal-rock-0-near.glb",
+              "triangles": 23984,
+              "bytes": 4605432
+            },
+            "mid": {
+              "url": "/seasons/kit/models/coastal-rock-0-mid.glb",
+              "triangles": 8496,
+              "bytes": 4231888
+            },
+            "far": {
+              "url": "/seasons/kit/models/coastal-rock-0-far.glb",
+              "triangles": 2998,
+              "bytes": 4089932
+            }
+          }
+        }
+      ],
+      "notes": [
+        "New photogrammetry source. Uniform scaling retains the natural silhouette; original colour, normal and AO/roughness maps embedded."
+      ]
+    },
+    "loose-rock": {
+      "name": "rock 07",
+      "source": "https://polyhaven.com/a/rock_07",
+      "author": "Jenelle van Heerden",
+      "license": "CC0-1.0",
+      "variants": [
+        {
+          "id": "0",
+          "bounds": {
+            "min": [
+              -0.2636497914791107,
+              0,
+              -0.5
+            ],
+            "max": [
+              0.2636497914791107,
+              0.44873708486557007,
+              0.5
+            ]
+          },
+          "height": 0.44873708486557007,
+          "lods": {
+            "near": {
+              "url": "/seasons/kit/models/loose-rock-0-near.glb",
+              "triangles": 6000,
+              "bytes": 718660
+            },
+            "mid": {
+              "url": "/seasons/kit/models/loose-rock-0-mid.glb",
+              "triangles": 2398,
+              "bytes": 604644
+            },
+            "far": {
+              "url": "/seasons/kit/models/loose-rock-0-far.glb",
+              "triangles": 900,
+              "bytes": 556196
+            }
+          }
+        }
+      ],
+      "notes": [
+        "New photogrammetry source. Uniform scaling retains the natural silhouette; original colour, normal and AO/roughness maps embedded."
       ]
     }
   },

@@ -11,13 +11,13 @@ export interface RelicHUD{hasKey:boolean;hasBook:boolean;busy:boolean;action:str
 export interface RelicMaterials{wood:THREE.Texture;cloth:THREE.Texture;paper:THREE.Texture;stone:ModelPart;}
 
 /** One grounded chest and key, plus the existing hardcover book; no second WebGL renderer. */
-export function createSeasonRelics(id:SeasonId,layout:SeasonLayout,bookSource:THREE.Object3D,chapterCover:THREE.Texture,reduced:boolean,storage?:RelicStorage,surfaces?:RelicMaterials){
+export function createSeasonRelics(id:SeasonId,layout:SeasonLayout,bookSource:THREE.Object3D,chapterCover:THREE.Texture,reduced:boolean,storage?:RelicStorage,surfaces?:RelicMaterials,quest=false){
   const group=new THREE.Group();group.name=`${id} · locked book chest and key`;
   const state=createRelicState(id,reduced,storage),placement=relicPlacement(id,layout.prop),ownedMaterials:THREE.Material[]=[],ownedGeometries:THREE.BufferGeometry[]=[];
   const makeMaterial=(colour:number,roughness=.7,metalness=0)=>{const m=new THREE.MeshStandardMaterial({color:colour,roughness,metalness});ownedMaterials.push(m);return m;};
   const wood=makeMaterial(id==='summer'?0x765038:0x543825,.76),brass=makeMaterial(0xb99550,.34,.72),lining=makeMaterial(id==='winter'?0x24394b:id==='autumn'?0x572b2a:0x243b33,1),paper=makeMaterial(0xe7dece,.96);
   if(surfaces){
-    wood.map=wood.bumpMap=surfaces.wood;wood.bumpScale=.003;wood.color.set(id==='summer'?0xd9c7aa:0xbdb5a8);
+    wood.map=wood.bumpMap=surfaces.wood;wood.bumpScale=.003;wood.color.set(quest?0x171c1b:id==='summer'?0xd9c7aa:0xbdb5a8);
     lining.map=lining.bumpMap=surfaces.cloth;lining.bumpScale=.0012;
     paper.map=paper.bumpMap=surfaces.paper;paper.bumpScale=.0006;
   }
@@ -112,7 +112,16 @@ export function createSeasonRelics(id:SeasonId,layout:SeasonLayout,bookSource:TH
     return chosen;
   }
   const label=(action:RelicAction|null)=>action==='key'?'Pick up the brass key':action==='unlock'?(state.pose().hasKey&&!placedKey?'Use the key to unlock the box':'The box is locked · Find the nearby key'):action==='book'?'Pick up the book':'';
+  let questExposed=!quest;
   return {group,book,chest,key,keyStone,placement,
+    syncQuest(keyFound:boolean,unlocked:boolean,bookTaken:boolean,exposed:boolean){
+      if(!quest)return;questExposed=exposed;
+      // An explicit trail restart also clears the physical key, lid and carried book.
+      if(!keyFound&&state.state.keyFound){state.reset();placedKey=placedBook=null;landing=null;keyPickup=0;bodyReady=false;}
+      if(keyFound&&!state.state.keyFound)state.act('key');
+      if(unlocked&&!state.state.unlocked&&state.state.stage==='resting')state.act('unlock');
+      if(bookTaken&&state.state.unlocked&&!state.state.bookTaken&&state.state.stage==='resting')state.act('book');
+    },
     status(camera:THREE.Camera):RelicHUD{const pose=state.pose();lastTarget=target(camera);return {hasKey:pose.hasKey&&!placedKey,hasBook:pose.hasBook&&!placedBook,busy:pose.busy||!!landing,stage:landing?'dropping':pose.stage,readerReady:pose.readerReady,action:label(lastTarget)};},
     hint(camera:THREE.Camera,ray?:THREE.Raycaster){return label(target(camera,ray));},
     interact(camera:THREE.Camera,ray?:THREE.Raycaster,strict=false){const action=target(camera,ray,strict);if(!action)return null;if(action==='key'&&placedKey){placedKey=null;keyPickup=1;return 'Picked up the brass key';}if(action==='book'&&placedBook){placedBook=null;return 'Picked up the book';}if(action==='unlock'&&(!state.pose().hasKey||placedKey))return 'The box is locked · Find the nearby key';return state.act(action)?action==='key'?'You found the brass key':action==='unlock'?'The key turns in the lock':'You take the book':null;},
@@ -149,6 +158,7 @@ export function createSeasonRelics(id:SeasonId,layout:SeasonLayout,bookSource:TH
       if(placedBook){book.position.copy(placedBook);book.quaternion.copy(worldQ);}
       if(handsBusy){if(!placedKey&&state.state.keyFound)key.visible=false;if(!placedBook&&p.hasBook&&!p.busy)book.visible=false;}
       if(landing){landing.age+=Math.max(0,Math.min(dt,.1));const t=relicSmooth(0,reduced?.08:.34,landing.age);landing.object.position.copy(landing.from).lerp(landing.to,t);landing.object.quaternion.copy(landing.fromQ).slerp(landing.toQ,t);if(t===1)landing=null;}
+      if(quest){chest.visible=questExposed;keyStone.visible=false;glint.visible=false;if(!state.state.keyFound)key.visible=false;if(!questExposed&&!p.hasBook)book.visible=false;}
     },
     warm(on:boolean){book.visible=on||state.state.unlocked;},
     dispose(){alive=false;rivets.dispose();ownedGeometries.forEach(g=>g.dispose());ownedMaterials.forEach(m=>m.dispose());group.clear();},

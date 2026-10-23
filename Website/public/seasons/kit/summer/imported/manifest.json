@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "prepared": "2026-10-22",
+  "coordinateSystem": "Y_UP_METRES",
+  "models": [
+    {
+      "id": "summer-diver",
+      "file": "summer-wetsuit.glb",
+      "sourceFile": "cesium-man-source.glb",
+      "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMan",
+      "download": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
+      "author": "Cesium",
+      "copyright": "Copyright 2017 Cesium",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "authoringFile": "summer-wetsuit.blend",
+      "modifications": "Artist-authored skinned body adapted into a headless graphite/blue neoprene wetsuit; original logo-bearing texture and head removed; smooth vertex-color panels; original weights and bones retained. This is an adaptation of a human base mesh, not a scanned scuba suit.",
+      "url": "/seasons/kit/summer/imported/summer-wetsuit.glb",
+      "retrieved": "2026-10-22",
+      "sourceSha256": "b7001eaeea8254bd44773bcd247e78696d94169388fbb2a1800fc69434e777d9",
+      "sha256": "9b5dc3999e06803da78a8f5be4aa9debcbd86669bd4106050a3ba338c5830758",
+      "bytes": 91672,
+      "sourceBytes": 438044,
+      "triangles": 1928,
+      "vertices": 1120,
+      "materials": 1,
+      "textures": 0,
+      "dimensionsMetres": [
+        1.4668089488136884,
+        1.4799999312054535,
+        0.3674380545427206
+      ],
+      "bounds": [
+        [
+          -0.7334045045366786,
+          -1.2730589860292643e-7,
+          -0.13425601682888258
+        ],
+        [
+          0.7334044442770098,
+          1.4799998038995548,
+          0.23318203771383805
+        ]
+      ],
+      "skinBones": [
+        "Skeleton_torso_joint_1",
+        "leg_joint_L_1",
+        "leg_joint_L_2",
+        "leg_joint_L_3",
+        "leg_joint_L_5",
+        "leg_joint_R_1",
+        "leg_joint_R_2",
+        "leg_joint_R_3",
+        "leg_joint_R_5",
+        "Skeleton_torso_joint_2",
+        "torso_joint_3",
+        "Skeleton_arm_joint_L__4_",
+        "Skeleton_arm_joint_L__3_",
+        "Skeleton_arm_joint_L__2_",
+        "Skeleton_arm_joint_R",
+        "Skeleton_arm_joint_R__2_",
+        "Skeleton_arm_joint_R__3_",
+        "Skeleton_neck_joint_1",
+        "Skeleton_neck_joint_2"
+      ],
+      "clips": [],
+      "decodedGeometryBytes": 84464,
+      "acceptance": {
+        "rights": "Exact source metadata and licence verified; notices preserved",
+        "binary": "Source and adapted GLBs parsed; weighted body and original BCD geometry present",
+        "visual": "Source and neutral adapted models rendered and inspected locally; assembled runtime rack preview retained",
+        "animation": "Independent SkeletonUtils clones and actual bone deformation covered by test-summer-imports.mjs",
+        "runtime": "Parent scene gameplay and visual QA required"
+      }
+    },
+    {
+      "id": "summer-scuba-gear",
+      "file": "summer-scuba-equipment.glb",
+      "sourceFile": "steren-scuba-equipment-source.glb",
+      "source": "https://poly.pizza/m/7igrHLjaQlW",
+      "download": "https://static.poly.pizza/efda7497-db5e-47e9-b317-8e8baeb1c616.glb",
+      "author": "Steren Giannini",
+      "copyright": "Scuba equipment by Steren Giannini",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "authoringFile": "summer-scuba-equipment.blend",
+      "modifications": "Preserved source BCD, cylinder, primary/safety regulator, hoses and gauges; adapted navy/metal palette and smooth normals; runtime mount normalized to the wetsuit.",
+      "url": "/seasons/kit/summer/imported/summer-scuba-equipment.glb",
+      "retrieved": "2026-10-22",
+      "sourceSha256": "510aa30856968b089d1814b43cd24f35b1444bf41e3e7d6eaa1de9bed0b0255e",
+      "sha256": "02a976c33a40677f0abe4c96a7ae60a48ca5a464aa295fd8386d53e7eb910dfd",
+      "bytes": 254836,
+      "sourceBytes": 262700,
+      "triangles": 4696,
+      "vertices": 9236,
+      "materials": 6,
+      "textures": 0,
+      "dimensionsMetres": [
+        1.7123797535896301,
+        1.3411111235618591,
+        1.7571152448654175
+      ],
+      "bounds": [
+        [
+          -0.7606921792030334,
+          -0.6364712119102478,
+          -0.808675229549408
+        ],
+        [
+          0.9516875743865967,
+          0.7046399116516113,
+          0.9484400153160095
+        ]
+      ],
+      "skinBones": [],
+      "clips": [],
+      "decodedGeometryBytes": 249840,
+      "acceptance": {
+        "rights": "Exact source metadata and licence verified; notices preserved",
+        "binary": "Source and adapted GLBs parsed; weighted body and original BCD geometry present",
+        "visual": "Source and neutral adapted models rendered and inspected locally; assembled runtime rack preview retained",
+        "animation": "Independent SkeletonUtils clones and actual bone deformation covered by test-summer-imports.mjs",
+        "runtime": "Parent scene gameplay and visual QA required"
+      }
+    }
+  ]
+}

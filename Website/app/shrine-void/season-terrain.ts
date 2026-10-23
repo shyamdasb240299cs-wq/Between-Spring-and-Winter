@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import {createLeafTexture} from './season-leaf';
 import type {GroundMotion} from './season-ground-motion';
 import type {SeasonId} from './seasons';
+import {springPathDistance,springClearance} from './spring-treasure-layout';
 import {groundHeight,random,smooth,autumnPathDistance,autumnLakeDistance,AUTUMN_LAKE_LEVEL,lakeShapeGLSL,type SeasonLayout} from './season-layout';
+import {SUMMER_GROUND_GLSL} from './summer-layout';
 
 export interface GroundMaps {color:THREE.Texture;normal:THREE.Texture;roughness:THREE.Texture;sizeMetres:number;}
 function mapleLeaf(c:CanvasRenderingContext2D,x:number,y:number,size:number,angle:number,colour:string){
@@ -22,11 +24,20 @@ function leafCarpet(){
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.anisotropy=8;return texture;
 }
 
-export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile:boolean){
+export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile:boolean,forest?:GroundMaps,reef?:GroundMaps){
   const group=new THREE.Group(),chunks:{mesh:THREE.Mesh;centre:THREE.Vector3;geometries:THREE.BufferGeometry[]}[]=[];
   group.name='Sculpted seasonal terrain';
   const material=new THREE.MeshStandardMaterial({map:base.color,roughness:.94,color:id==='winter'?0xf3f5ff:0xffffff});
   const litter=id==='autumn'?leafCarpet():base.color;
+  let trail:THREE.CanvasTexture|undefined;
+  if(id==='spring'){
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=384;const context=canvas.getContext('2d')!,pixels=context.createImageData(384,384);
+    for(let row=0;row<384;row++)for(let col=0;col<384;col++){
+      const x=col/383*76-38,z=(1-row/383)*76-41,route=1-smooth(.65,1.35,springPathDistance(x,z)),wet=smooth(.63,.95,Math.sin(x*.63+z*.21)*Math.sin(z*.58-x*.13));
+      const i=(row*384+col)*4;pixels.data[i]=Math.round(route*255);pixels.data[i+1]=Math.round(wet*255);pixels.data[i+2]=0;pixels.data[i+3]=255;
+    }
+    context.putImageData(pixels,0,0);trail=new THREE.CanvasTexture(canvas);trail.flipY=true;trail.colorSpace=THREE.NoColorSpace;trail.generateMipmaps=false;
+  }
   // A fixed ring of sole stamps avoids allocating meshes or rebuilding the snow.
   const snowSteps=Array.from({length:24},()=>new THREE.Vector4()),snowCount={value:0},terrainTime={value:0};let snowHead=0;
   material.customProgramCacheKey=()=>`season-ground-${id}-snow-lake-v2`;
@@ -35,13 +46,17 @@ export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile
       leafLitter:{value:litter},groundMap:{value:base.color},pathMap:{value:path.color},groundNormal:{value:base.normal},pathNormal:{value:path.normal},groundRoughness:{value:base.roughness},pathRoughness:{value:path.roughness},
       groundScale:{value:base.sizeMetres},pathScale:{value:path.sizeMetres},seasonIndex:{value:['spring','summer','autumn','winter'].indexOf(id)},
       snowSteps:{value:snowSteps},snowCount,terrainTime,
+      reefTime:terrainTime,reefMap:{value:reef?.color??base.color},reefNormal:{value:reef?.normal??base.normal},
+      springTrail:{value:trail??base.color},
+      forestMap:{value:forest?.color??base.color},forestNormal:{value:forest?.normal??base.normal},forestRoughness:{value:forest?.roughness??base.roughness},
     });
     shader.vertexShader='varying vec3 vGroundWorld;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGroundWorld=(modelMatrix*vec4(transformed,1.)).xyz;');
     shader.fragmentShader=`varying vec3 vGroundWorld;
-      uniform sampler2D groundMap,pathMap,groundNormal,pathNormal,groundRoughness,pathRoughness,leafLitter;uniform float groundScale,pathScale;uniform int seasonIndex;
+      uniform sampler2D reefMap,reefNormal,groundMap,pathMap,groundNormal,pathNormal,groundRoughness,pathRoughness,leafLitter,springTrail,forestMap,forestNormal,forestRoughness;uniform float groundScale,pathScale,reefTime;uniform int seasonIndex;
       ${lakeShapeGLSL}
+      ${SUMMER_GROUND_GLSL}
       float pathBlend(){
-        if(seasonIndex==0||seasonIndex==1)return 0.;float z=vGroundWorld.z;float centre=sin(z*.075)*.8+sin(z*.17)*.22;float d=abs(vGroundWorld.x-centre);
+        if(seasonIndex==0)return texture2D(springTrail,(vGroundWorld.xz+vec2(38.,41.))/76.).r*.62;if(seasonIndex==1)return (1.-smoothstep(.85,1.8,summerPathAt(vGroundWorld.xz)))*(1.-smoothstep(.65,.84,summerIslandAt(vGroundWorld.xz)));float z=vGroundWorld.z;float centre=sin(z*.075)*.8+sin(z*.17)*.22;float d=abs(vGroundWorld.x-centre);
         float edge=sin(z*2.3+vGroundWorld.x*2.)*.10+sin(z*.73)*.12;float route=1.-smoothstep(1.05,1.9,d+edge);
         if(seasonIndex==2){route=(1.-smoothstep(1.05,1.9,autumnPathAt(vGroundWorld.xz)+edge))*smoothstep(1.01,1.10,autumnLakeAt(vGroundWorld.xz));}return route;
       }
@@ -57,28 +72,35 @@ export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile
       .replace('#include <map_fragment>',`float route=pathBlend();vec2 guv=vGroundWorld.xz/max(.5,groundScale),puv=vGroundWorld.xz/max(.5,pathScale);
         vec3 grass=texture2D(groundMap,guv).rgb,soil=texture2D(pathMap,puv).rgb;
         float macro=.94+.06*sin(vGroundWorld.x*.63+sin(vGroundWorld.z*.33))+.035*sin(vGroundWorld.z*1.7+vGroundWorld.x*.5);
-        if(seasonIndex==0){float greenValue=dot(grass,vec3(.25,.6,.15));grass=mix(grass,vec3(greenValue*.27,greenValue*.94,greenValue*.12),.80);}
+        if(seasonIndex==0){float greenValue=dot(grass,vec3(.25,.6,.15));grass=mix(grass,vec3(greenValue*.24,greenValue*.79,greenValue*.12),.80);soil*=vec3(.72,.76,.66);}
         if(seasonIndex==2)grass=mix(grass,texture2D(leafLitter,vGroundWorld.xz/2.8).rgb,.12);
         vec3 groundColour=mix(grass,soil,route)*macro;
-        if(seasonIndex==1){float sandValue=dot(groundColour,vec3(.25,.6,.15));groundColour=mix(groundColour,vec3(sandValue*1.08,sandValue*1.035,sandValue*.94),.22);
+        float forestBlend=0.;float pondBank=0.;
+        if(seasonIndex==1){forestBlend=(1.-smoothstep(.65,.84,summerIslandAt(vGroundWorld.xz)+sin(vGroundWorld.x*1.2)*sin(vGroundWorld.z*.7)*.009))*smoothstep(.1,.7,vGroundWorld.y);pondBank=1.-smoothstep(1.02,1.42,summerPondAt(vGroundWorld.xz));
+          vec3 meadow=texture2D(forestMap,guv).rgb*vec3(.72,.88,.57),mud=soil*vec3(.53,.56,.43);
+          float litter=.16+.15*smoothstep(-.3,.7,sin(vGroundWorld.x*.53+vGroundWorld.z*.18)*sin(vGroundWorld.z*.67));
+          vec3 interior=mix(meadow,mud,max(route*.85,max(litter,pondBank*.83)))*macro;
+          groundColour=mix(grass*macro,interior,forestBlend);
           float shellGrain=.985+.015*sin(vGroundWorld.x*51.+sin(vGroundWorld.z*21.))*sin(vGroundWorld.z*47.);groundColour*=shellGrain;
-          float wet=1.-smoothstep(-.035,.35,vGroundWorld.y);groundColour*=mix(vec3(1.04,1.035,1.02),vec3(.53,.59,.62),wet);}
+          float wet=1.-smoothstep(-.035,.35,vGroundWorld.y);groundColour*=mix(vec3(1.04,1.035,1.02),vec3(.53,.59,.62),wet);
+          if(vGroundWorld.y<-.2){vec2 p=vGroundWorld.xz;vec3 seabedSand=texture2D(groundMap,p/max(.5,groundScale)).rgb;float sediment=smoothstep(-.25,.55,sin(p.x*.19+sin(p.y*.12)*2.)*sin(p.y*.23-p.x*.07));vec3 rubble=texture2D(reefMap,p/2.4).rgb;seabedSand=mix(seabedSand,rubble,sediment*.78);vec2 flow=p*.65+vec2(sin(p.y*.8+reefTime*.38),cos(p.x*.7-reefTime*.31))*.32;float caustic=pow(1.-abs(sin(flow.x+flow.y)*sin(flow.x-flow.y)),18.);float softLight=1.+caustic*.16*exp(vGroundWorld.y*.055);groundColour=mix(groundColour,seabedSand*vec3(1.08,1.04,.91),.76)*softLight;groundColour*=vec3(exp(vGroundWorld.y*.007),1.,1.015);}}
         if(seasonIndex==2){float bank=1.-smoothstep(1.05,1.26,autumnLakeAt(vGroundWorld.xz));groundColour=mix(groundColour,soil*vec3(.56,.60,.51),bank*.74);}
         if(seasonIndex==3){groundColour=mix(grass,grass*.87,route)*macro;groundColour*=vec3(.94,.97,1.04);}
         ${id==='winter'?'vec3 snowPrint=snowTrack(vGroundWorld.xz);float footprint=snowPrint.x;groundColour*=mix(vec3(1.),vec3(.61,.69,.80),footprint*.72);':''}
         diffuseColor.rgb*=groundColour;`)
       .replace('#include <roughnessmap_fragment>',`float surfaceRoughness=mix(texture2D(groundRoughness,guv).g,texture2D(pathRoughness,puv).g,route);float roughnessFactor=roughness*mix(.84,1.,surfaceRoughness);
-        if(seasonIndex==1)roughnessFactor=mix(.32,.89+surfaceRoughness*.1,smoothstep(.0,.35,vGroundWorld.y));
+        if(seasonIndex==1){roughnessFactor=mix(.32,.89+surfaceRoughness*.1,smoothstep(.0,.35,vGroundWorld.y));roughnessFactor=mix(roughnessFactor,mix(.84,.49,max(route*.45,pondBank)),forestBlend);if(vGroundWorld.y<-.2)roughnessFactor=.96;}
         if(seasonIndex==2)roughnessFactor=mix(.65,.96,smoothstep(1.06,1.26,autumnLakeAt(vGroundWorld.xz)));
+        if(seasonIndex==0){float wet=texture2D(springTrail,(vGroundWorld.xz+vec2(38.,41.))/76.).g;roughnessFactor=mix(roughnessFactor,.49,wet*.5);}
         ${id==='winter'?'roughnessFactor=mix(roughnessFactor,.75,footprint);':''}`)
       .replace('#include <normal_fragment_maps>',`vec3 gn=texture2D(groundNormal,guv).xyz*2.-1.;vec3 pn=texture2D(pathNormal,puv).xyz*2.-1.;
         vec2 surfaceBump=mix(gn.xy,pn.xy,route);
-        if(seasonIndex==1){float dry=smoothstep(.02,.35,vGroundWorld.y);float ripple=sin(vGroundWorld.z*29.+sin(vGroundWorld.x*1.9)*.6);surfaceBump.y+=ripple*.11*dry;surfaceBump.x+=sin(vGroundWorld.x*43.+vGroundWorld.z*13.)*.035*dry;surfaceBump*=mix(.2,.8,dry);}
+        if(seasonIndex==1){vec2 fn=texture2D(forestNormal,guv).xy*2.-1.;surfaceBump=mix(surfaceBump,mix(fn,pn.xy,max(route,pondBank))*.7,forestBlend);float dry=smoothstep(.02,.35,vGroundWorld.y);float ripple=sin(vGroundWorld.z*29.+sin(vGroundWorld.x*1.9)*.6);surfaceBump.y+=ripple*.11*dry*(1.-forestBlend);surfaceBump*=mix(.2,.8,dry);if(vGroundWorld.y<-.2){vec2 p=vGroundWorld.xz;float sediment=smoothstep(-.25,.55,sin(p.x*.19+sin(p.y*.12)*2.)*sin(p.y*.23-p.x*.07));surfaceBump=mix(gn.xy,(texture2D(reefNormal,p/2.4).xy*2.-1.),sediment*.78)*.65;surfaceBump.y+=sin(p.y*19.+sin(p.x*.58)*1.7)*.20*(1.-sediment);}}
         normal=normalize(normal+mat3(viewMatrix)*vec3(surfaceBump.x,0.,surfaceBump.y)*.3);
         ${id==='winter'?'normal=normalize(normal+mat3(viewMatrix)*vec3(snowPrint.y,0.,snowPrint.z)*.014);':''}`);
   };
-  const extent=id==='summer'?48:112;
-  for(let z=-extent;z<extent;z+=16)for(let x=-extent;x<extent;x+=16){
+  const extent=id==='summer'?96:112;
+  for(let z=-extent;z<extent;z+=16)for(let x=id==='summer'?-80:-extent;x<(id==='summer'?240:extent);x+=16){
     const distance=Math.hypot(x+8,z+11),segments=distance<32?(mobile?24:40):distance<65?12:6;
     const geometries=[segments].map(segments=>{
       const geometry=new THREE.PlaneGeometry(16,16,segments,segments);geometry.rotateX(-Math.PI/2);
@@ -97,8 +119,8 @@ export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile
   return {
     group,
     stepSnow(x:number,z:number,yaw:number,time:number){if(id!=='winter')return;snowSteps[snowHead].set(x,z,yaw,time);snowHead=(snowHead+1)%snowSteps.length;snowCount.value=Math.min(snowCount.value+1,snowSteps.length);terrainTime.value=time;},
-    update(_camera:THREE.Camera,time=0){terrainTime.value=time;},
-    dispose(){for(const c of chunks)c.geometries.forEach(g=>g.dispose());material.dispose();if(id==='autumn')litter.dispose();},
+    update(camera:THREE.Camera,time=0){terrainTime.value=time;if(id==='summer')for(const c of chunks)c.mesh.visible=Math.hypot(c.centre.x-camera.position.x,c.centre.z-camera.position.z)<(camera.position.y<-.2?75:185);},
+    dispose(){for(const c of chunks)c.geometries.forEach(g=>g.dispose());material.dispose();trail?.dispose();if(id==='autumn')litter.dispose();},
   };
 }
 
@@ -134,12 +156,13 @@ export function createGroundCover(id:SeasonId,layout:SeasonLayout,mobile:boolean
       }
     };
     motion?.apply(material,grass?'grass':'leaf');
-    for(let tz=-32;tz<32;tz+=8)for(let tx=-32;tx<32;tx+=8){
-      if(Math.hypot(tx+4,tz+7)>33)continue;
+    for(let tz=grass?-40:-32;tz<(grass?40:32);tz+=8)for(let tx=grass?-40:-32;tx<(grass?40:32);tx+=8){
+      if(Math.hypot(tx+4,tz+7)>(grass?39:33))continue;
       const radius=Math.hypot(tx+4,tz+7),count=grass?(mobile?(radius<17?115:35):(radius<17?320:75)):(mobile?900:2500),positions:{x:number;z:number;seed:number}[]=[];
       for(let n=0;n<count*4&&positions.length<count;n++){
         const seed=(tz+48)*137+(tx+48)*79+n*7+10000,x=tx+random(seed+2)*8,z=tz+random(seed)*8,r=Math.hypot(x,z+3);
-        if(r>30)continue;
+        if(r>(grass?36:30))continue;
+        if(grass&&springClearance(x,z))continue;
         if(grass&&Math.abs(x-layout.prop.x)<1.83&&Math.abs(z-layout.prop.z)<1.48)continue;
         if(leaves&&(autumnLakeDistance(x,z)<1.08||groundHeight(id,x,z)<=AUTUMN_LAKE_LEVEL+.05))continue;
         const road=leaves?autumnPathDistance(x,z):0;

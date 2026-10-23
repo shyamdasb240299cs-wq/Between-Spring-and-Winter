@@ -2,13 +2,15 @@ import type { SeasonNavigation } from './seasons';
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 /** Walking follows a small baked navigation grid, never the high-detail render meshes. */
-export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:number)=>boolean) {
+export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:number)=>boolean,waterHeight?:(x:number,z:number)=>number) {
   if (nav.cell <= 0 || nav.width < 2 || nav.depth < 2 || nav.heights.length !== nav.width * nav.depth) throw new Error('Invalid season navigation');
   const keys = new Set<string>();
   const accepted = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd']);
   let lookX=0,lookY=0;
   let blocked = false, stickX = 0, stickY = 0, wheel = 0, vx = 0, vz = 0;
+  let interiorSurface:((x:number,z:number)=>number|null)|null=null;
   function height(x: number, z: number): number | null {
+    if(interiorSurface)return interiorSurface(x,z);
     const gx = (x - nav.origin[0]) / nav.cell, gz = (z - nav.origin[1]) / nav.cell;
     const ix = Math.floor(gx), iz = Math.floor(gz);
     if (ix < 0 || iz < 0 || ix >= nav.width - 1 || iz >= nav.depth - 1) return null;
@@ -30,6 +32,7 @@ export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:
   }
   return {
     state, height, resetInput,
+    setSurface(surface:((x:number,z:number)=>number|null)|null){interiorSurface=surface;resetInput();},
     key(key: string, down: boolean) { const k = key.length === 1 ? key.toLowerCase() : key; if (!accepted.has(k)) return false; if (down && !blocked) keys.add(k); else keys.delete(k); return true; },
     joystick(x: number, y: number) { if (!blocked) { stickX = clamp(x, -1, 1); stickY = clamp(y, -1, 1); } },
     look(dx: number, dy: number) { if (!blocked) { lookX+=clamp(dx,-180,180)*.003;lookY+=clamp(dy,-180,180)*.0025; } },
@@ -47,7 +50,8 @@ export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:
         let s = Number(keys.has('d')) - Number(keys.has('a')) + stickX;
         const length = Math.max(1, Math.hypot(f, s)); f /= length; s /= length;
         const alpha = 1 - Math.exp(-step * 16);
-        const depth=Math.max(0,(nav.waterLevel??-Infinity)-(state.y-1.63)),speed=3.2*(1-clamp(depth/(nav.wadingDepth??.65),0,1)*.45);
+        const localWater=waterHeight?.(state.x,state.z),water=Number.isFinite(localWater)?localWater!:(nav.waterLevel??-Infinity);
+        const depth=Math.max(0,water-(state.y-1.63)),speed=3.2*(1-clamp(depth/(nav.wadingDepth??.65),0,1)*.45);
         vx += ((-Math.sin(state.yaw) * f + Math.cos(state.yaw) * s) * speed - vx) * alpha;
         vz += ((-Math.cos(state.yaw) * f - Math.sin(state.yaw) * s) * speed - vz) * alpha;
         wheel *= Math.exp(-step * 9);

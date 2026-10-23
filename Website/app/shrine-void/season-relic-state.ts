@@ -16,6 +16,7 @@ export function createRelicState(id:SeasonId,reduced=false,storage?:RelicStorage
   const persist=()=>{try{storage?.setItem(relicSaveKey(id),JSON.stringify({version:1,keyFound:state.keyFound,unlocked:state.unlocked,bookTaken:state.bookTaken}));}catch{}};
   const duration=(stage:RelicStage)=>stage==='unlocking'?(reduced?.35:2.3):stage==='taking'?(reduced?.2:1):stage==='presenting'?(reduced?.8:3):stage==='closing'?(reduced?.2:.85):Infinity;
   return {state,
+    reset(){Object.assign(state,{version:1,keyFound:false,unlocked:false,bookTaken:false,stage:'resting',age:0});closingFrom={present:1,opening:1,zoom:1};persist();},
     act(action:RelicAction){if(state.stage!=='resting')return false;
       if(action==='key'&&!state.keyFound){state.keyFound=true;persist();return true;}
       if(action==='unlock'&&state.keyFound&&!state.unlocked){state.stage='unlocking';state.age=0;return true;}

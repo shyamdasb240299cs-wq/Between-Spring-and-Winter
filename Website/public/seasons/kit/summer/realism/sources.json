@@ -1,0 +1,48 @@
+[
+  {
+    "id": "coral_gravel",
+    "source": "https://polyhaven.com/a/coral_gravel",
+    "license": "CC0-1.0",
+    "resolution": 1024
+  },
+  {
+    "id": "weathered_planks",
+    "source": "https://polyhaven.com/a/weathered_planks",
+    "license": "CC0-1.0",
+    "resolution": 1024
+  },
+  {
+    "id": "modular_wooden_pier",
+    "source": "https://polyhaven.com/a/modular_wooden_pier",
+    "license": "CC0-1.0",
+    "triangles": 3582,
+    "bytes": 894120,
+    "nodes": [
+      {
+        "name": "modular_wooden_pier_planks",
+        "translation": [
+          -0.9502137303352356,
+          2.6083927154541016,
+          1.1808443069458008
+        ]
+      }
+    ]
+  },
+  {
+    "id": "coast_land_rocks_04",
+    "source": "https://polyhaven.com/a/coast_land_rocks_04",
+    "license": "CC0-1.0",
+    "triangles": 2102,
+    "bytes": 970652,
+    "nodes": [
+      {
+        "name": "coast_land_rocks_04_LOD0",
+        "translation": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  }
+]

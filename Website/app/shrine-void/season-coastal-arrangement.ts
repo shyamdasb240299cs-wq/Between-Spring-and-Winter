@@ -9,7 +9,7 @@ export function coastalArrangement(layout:SeasonLayout){
     details.push({kind,x,z,size,yaw,bury});
   }
   // Keep detailed loose items near the original beach; outer palms use batched grass.
-  layout.trees.slice(0,8).forEach((tree,index)=>{
+  layout.trees.filter(tree=>tree.variant===0).slice(0,8).forEach((tree,index)=>{
     const length=Math.hypot(tree.x,tree.z+3)||1,nx=-tree.x/length,nz=(-3-tree.z)/length,tx=-nz,tz=nx;
     const x=tree.x+nx*.68,z=tree.z+nz*.68;
     add('coastal-shrub',x,z,.52+random(tree.seed)*.16,random(tree.seed+4)*6.28,.025);

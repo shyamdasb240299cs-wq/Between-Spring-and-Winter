@@ -7,7 +7,7 @@ const root=new URL('../public/',import.meta.url),catalog=JSON.parse(await fs.rea
 assert.equal(catalog.coordinateSystem,'Y_UP_METRES');
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS),report=[];
 const propKeys=['picnic-basket','apple','plate','thermos','camp-thermos','ball','beach-chair','lantern','umbrella'];
-for(const id of ['cherry','palm','maple','fir','bench','campfire','basket','rock','shell','log','grass','coastal-shrub','coral','pebble',...propKeys]){
+for(const id of ['cherry','palm','maple','fir','bench','campfire','basket','rock','shell','log','grass','coastal-shrub','coral','pebble','woodland-rock','coastal-rock','loose-rock',...propKeys]){
   const entry=catalog.models[id];assert.ok(entry?.variants.length,`Missing selected asset ${id}`);
   assert.ok(entry.source.startsWith('https://'));assert.ok(['CC-BY-4.0','CC-BY-3.0','CC0-1.0'].includes(entry.license));
   if(propKeys.includes(id))assert.ok(/^https:\/\/(polyhaven\.com\/a\/|github\.com\/KhronosGroup\/|poly\.pizza\/m\/)/.test(entry.source),`${id}: unverified source domain`);
@@ -21,6 +21,14 @@ for(const id of ['cherry','palm','maple','fir','bench','campfire','basket','rock
       if(id==='cherry'||p.getMaterial()?.getBaseColorTexture())assert.ok(p.getAttribute('TEXCOORD_0'),`${id} textured geometry has no UVs`);
     }
     assert.equal(Math.round(triangles),lod.triangles);
+    if(id==='cherry'||id==='maple'){
+      const bark=doc.getRoot().listMeshes().flatMap(m=>m.listPrimitives()).filter(p=>/bark/i.test(p.getMaterial()?.getName()||''));
+      const low=Math.min(...bark.map(p=>p.getAttribute('POSITION').getMin([])[1]));
+      assert.ok(Math.abs(low)<.001,`${id} ${level}: the full lower trunk must reach the ground`);
+      for(let y=.1;y<2.3;y+=.2)assert.ok(bark.some(p=>{
+        const a=p.getAttribute('POSITION').getArray();for(let i=1;i<a.length;i+=3)if(Math.abs(a[i]-y)<.3)return true;return false;
+      }),`${id} ${level}: lower stem must have continuous vertical coverage`);
+    }
     if(id==='fir'){
       const stems=doc.getRoot().listMeshes().flatMap(m=>m.listPrimitives()).filter(p=>/trunk_/.test(p.getMaterial()?.getName()||''));
       assert.equal(stems.length,1,'Each fir needs one independently preserved scanned stem');

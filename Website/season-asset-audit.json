@@ -12,15 +12,15 @@
       "id": "cherry",
       "variant": "0",
       "level": "mid",
-      "triangles": 9114,
-      "bytes": 666332
+      "triangles": 9437,
+      "bytes": 682636
     },
     {
       "id": "cherry",
       "variant": "0",
       "level": "far",
-      "triangles": 5916,
-      "bytes": 340256
+      "triangles": 6235,
+      "bytes": 356472
     },
     {
       "id": "cherry",
@@ -33,15 +33,15 @@
       "id": "cherry",
       "variant": "1",
       "level": "mid",
-      "triangles": 7465,
-      "bytes": 611872
+      "triangles": 8927,
+      "bytes": 696112
     },
     {
       "id": "cherry",
       "variant": "1",
       "level": "far",
-      "triangles": 4265,
-      "bytes": 285668
+      "triangles": 5727,
+      "bytes": 365080
     },
     {
       "id": "cherry",
@@ -54,15 +54,15 @@
       "id": "cherry",
       "variant": "2",
       "level": "mid",
-      "triangles": 9756,
-      "bytes": 691784
+      "triangles": 9945,
+      "bytes": 701696
     },
     {
       "id": "cherry",
       "variant": "2",
       "level": "far",
-      "triangles": 6568,
-      "bytes": 365964
+      "triangles": 6745,
+      "bytes": 375356
     },
     {
       "id": "palm",
@@ -96,15 +96,15 @@
       "id": "maple",
       "variant": "0",
       "level": "mid",
-      "triangles": 5279,
-      "bytes": 2232572
+      "triangles": 6882,
+      "bytes": 2342908
     },
     {
       "id": "maple",
       "variant": "0",
       "level": "far",
-      "triangles": 1828,
-      "bytes": 1729692
+      "triangles": 3682,
+      "bytes": 1862996
     },
     {
       "id": "maple",
@@ -117,15 +117,15 @@
       "id": "maple",
       "variant": "1",
       "level": "mid",
-      "triangles": 5417,
-      "bytes": 2242020
+      "triangles": 6261,
+      "bytes": 2304096
     },
     {
       "id": "maple",
       "variant": "1",
       "level": "far",
-      "triangles": 1701,
-      "bytes": 1720724
+      "triangles": 3061,
+      "bytes": 1824280
     },
     {
       "id": "maple",
@@ -138,15 +138,15 @@
       "id": "maple",
       "variant": "2",
       "level": "mid",
-      "triangles": 5338,
-      "bytes": 2235836
+      "triangles": 7199,
+      "bytes": 2373756
     },
     {
       "id": "maple",
       "variant": "2",
       "level": "far",
-      "triangles": 1686,
-      "bytes": 1717372
+      "triangles": 3999,
+      "bytes": 1894132
     },
     {
       "id": "fir",
@@ -462,6 +462,69 @@
       "level": "far",
       "triangles": 360,
       "bytes": 390620
+    },
+    {
+      "id": "woodland-rock",
+      "variant": "0",
+      "level": "near",
+      "triangles": 18000,
+      "bytes": 4101252
+    },
+    {
+      "id": "woodland-rock",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 7200,
+      "bytes": 3720828
+    },
+    {
+      "id": "woodland-rock",
+      "variant": "0",
+      "level": "far",
+      "triangles": 2700,
+      "bytes": 3576128
+    },
+    {
+      "id": "coastal-rock",
+      "variant": "0",
+      "level": "near",
+      "triangles": 23984,
+      "bytes": 4605432
+    },
+    {
+      "id": "coastal-rock",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 8496,
+      "bytes": 4231888
+    },
+    {
+      "id": "coastal-rock",
+      "variant": "0",
+      "level": "far",
+      "triangles": 2998,
+      "bytes": 4089932
+    },
+    {
+      "id": "loose-rock",
+      "variant": "0",
+      "level": "near",
+      "triangles": 6000,
+      "bytes": 718660
+    },
+    {
+      "id": "loose-rock",
+      "variant": "0",
+      "level": "mid",
+      "triangles": 2398,
+      "bytes": 604644
+    },
+    {
+      "id": "loose-rock",
+      "variant": "0",
+      "level": "far",
+      "triangles": 900,
+      "bytes": 556196
     },
     {
       "id": "picnic-basket",

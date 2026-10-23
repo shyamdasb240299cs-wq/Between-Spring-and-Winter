@@ -1,0 +1,9 @@
+Copyright 2017 Cesium
+https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMan
+CC-BY-4.0: https://creativecommons.org/licenses/by/4.0/
+Changes: Artist-authored skinned body adapted into a headless graphite/blue neoprene wetsuit; original logo-bearing texture and head removed; smooth vertex-color panels; original weights and bones retained. This is an adaptation of a human base mesh, not a scanned scuba suit.
+
+Scuba equipment by Steren Giannini
+https://poly.pizza/m/7igrHLjaQlW
+CC-BY-3.0: https://creativecommons.org/licenses/by/3.0/
+Changes: Preserved source BCD, cylinder, primary/safety regulator, hoses and gauges; adapted navy/metal palette and smooth normals; runtime mount normalized to the wetsuit.

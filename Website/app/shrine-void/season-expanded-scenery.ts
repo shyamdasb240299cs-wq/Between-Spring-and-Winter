@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {groundHeight,type SeasonLayout} from './season-layout';
 import type {SeasonId} from './seasons';
+import {settleGroundObject} from './season-object-grounding';
 
 /** Existing attributed glTF assets, grounded at metre scale in the new clearings. */
 export function createExpandedScenery(id:SeasonId,layout:SeasonLayout,models:Record<string,THREE.Object3D>){
@@ -10,7 +11,7 @@ export function createExpandedScenery(id:SeasonId,layout:SeasonLayout,models:Rec
     const model=source.clone(true),bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),centre=bounds.getCenter(new THREE.Vector3());
     model.position.sub(new THREE.Vector3(centre.x,bounds.min.y,centre.z));
     const root=new THREE.Group();root.name=`${placement.kind} · trail ${group.children.length+1}`;root.userData.landmark=placement;
-    root.add(model);root.scale.setScalar(placement.size/Math.max(size.x,size.z));if(placement.kind==='boulder')root.scale.y*=.65;
+    root.add(model);root.scale.setScalar(placement.size/Math.max(size.x,size.z));
     root.rotation.y=placement.yaw;root.position.set(placement.x,groundHeight(id,placement.x,placement.z),placement.z);group.add(root);root.updateWorldMatrix(true,true);
     const worldBounds=new THREE.Box3().setFromObject(root),bottom=worldBounds.min.y;
     // Leg endpoints follow the actual slope while the seat remains level.
@@ -23,7 +24,7 @@ export function createExpandedScenery(id:SeasonId,layout:SeasonLayout,models:Rec
       }
       geometry.computeVertexNormals();geometry.computeBoundingSphere();object.geometry=geometry;
     });
-    if(placement.kind==='boulder'||placement.kind==='log')root.position.y-=placement.kind==='boulder'?.16:.035;
+    if(placement.kind==='boulder'||placement.kind==='log')settleGroundObject(id,root,placement.kind==='boulder'?.025:.012);
     root.traverse(object=>{if(object instanceof THREE.Mesh)object.castShadow=object.receiveShadow=true;});
     root.updateWorldMatrix(true,true);
   }

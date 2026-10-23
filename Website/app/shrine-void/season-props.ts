@@ -8,6 +8,7 @@ import {coastalArrangement} from './season-coastal-arrangement';
 import {createBeachFurniture} from './season-beach-furniture';
 import {createScenePickup,type PickupItem} from './scene-pickup';
 import {createExpandedScenery} from './season-expanded-scenery';
+import {settleGroundObject} from './season-object-grounding';
 
 export interface PropInteraction {kind:'ball'|'lantern';label:string;point:THREE.Vector3;}
 
@@ -28,6 +29,7 @@ export function createSeasonProps(id:SeasonId,layout:SeasonLayout,models:Record<
     const prototype=models[key];if(!prototype)return null;
     const mesh=prototype.clone(true),box=new THREE.Box3().setFromObject(mesh),s=box.getSize(new THREE.Vector3()),c=box.getCenter(new THREE.Vector3());
     const root=new THREE.Group(),scale=size/Math.max(s.x,s.z);mesh.position.sub(new THREE.Vector3(c.x,box.min.y,c.z));root.add(mesh);root.scale.setScalar(scale);root.rotation.y=angle;root.position.set(x,groundHeight(id,x,z)+lift,z);root.name=key;root.traverse(o=>{if(o instanceof THREE.Mesh)o.castShadow=o.receiveShadow=true;});group.add(root);
+    if(key==='rock')settleGroundObject(id,root,.006);
     if(names[key]&&size<=.65)loose.push({object:root,label:names[key]});else if(key!=='ball'&&key!=='coastal-shrub')solids.push(root);
     return root;
   }
@@ -69,7 +71,7 @@ export function createSeasonProps(id:SeasonId,layout:SeasonLayout,models:Record<
     }
     petals.count=count*6;centres.count=stems.count=count;[petals,centres,stems].forEach(m=>{m.computeBoundingSphere();group.add(m);});
   }else if(id==='summer'){
-    const furniture=createBeachFurniture(cx,cz);group.add(furniture);solids.push(furniture);
+    // The Summer trail owns the two final chairs, table and their contacts.
     model('thermos',cx+1.13,cz+.40,.20,-.3,.02);
     model('shell',cx+1.18,cz+1.05,.22,.5);
     model('shell',cx-.8,cz-.89,.13,-1.4);
@@ -128,19 +130,18 @@ export function createSeasonProps(id:SeasonId,layout:SeasonLayout,models:Record<
     const emberM=new THREE.PointsMaterial({color:0xffa13b,size:.025,transparent:true,opacity:.8,depthWrite:false});const embers=new THREE.Points(emberG,emberM);embers.position.set(cx,fireY+.3,cz);group.add(embers);
     emberM.onBeforeCompile=s=>{s.uniforms.emberTime={value:0};emberM.userData.shader=s;s.vertexShader='uniform float emberTime;\n'+s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed.y=mod(position.y+emberTime*.5,2.);transformed.x+=sin(position.y*10.+emberTime)*.12;');};animated.push(t=>{if(emberM.userData.shader)emberM.userData.shader.uniforms.emberTime.value=t;});
   }
-  // Rocks and low shrubs connect the trees to the soil instead of leaving exposed stems.
-  for(let n=0;n<(id==='summer'?0:7);n++){
-    const a=n/7*Math.PI*2,r=11+random(n+59)*8;
-    const x=Math.cos(a)*r,z=-3+Math.sin(a)*r;
-    if(Math.hypot(x-cx,z-cz)<2)continue;
-    const rock=model('rock',x,z,.5+random(n+33)*.8,random(n)*6.28);if(rock)rock.position.y-=.05;
+  // Loose fragments lie beside the parent outcrops, clear of trunks and seats.
+  for(const [n,p]of layout.landmarks.filter(p=>p.kind==='boulder').entries()){
+    if(id==='summer')break;
+    const a=p.yaw+1.2,x=p.x+Math.cos(a)*(p.radius+.7),z=p.z+Math.sin(a)*(p.radius+.7);
+    if(layout.obstacles.some(o=>Math.hypot(o.x-x,o.z-z)<o.radius+.4))continue;
+    model('rock',x,z,.23+random(n+33)*.24,random(n)*6.28);
   }
   if(id==='summer'){
     if(coastalGrass)group.add(createCoastalPlants(layout,coastalGrass));
     const detail=new THREE.Group();detail.name='Palm-base shells, stones and coral';group.add(detail);
     for(const p of coastalArrangement(layout)){
       const object=model(p.kind,p.x,p.z,p.size,p.yaw,-p.bury);if(!object)continue;
-      if(p.kind==='rock')object.scale.y*=.70;
       if(p.kind==='coral'){object.rotation.x=.95;object.updateMatrixWorld(true);object.position.y+=groundHeight(id,p.x,p.z)-new THREE.Box3().setFromObject(object).min.y-p.bury;}
       detail.attach(object);
     }

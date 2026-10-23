@@ -1,0 +1,624 @@
+{
+  "version": 1,
+  "coordinateSystem": "Y_UP_METRES",
+  "prepared": "2026-10-22",
+  "description": "Original exportable sources, instantiated from matching editable TypeScript authoring at runtime.",
+  "models": [
+    {
+      "id": "boat",
+      "file": "boat.glb",
+      "url": "/seasons/kit/summer/boat.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "b62ae2bd3a9437c6d29121b90157623ced4d292b95cc195e7f7820b2f5e2836b",
+      "bytes": 1991708,
+      "dimensionsMetres": [
+        2.4523937702178955,
+        2.515151176452637,
+        6.074346947669984
+      ],
+      "bounds": [
+        [
+          -1.2261968851089478,
+          -1.0601511335372924,
+          -3.0093469619750977
+        ],
+        [
+          1.2261968851089478,
+          1.4550000429153442,
+          3.0649999856948855
+        ]
+      ],
+      "triangles": 21326,
+      "vertices": 60971,
+      "materials": 8,
+      "movingNodes": [
+        "Steering wheel pivot",
+        "Dry bag",
+        "Tank cap pivot",
+        "Engine supply hose",
+        "Outboard steer pivot",
+        "Propeller pivot",
+        "Stern ladder hinge",
+        "Fuel needle"
+      ],
+      "namedNodes": [
+        "Summer original 5.89m RIB",
+        "Console",
+        "Steering wheel pivot",
+        "Fuel needle",
+        "Pilot seat",
+        "Second seat / room for two",
+        "Dry bag",
+        "Strap",
+        "Fuel tank",
+        "Tank cap pivot",
+        "Engine supply hose",
+        "Outboard steer pivot",
+        "Outboard cowling",
+        "Propeller pivot",
+        "Stern ladder hinge",
+        "Ladder rail",
+        "Ladder rail",
+        "Ladder rung",
+        "Ladder rung",
+        "Ladder rung",
+        "Ladder rung",
+        "Ladder rung",
+        "Merged Summer original / pale",
+        "Merged Summer original / rubber",
+        "Merged Summer original / black",
+        "Merged ",
+        "Merged Summer original / metal",
+        "Merged Summer original / blue"
+      ],
+      "description": "Original 5.89m RIB with lofted V hull, inflatable collar, two seats, fitted tray, cap/tank/hose and outboard.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "scuba",
+      "file": "scuba.glb",
+      "url": "/seasons/kit/summer/scuba.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "5b6263bafa2f179b68f9e99ce550d47a55c03151e0e76f018bd0b38b3b74af2e",
+      "bytes": 688792,
+      "dimensionsMetres": [
+        1.0054852036767754,
+        1.9175000001490115,
+        1.1459999889135362
+      ],
+      "bounds": [
+        [
+          -0.5027426018383877,
+          -0.17499999970197677,
+          -0.7499999880790711
+        ],
+        [
+          0.5027426018383877,
+          1.7425000004470348,
+          0.396000000834465
+        ]
+      ],
+      "triangles": 8072,
+      "vertices": 19439,
+      "materials": 8,
+      "movingNodes": [
+        "Left sleeve and glove",
+        "Right sleeve and glove",
+        "Wetsuit leg",
+        "Fitted fin",
+        "BCD cylinder regulator connected",
+        "Mask and adjustable strap"
+      ],
+      "namedNodes": [
+        "Complete original scuba set",
+        "Wetsuit torso",
+        "Left sleeve and glove",
+        "Sleeve",
+        "Forearm",
+        "Glove palm",
+        "Gloved finger",
+        "Gloved finger",
+        "Gloved finger",
+        "Gloved finger",
+        "Wetsuit leg",
+        "Dive boot",
+        "Fitted fin",
+        "Right sleeve and glove",
+        "Sleeve",
+        "Forearm",
+        "Glove palm",
+        "Gloved finger",
+        "Gloved finger",
+        "Gloved finger",
+        "Gloved finger",
+        "Wetsuit leg",
+        "Dive boot",
+        "Fitted fin",
+        "BCD cylinder regulator connected",
+        "Air cylinder",
+        "Tank valve",
+        "Primary regulator hose",
+        "Inflator hose",
+        "Mask and adjustable strap",
+        "Mask strap",
+        "Dive torch",
+        "Wrist compass",
+        "Dive slate"
+      ],
+      "description": "Original full wetsuit, BCD/cylinder/regulator, mask, fins, gloves, torch, compass and slate.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "keepsake-case",
+      "file": "keepsake-case.glb",
+      "url": "/seasons/kit/summer/keepsake-case.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "d8313e0ece07c196f742f9a517dc7fc40172ac5d944afd8bf5405a7f430a11dc",
+      "bytes": 302880,
+      "dimensionsMetres": [
+        0.7400000095367432,
+        0.3154999961256981,
+        0.6246595878899097
+      ],
+      "bounds": [
+        [
+          -0.3700000047683716,
+          2.682209010451686e-9,
+          -0.27000000074505803
+        ],
+        [
+          0.3700000047683716,
+          0.31549999880790713,
+          0.3546595871448517
+        ]
+      ],
+      "triangles": 3144,
+      "vertices": 9091,
+      "materials": 5,
+      "movingNodes": [
+        "Case lid hinge"
+      ],
+      "namedNodes": [
+        "Sealed keepsake case",
+        "Rubber gasket",
+        "Case lid hinge",
+        "Lid padding",
+        "Carry handle",
+        "Shaped padding",
+        "Blue Summer book",
+        "Dry letter"
+      ],
+      "description": "Original sealed case with carry handle, gasket, latches, shaped padding, dry letter and Summer book.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "fuel-can",
+      "file": "fuel-can.glb",
+      "url": "/seasons/kit/summer/fuel-can.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "0dc5ee466a4673c4d5cca3631c540c062f536067c3aac88d60dfac7ecfe45052",
+      "bytes": 100272,
+      "dimensionsMetres": [
+        0.3400000035762787,
+        0.5450000033527613,
+        0.2239999967738986
+      ],
+      "bounds": [
+        [
+          -0.17000000178813934,
+          0.02999999701976777,
+          -0.10499999672174454
+        ],
+        [
+          0.17000000178813934,
+          0.5750000003725291,
+          0.11900000005215407
+        ]
+      ],
+      "triangles": 1028,
+      "vertices": 2904,
+      "materials": 2,
+      "movingNodes": [],
+      "namedNodes": [
+        "fuel-can"
+      ],
+      "description": "Original red fuel can with cap, grip and stamped ribs.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "coral-branch",
+      "file": "coral-branch.glb",
+      "url": "/seasons/kit/summer/coral-branch.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "14d5c49d8ffb861c15fa282901f089bab7023bd9f1406c62745b833bf72ff612",
+      "bytes": 123348,
+      "dimensionsMetres": [
+        1.3803001046180725,
+        1.263525480031967,
+        1.4175363779067993
+      ],
+      "bounds": [
+        [
+          -0.6836591362953186,
+          5.9604645663569045e-9,
+          -0.6885829567909241
+        ],
+        [
+          0.6966409683227539,
+          1.2635254859924316,
+          0.7289534211158752
+        ]
+      ],
+      "triangles": 1272,
+      "vertices": 3816,
+      "materials": 1,
+      "movingNodes": [],
+      "namedNodes": [],
+      "description": "Original dimensional branching coral source.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "coral-fan",
+      "file": "coral-fan.glb",
+      "url": "/seasons/kit/summer/coral-fan.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "ad9819b0d67f51ad49e216cdb9f44c5166efd200eeb51e1e1b10c92524a29d45",
+      "bytes": 766152,
+      "dimensionsMetres": [
+        1.4573280811309814,
+        1.1410670267045497,
+        0.14339451491832733
+      ],
+      "bounds": [
+        [
+          -0.7327017784118652,
+          1.3411045607369942e-9,
+          -0.07169725745916367
+        ],
+        [
+          0.7246263027191162,
+          1.1410670280456543,
+          0.07169725745916367
+        ]
+      ],
+      "triangles": 7968,
+      "vertices": 23904,
+      "materials": 1,
+      "movingNodes": [],
+      "namedNodes": [],
+      "description": "Original dimensional upright fan coral source.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "coral-mound",
+      "file": "coral-mound.glb",
+      "url": "/seasons/kit/summer/coral-mound.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "64ef41078fbd19294628eca5e6e53cd56bff9b831c287c6d8afae36fe3a48b2f",
+      "bytes": 181708,
+      "dimensionsMetres": [
+        1.5881925821304321,
+        0.738305002450943,
+        1.4116652607917786
+      ],
+      "bounds": [
+        [
+          -0.8332340121269226,
+          -0.11989268660545349,
+          -0.6954311728477478
+        ],
+        [
+          0.7549585700035095,
+          0.6184123158454895,
+          0.7162340879440308
+        ]
+      ],
+      "triangles": 1880,
+      "vertices": 5640,
+      "materials": 1,
+      "movingNodes": [],
+      "namedNodes": [],
+      "description": "Original dimensional lobed mound coral source.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "coral-table",
+      "file": "coral-table.glb",
+      "url": "/seasons/kit/summer/coral-table.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "356fc743f62bbb73095230261bbcb1917449d95cc4de04be80abe243c95be825",
+      "bytes": 153288,
+      "dimensionsMetres": [
+        1.7000000476837158,
+        0.8324999690055845,
+        1.7000000476837158
+      ],
+      "bounds": [
+        [
+          -0.8500000238418579,
+          1.1920929132713809e-8,
+          -0.8500000238418579
+        ],
+        [
+          0.8500000238418579,
+          0.8324999809265137,
+          0.8500000238418579
+        ]
+      ],
+      "triangles": 1584,
+      "vertices": 4752,
+      "materials": 1,
+      "movingNodes": [],
+      "namedNodes": [],
+      "description": "Original dimensional tiered table coral source.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "fish-butterfly",
+      "file": "fish-butterfly.glb",
+      "url": "/seasons/kit/summer/fish-butterfly.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "bfeaf7b4ffec4746f66124437580ef1376726e59ec41ad64ef8d628d67a9ce52",
+      "bytes": 149644,
+      "dimensionsMetres": [
+        1.2200000286102295,
+        1.0257000029087067,
+        0.42107081413269043
+      ],
+      "bounds": [
+        [
+          -0.7200000286102295,
+          -0.4796999990940094,
+          -0.21053540706634521
+        ],
+        [
+          0.5,
+          0.5460000038146973,
+          0.21053540706634521
+        ]
+      ],
+      "triangles": 1124,
+      "vertices": 3372,
+      "materials": 1,
+      "movingNodes": [
+        "Posterior vertex deformation in summer-wildlife.ts"
+      ],
+      "namedNodes": [],
+      "description": "Original butterflyfish-like browser with eyes, gill body sections and dimensional paired/caudal/dorsal fins.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "fish-silver",
+      "file": "fish-silver.glb",
+      "url": "/seasons/kit/summer/fish-silver.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "1ddd0c72659f6afd15bb58f6c6fb5eaa3aecae255747009565f00c2b1ab5f0b9",
+      "bytes": 149628,
+      "dimensionsMetres": [
+        1.2200000286102295,
+        0.482000008225441,
+        0.4483708143234253
+      ],
+      "bounds": [
+        [
+          -0.7200000286102295,
+          -0.23000000417232513,
+          -0.22418540716171265
+        ],
+        [
+          0.5,
+          0.25200000405311584,
+          0.22418540716171265
+        ]
+      ],
+      "triangles": 1124,
+      "vertices": 3372,
+      "materials": 1,
+      "movingNodes": [
+        "Posterior vertex deformation in summer-wildlife.ts"
+      ],
+      "namedNodes": [],
+      "description": "Original small silver school fish with eyes, gill body sections and dimensional paired/caudal/dorsal fins.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    },
+    {
+      "id": "fish-lagoon",
+      "file": "fish-lagoon.glb",
+      "url": "/seasons/kit/summer/fish-lagoon.glb",
+      "creator": "Original Between Spring and Winter project authoring",
+      "rights": "Project original; no third-party geometry",
+      "sourceFiles": [
+        "app/shrine-void/summer-models.ts",
+        "app/shrine-void/summer-wildlife.ts"
+      ],
+      "sourceSha256": [
+        "36eb95dd3110f3c059b50bc845f0f883aafb660bc6c405257c258b4deb15f6e3",
+        "96f47aca8cec74bd8196ceb9b626f24cd845dd46833b4bf7f72580e9c582e054"
+      ],
+      "sha256": "ba689a6790736e3dca5496006b55fe894921090b54dafa667e67f0fdbfcb730a",
+      "bytes": 149628,
+      "dimensionsMetres": [
+        1.2200000286102295,
+        0.6049000024795532,
+        0.4483708143234253
+      ],
+      "bounds": [
+        [
+          -0.7200000286102295,
+          -0.28290000557899475,
+          -0.22418540716171265
+        ],
+        [
+          0.5,
+          0.32199999690055847,
+          0.22418540716171265
+        ]
+      ],
+      "triangles": 1124,
+      "vertices": 3372,
+      "materials": 1,
+      "movingNodes": [
+        "Posterior vertex deformation in summer-wildlife.ts"
+      ],
+      "namedNodes": [],
+      "description": "Original larger lagoon browser with eyes, gill body sections and dimensional paired/caudal/dorsal fins.",
+      "acceptance": {
+        "source": "original authored",
+        "binary": "exported and parsed",
+        "visual": "runtime review required",
+        "animation": "runtime pivots/deformation, no baked GLB clips",
+        "lod": "single reusable source; runtime instancing and density reduction"
+      }
+    }
+  ]
+}
