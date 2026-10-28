@@ -1,0 +1,21 @@
+{
+  "source": "User-supplied Downloads/glass.glb",
+  "generator": "meshy-scene",
+  "reference": "User-supplied smoky clear-frame spectacles photograph",
+  "originalBytes": 1356408,
+  "runtimeBytes": 463256,
+  "triangles": 75338,
+  "regions": {
+    "frame": 44837,
+    "lenses": 17573,
+    "tips": 7076,
+    "hinges": 5852
+  },
+  "changes": [
+    "Original mesh shape retained; smooth normals and procedural micrograin UVs added.",
+    "Both front and back lens surfaces isolated using their actual geometric boundaries.",
+    "Continuous smoky translucent acetate frames and arms, clear optical lenses and silver hinge inlays; no rubber tips.",
+    "Lossless mesh topology compression with high-precision meshopt quantization."
+  ],
+  "license": "User supplied; no third-party license claim inferred."
+}

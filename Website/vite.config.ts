@@ -52,7 +52,12 @@ export default defineConfig(async ({ command }) => {
           plugins: [tailwindcss()],
         },
       },
-      plugins: [vinext(), nitro()],
+      plugins: [vinext(), nitro({
+        // Vinext forwards Next's default external-package list to Nitro even
+        // when these build tools are absent from the server import graph.
+        // Do not copy lint/CSS/compiler toolchains into the Vercel function.
+        traceDeps: ['!eslint', '!postcss', '!typescript', '!webpack'],
+      })],
     };
   }
 
@@ -75,9 +80,14 @@ export default defineConfig(async ({ command }) => {
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
         : {}),
-      ...(isCodexSeatbeltSandbox
-        ? { watch: { useFsEvents: false, usePolling: true } }
-        : {}),
+      watch: {
+        // Packaging writes thousands of generated files. Do not make the running
+        // game preview process those writes as source changes.
+        ignored: ["**/.vercel/**", "**/dist/**", "**/.vinext/**", "**/.git.local/**"],
+        ...(isCodexSeatbeltSandbox
+          ? { useFsEvents: false, usePolling: true }
+          : {}),
+      },
     },
     plugins: [
       vinext(),

@@ -1,0 +1,71 @@
+{
+  "prepared": "2026-10-24",
+  "units": "metres",
+  "upAxis": "Y",
+  "models": {
+    "candle": {
+      "url": "/seasons/kit/spring-personal/candle.glb",
+      "sourceArchive": "Candle.zip",
+      "sourceEntry": "AdvancedExport/3DModel_Custom.glb",
+      "license": "User-supplied personal asset; no public-license claim",
+      "bytes": 462420,
+      "triangles": 20000,
+      "originalTriangles": 20006,
+      "height": 0.17,
+      "bounds": {
+        "min": [
+          -0.0657000952986265,
+          -4.731492975196261e-13,
+          -0.05690618670059499
+        ],
+        "max": [
+          0.0657000952986265,
+          0.17000000178813934,
+          0.05690618670059499
+        ]
+      },
+      "sha256": "957353b916e43f617a6831067ad4e015905497dd80bbe1d4be48aa6610f1602f",
+      "textures": [
+        {
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ]
+        }
+      ]
+    },
+    "mushroom-toy": {
+      "url": "/seasons/kit/spring-personal/mushroom-toy.glb",
+      "sourceArchive": "mushroom toy.zip",
+      "sourceEntry": "3DModel.glb",
+      "license": "User-supplied personal asset; no public-license claim",
+      "bytes": 654212,
+      "triangles": 41216,
+      "originalTriangles": 47528,
+      "height": 0.26,
+      "bounds": {
+        "min": [
+          -0.09385693654321128,
+          2.7755575615628914e-17,
+          -0.09611785546796481
+        ],
+        "max": [
+          0.09385693654321128,
+          0.2600000202655792,
+          0.0960871218230025
+        ]
+      },
+      "sha256": "e38c2183628e7be4f663afd85ebf4dd015f433d5c78b702b26dee1cd890d6948",
+      "textures": [
+        {
+          "mime": "image/webp",
+          "size": [
+            1024,
+            1024
+          ]
+        }
+      ]
+    }
+  }
+}

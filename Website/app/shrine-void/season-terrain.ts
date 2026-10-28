@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {createLeafTexture} from './season-leaf';
 import type {GroundMotion} from './season-ground-motion';
 import type {SeasonId} from './seasons';
-import {springPathDistance,springClearance} from './spring-treasure-layout';
+import {springPathDistance,springClearance,springRiverCentre,springRiverWidth} from './spring-treasure-layout';
 import {groundHeight,random,smooth,autumnPathDistance,autumnLakeDistance,AUTUMN_LAKE_LEVEL,lakeShapeGLSL,type SeasonLayout} from './season-layout';
 import {SUMMER_GROUND_GLSL,summerTerrainSegments} from './summer-layout';
 
@@ -100,8 +100,16 @@ export function createTerrain(id:SeasonId,base:GroundMaps,path:GroundMaps,mobile
         ${id==='winter'?'normal=normalize(normal+mat3(viewMatrix)*vec3(snowPrint.y,0.,snowPrint.z)*.014);':''}`);
   };
   const extent=id==='summer'?96:112;
-  for(let z=-extent;z<extent;z+=16)for(let x=id==='summer'?-80:-extent;x<(id==='summer'?240:extent);x+=16){
-    const distance=Math.hypot(x+8,z+11),segments=id==='summer'?summerTerrainSegments(x,z,mobile):distance<32?(mobile?24:40):distance<65?12:6;
+  // Continue the landscape around the two off-scene river bends. Only the
+  // narrow corridor needs extra chunks; the walking boundary stays the same.
+  const tiles:{x:number;z:number}[]=[];
+  for(let z=-extent;z<extent;z+=16)for(let x=id==='summer'?-80:-extent;x<(id==='summer'?240:extent);x+=16)tiles.push({x,z});
+  if(id==='spring')for(let z=-208;z<192;z+=16){
+    const centres=[springRiverCentre(z),springRiverCentre(z+8),springRiverCentre(z+16)],minX=Math.floor((Math.min(...centres)-16)/16)*16,maxX=Math.ceil((Math.max(...centres)+16)/16)*16;
+    for(let x=minX;x<maxX;x+=16)if(x< -extent||x>=extent||z< -extent||z>=extent)tiles.push({x,z});
+  }
+  for(const {x,z} of tiles){
+    const distance=Math.hypot(x+8,z+11),riverTile=id==='spring'&&[z,z+8,z+16].some(p=>Math.abs(x+8-springRiverCentre(p))<springRiverWidth(p)+13),segments=id==='summer'?summerTerrainSegments(x,z,mobile):riverTile?(distance<65?(mobile?24:32):12):distance<32?(mobile?24:40):distance<65?12:6;
     const geometries=[segments].map(segments=>{
       const geometry=new THREE.PlaneGeometry(16,16,segments,segments);geometry.rotateX(-Math.PI/2);
       const positions=geometry.attributes.position;

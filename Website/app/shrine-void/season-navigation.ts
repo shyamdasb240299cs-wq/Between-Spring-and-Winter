@@ -9,8 +9,9 @@ export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:
   let lookX=0,lookY=0;
   let blocked = false, stickX = 0, stickY = 0, wheel = 0, vx = 0, vz = 0;
   let interiorSurface:((x:number,z:number)=>number|null)|null=null;
+  let surfaceFallback=false;
   function height(x: number, z: number): number | null {
-    if(interiorSurface)return interiorSurface(x,z);
+    if(interiorSurface){const surface=interiorSurface(x,z);if(surface!==null||!surfaceFallback)return surface;}
     const gx = (x - nav.origin[0]) / nav.cell, gz = (z - nav.origin[1]) / nav.cell;
     const ix = Math.floor(gx), iz = Math.floor(gz);
     if (ix < 0 || iz < 0 || ix >= nav.width - 1 || iz >= nav.depth - 1) return null;
@@ -32,7 +33,7 @@ export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:
   }
   return {
     state, height, resetInput,
-    setSurface(surface:((x:number,z:number)=>number|null)|null){interiorSurface=surface;resetInput();},
+    setSurface(surface:((x:number,z:number)=>number|null)|null,fallbackToNavigation=false){interiorSurface=surface;surfaceFallback=fallbackToNavigation;resetInput();},
     key(key: string, down: boolean) { const k = key.length === 1 ? key.toLowerCase() : key; if (!accepted.has(k)) return false; if (down && !blocked) keys.add(k); else keys.delete(k); return true; },
     joystick(x: number, y: number) { if (!blocked) { stickX = clamp(x, -1, 1); stickY = clamp(y, -1, 1); } },
     look(dx: number, dy: number) { if (!blocked) { lookX+=clamp(dx,-180,180)*.003;lookY+=clamp(dy,-180,180)*.0025; } },

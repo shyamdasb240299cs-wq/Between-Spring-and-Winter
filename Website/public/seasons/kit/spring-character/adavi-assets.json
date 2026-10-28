@@ -1,0 +1,20 @@
+{
+  "prepared": "2026-10-25",
+  "mode": "Built-in image_gen",
+  "asset": "/seasons/kit/spring-character/shyamu-adavi-poses.webp",
+  "dimensions": [1254, 1254],
+  "alpha": true,
+  "grid": {"columns": 2, "rows": 2, "cellWidth": 627, "cellHeight": 627},
+  "poses": [
+    {"name": "welcome", "column": 0, "row": 0, "backgroundPosition": "0% 0%"},
+    {"name": "challenge", "column": 1, "row": 0, "backgroundPosition": "100% 0%"},
+    {"name": "teaching", "column": 0, "row": 1, "backgroundPosition": "0% 100%"},
+    {"name": "celebrate", "column": 1, "row": 1, "backgroundPosition": "100% 100%"}
+  ],
+  "source": "Owner-provided illustrated portrait and established Syamu character identity",
+  "prompt": "Use case: identity-preserve. Asset type: transparent 2 by 2 character expression and gesture sprite atlas for a personal 3D game. Image 1 is exact face/identity reference; Image 2 is existing game sprite style reference. Create FOUR new separate waist-up poses of the SAME young Indian man. Preserve exact recognizable facial structure, warm skin tone, voluminous wavy dark hair, subtle moustache/beard, plain white crew-neck T-shirt, softly shaded realistic painted illustration style. Equal 2x2 square grid, every sprite fits entirely in its own equal square with generous transparent gutters, no crossing cell boundaries, same head size and baseline per cell. TOP LEFT: nostalgic affectionate smile, one hand over heart and the other palm welcoming, remembering happy memories. TOP RIGHT: playful confident challenge, eyebrow slightly raised and index finger lifted, cheeky small grin (not exaggerated). BOTTOM LEFT: teaching a stone skip, concentrated friendly expression, holding a small flat dark river pebble horizontally between fingers, free hand low and flat demonstrating a shallow throwing angle. BOTTOM RIGHT: proud delighted warm smile, thumbs up with one hand and other hand open presenting a reward, celebrating success. Natural human anatomy/hands. Face stays the same person in every cell. Genuine transparent background with clean alpha. No scenery, lettering, labels, frames, borders, logos or shadows on a background. Output a coherent square four-pose atlas 2048x2048 if possible.",
+  "master": "Assets and working files/spring-gameplay-polish/shyamu-adavi-poses-source.png",
+  "generatedMaster": "C:/Users/Shyam/.codex/generated_images/01a17145-82bf-7d80-a13b-7c6d1416ea72/exec-1e2e6464-33e9-40ae-b2f5-a637b4df2fd6.png",
+  "processing": "Copied the generated PNG master into the project, then encoded to WebP with sharp, quality 92 and alpha quality 100. Native dimensions and generated alpha preserved. No painting, background removal, identity editing, cropping or rescaling.",
+  "promptDetails": "Identity-preserving transparent character pose atlas for the Adavi chapter of the personal 3D game. Preserve the same young Indian man's facial structure, skin tone, wavy dark hair, subtle moustache and beard, softly shaded illustrated style, and plain white T-shirt from the established reference portrait. Four separated poses in a consistent 2 by 2 grid: welcoming the player, presenting a playful stone-skipping challenge, teaching the technique, and celebrating success. Consistent character scale and clean transparent gutters; no scenery, captions, lettering, frames or watermarks."
+}

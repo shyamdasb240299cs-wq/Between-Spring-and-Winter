@@ -1,0 +1,49 @@
+{
+  "updated": "2026-10-25",
+  "references": "User-supplied photographs, retained in working files only; no reference photos are shipped as game textures.",
+  "route": "Konni – Thiruvananthapuram",
+  "assets": [
+    {
+      "name": "Kloppenheim 03 Pure Sky",
+      "source": "https://polyhaven.com/a/kloppenheim_03_puresky",
+      "license": "CC0-1.0",
+      "files": [
+        "sunny-sky.webp",
+        "sunny-sky-1k.hdr"
+      ]
+    },
+    {
+      "name": "asphalt_02",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0-1.0"
+    },
+    {
+      "name": "metal_plate",
+      "source": "https://polyhaven.com/a/metal_plate",
+      "license": "CC0-1.0"
+    },
+    {
+      "name": "plastered_wall_02",
+      "source": "https://polyhaven.com/a/plastered_wall_02",
+      "license": "CC0-1.0"
+    },
+    {
+      "name": "clay_roof_tiles",
+      "source": "https://polyhaven.com/a/clay_roof_tiles",
+      "license": "CC0-1.0"
+    },
+    {
+      "name": "Coconut Palm",
+      "source": "https://sketchfab.com/3d-models/26e787f2ff2e4c0fb004c3b0210805a3",
+      "author": "evolveduk",
+      "license": "CC-BY-4.0",
+      "files": "Reuses the attributed, prepared project GLBs."
+    },
+    {
+      "name": "Roadside trees, grass and stones",
+      "source": "../catalog.json",
+      "license": "See catalog and ASSET-CREDITS.md",
+      "files": "Existing attributed project GLBs; materials and instance transforms are owned by the bus."
+    }
+  ]
+}

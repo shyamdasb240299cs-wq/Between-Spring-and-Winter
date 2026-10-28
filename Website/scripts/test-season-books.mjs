@@ -8,7 +8,9 @@ import {NodeIO} from '@gltf-transform/core';
 import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
 registerHooks({resolve(s,c,n){try{return n(s,c);}catch(e){if(e.code==='ERR_MODULE_NOT_FOUND'&&s.startsWith('.'))return n(s+'.ts',c);throw e;}}});
 const {createRelicState,relicSaveKey}=await import('../app/shrine-void/season-relic-state.ts');
-const {createSpringTreasureState}=await import('../app/shrine-void/spring-treasure-state.ts');
+const {createSpringTreasureState,SPRING_SAVE_KEY}=await import('../app/shrine-void/spring-treasure-state.ts');
+const {ADAVI_STONES}=await import('../app/shrine-void/spring-adavi-physics.ts');
+const {SPRING_TREASURE_SPOT,SPRING_SHOVEL_SPOT}=await import('../app/shrine-void/spring-finale-world.ts');
 const {seasonBook,clampBookPage}=await import('../app/shrine-void/season-book-data.ts');
 const {createSeasonLayout,groundHeight}=await import('../app/shrine-void/season-layout.ts');
 const {createSeasonTravel}=await import('../app/shrine-void/season-navigation.ts');
@@ -49,9 +51,9 @@ const stoneNode=stoneDocument.getRoot().listNodes().find(n=>n.getMesh()),primiti
 for(const [attribute,name]of [['POSITION','position'],['NORMAL','normal'],['TEXCOORD_0','uv']]){const accessor=primitive.getAttribute(attribute);if(accessor)stoneGeometry.setAttribute(name,new THREE.BufferAttribute(accessor.getArray().slice(),accessor.getElementSize()));}
 if(primitive.getIndices())stoneGeometry.setIndex(new THREE.BufferAttribute(primitive.getIndices().getArray().slice(),1));stoneGeometry.applyMatrix4(new THREE.Matrix4().fromArray(stoneNode.getWorldMatrix()));
 const surfaces={wood:new THREE.Texture(),cloth:new THREE.Texture(),paper:new THREE.Texture(),stone:{geometry:stoneGeometry,material:new THREE.MeshStandardMaterial({map:new THREE.Texture()}),name:'real scanned rock'}};
-// Summer's physical key/chest route has been replaced by the case trail. Its
-// legacy save controller above remains covered for reader migration.
-for(const id of ['spring','autumn','winter']){
+// Spring and Summer use their own quest worlds. The legacy controller above
+// remains covered for migration; only these seasons still use its physical route.
+for(const id of ['autumn','winter']){
  const layout=createSeasonLayout(id),nav=layout.navigation,travel=createSeasonTravel(nav),placement=relicPlacement(id,layout.prop),relic=createSeasonRelics(id,layout,gltf.scene,cover,false,makeStorage(),surfaces);
  assert.equal(relic.chest.scale.x,CHEST_SCALE);relic.chest.updateMatrixWorld(true);
  const unturned=relic.chest.clone(true);unturned.quaternion.identity();unturned.position.set(0,0,0);
@@ -103,31 +105,61 @@ for(const id of ['spring','autumn','winter']){
  assert.ok(meshes<30,'Book decorations and chest details have a bounded draw count');assert.ok(triangles<30000,'The treasure arrangement has bounded geometry');
  relic.dispose();console.log(`${id}: chest/key routes, real 3D book, unlock/take/carry/read/close; ${meshes} meshes, ${triangles} source triangles`);
 }
-// Restarting the Spring trail must reset its physical relic as well as its saved discoveries.
-const springLayout=createSeasonLayout('spring');
-for(const milestone of ['cabinet','box','book']){
- const quest=createSpringTreasureState(makeStorage());
- const questStorage={getItem:()=>JSON.stringify({version:1,keyFound:quest.state.cabinetOpen,unlocked:quest.state.boxOpen,bookTaken:quest.state.bookFound}),setItem(){}};
- const relic=createSeasonRelics('spring',springLayout,gltf.scene,cover,true,questStorage,surfaces,true);
- const tick=(frames=1)=>{for(let i=0;i<frames;i++){const q=quest.state;relic.syncQuest(q.cabinetOpen,q.boxOpen,q.bookFound,q.digStage===3);relic.update(1/60,i/60,camera);}};
- const findBox=()=>{quest.act('take-spade');for(let n=0;n<3;n++)quest.act('dig');quest.act('open-box');tick(30);};
- quest.act('open-cabinet',['sun','leaf','ripple']);tick();
- if(milestone!=='cabinet')findBox();
- if(milestone==='book'){quest.act('take-book');tick(20);}
- assert.equal(quest.act('reset'),true);tick();
- const hud=relic.status(camera);
- assert.equal(hud.hasKey,false,`${milestone}: restart clears the held key`);
- assert.equal(hud.hasBook,false,`${milestone}: restart clears the carried book`);
- assert.equal(hud.busy,false,`${milestone}: restart leaves a stable pose`);
- assert.equal(relic.chest.visible,false,`${milestone}: restart buries the box`);
- assert.equal(relic.key.visible,false,`${milestone}: restart hides the undiscovered key`);
- assert.equal(relic.book.visible,false,`${milestone}: restart hides the undiscovered book`);
- assert.equal(relic.read(),false,`${milestone}: restart cannot read the previous book`);
- quest.act('open-cabinet',['sun','leaf','ripple']);tick();findBox();quest.act('take-book');tick(20);
- assert.equal(relic.status(camera).hasBook,true,`${milestone}: the restarted trail can be completed`);
- assert.equal(relic.read(),true,`${milestone}: the newly found book can be opened`);
- relic.dispose();
+// Test the current Spring route rather than the removed cabinet/spade shortcut.
+const springLayout=createSeasonLayout('spring'),springTravel=createSeasonTravel(springLayout.navigation),springNav=springLayout.navigation;
+const springSeen=new Set(),springQueue=[[Math.round((springNav.spawn.x-springNav.origin[0])/springNav.cell),Math.round((springNav.spawn.z-springNav.origin[1])/springNav.cell)]],springReachable=[];
+for(let head=0;head<springQueue.length;head++){
+ const [ix,iz]=springQueue[head],key=ix+':'+iz;if(springSeen.has(key))continue;springSeen.add(key);
+ const x=springNav.origin[0]+ix*springNav.cell,z=springNav.origin[1]+iz*springNav.cell;
+ if(![[0,0],[.28,0],[-.28,0],[0,.28],[0,-.28]].every(([dx,dz])=>springTravel.height(x+dx,z+dz)!==null))continue;
+ springReachable.push({x,z});for(const [dx,dz]of [[1,0],[-1,0],[0,1],[0,-1]])springQueue.push([ix+dx,iz+dz]);
 }
-console.log('Spring trail restart passed after cabinet, box and book discovery, including completing the trail again.');
+for(const [name,target] of [['shovel',SPRING_SHOVEL_SPOT],['sunlit treasure',SPRING_TREASURE_SPOT]])assert.ok(springReachable.some(p=>Math.hypot(p.x-target.x,p.z-target.z)<1.7),`Current Spring ${name} has a spawn-connected approach with body clearance`);
+let springClock=10000;
+const flatStone=ADAVI_STONES.find(stone=>stone.shape==='flat');
+function playSpring(quest,stop='complete'){
+ const act=(action,value)=>assert.ok(quest.act(action,value),`Spring route: ${action}`);
+ const equip=item=>act('equip-storage',quest.state.storageSlots.indexOf(item));
+ act('read-letter');act('put-paper');act('take-item','basket');
+ for(let n=0;n<8;n++){act('eat-held');springClock+=1200;}
+ act('take-key');act('return-held');equip('key');act('unlock-door');act('enter-adavi');
+ for(let n=0;n<4;n++)act('adavi-intro-next');
+ act('pick-stone',flatStone.id);act('aim-stone');act('throw-stone');
+ for(let n=1;n<=4;n++)act('skip-contact',n);
+ act('finish-throw',{success:true,skips:4,distance:14.8,feedback:'Four skips to the far bank.'});
+ for(let n=0;n<2;n++)act('adavi-win-next');
+ act('reveal-bag');act('take-bag');act('open-bag');
+ for(const item of ['mushroom-toy','candle','note'])act('take-bag-item',item);
+ act('close-bag-note');act('put-bag',{world:'adavi',x:192.5,z:8,yaw:.55});act('exit-adavi');
+ act('read-bridge-note');act('close-quest-note');act('take-pill');act('sit-bench');act('take-pill-seated');
+ springClock+=1120;act('sleep-phase','sleeping');springClock+=3500;act('sleep-phase','waking');springClock+=3300;act('wake-in-bus');
+ act('read-journey-note');act('close-quest-note');act('take-compass');act('take-glasses');act('return-from-bus');
+ springClock+=1120;act('wake-at-bench');springClock+=3300;act('finish-waking');act('stand-up');
+ act('read-train-note');act('close-train-note');act('wash-hands');act('reveal-train-mirror');act('open-train-case');
+ for(const [index,delta]of [[1,1],[2,1],[3,-1],[4,-1],[4,-1],[4,-1],[4,-1]])act('turn-train-wheel',{index,delta});
+ act('unlock-train-case');act('take-treasure-key');if(stop==='key')return;
+ act('read-train-letter');act('close-train-note');act('read-dumpling-note');act('close-quest-note');
+ // Old letters remain recoverable world items while making room for the hunt.
+ for(const item of ['letter','pill-letter']){const slot=quest.state.storageSlots.indexOf(item);act('drop-inventory',{slot,item,placement:{item,world:'spring',x:14.7,y:.3,z:-17,yaw:0}});}
+ act('take-dumplings');act('open-dumplings');for(let n=0;n<7;n++){act('eat-dumpling');springClock+=1550;}
+ act('return-dumplings');act('read-bridge-note');act('close-quest-note');for(let n=0;n<5;n++)act('collect-paper',n);
+ act('take-shovel');act('dig-treasure');springClock+=6100;act('finish-dig');if(stop==='chest')return;
+ act('put-shovel');equip('treasure-key');act('open-treasure');act('dismiss-final-dialogue');act('stow-hand',quest.state.hands.indexOf('treasure-key'));
+ equip('candle');equip('glasses');act('focus-candle');springClock+=4100;act('light-candle');act('take-spring-book');if(stop==='book')return;
+ for(const phase of ['sitting','opening','reading'])act('ending-phase',phase);
+ act('close-spring-book');assert.equal(quest.state.endingPhase,'complete');
+}
+for(const milestone of ['key','chest','book']){
+ const storage=makeStorage(),quest=createSpringTreasureState(storage,()=>springClock);playSpring(quest,milestone);
+ assert.ok(quest.state[{key:'treasureKeyTaken',chest:'treasureDug',book:'springBookTaken'}[milestone]],`${milestone} is actually earned before restart`);
+ assert.ok(quest.act('reset'));
+ const reset=createSpringTreasureState(storage,()=>springClock);
+ for(const flag of ['keyTaken','stoneChallengeComplete','bagTaken','pillUsed','dreamReturned','trainLockOpen','treasureKeyTaken','rainCleared','paperHuntStarted','treasureDug','treasureOpen','candleLit','springBookTaken'])assert.equal(reset.state[flag],false,`${milestone}: restart clears ${flag}`);
+ assert.ok(reset.state.storageSlots.every(item=>item===null)&&reset.state.hands.every(item=>item===null));
+ assert.equal(reset.act('read-spring-book'),false,`${milestone}: restart cannot reopen the old book`);
+ playSpring(reset);const reloaded=createSpringTreasureState(storage,()=>springClock);assert.equal(reloaded.state.endingPhase,'complete');assert.ok(reloaded.act('read-spring-book'));assert.equal(reloaded.state.endingPhase,'reading');
+ assert.equal(JSON.parse(storage.getItem(SPRING_SAVE_KEY)).springBookTaken,true);
+}
+console.log('Spring current route passed: connected shovel/treasure approaches; full food, Adavi, bus, train, meal, paper, shovel, candle and reader progression; restart after key, chest and book; complete replay and reload.');
 cover.dispose();stoneGeometry.dispose();surfaces.stone.material.map.dispose();surfaces.stone.material.dispose();surfaces.wood.dispose();surfaces.cloth.dispose();surfaces.paper.dispose();
 console.log('Season books passed: legacy save inventories, current physical relic routes, reader carry/restart, storage and refresh rates; supplied Spring pages and explicit missing Summer content.');

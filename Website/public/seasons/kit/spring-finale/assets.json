@@ -1,0 +1,17 @@
+{
+  "source": "User supplied Downloads/Food+pack.glb",
+  "license": "Source metadata retained; user-provided asset",
+  "selection": [
+    "Steamer",
+    "Steamer lid",
+    "Dumpling (seven connected components)",
+    "Chopstick"
+  ],
+  "excluded": "Plated Dumpling.001 and other food servings",
+  "modifications": [
+    "Original seven steamed buns split for individual eating",
+    "Original lid rotated closed and normalized with container",
+    "Unused assets pruned, 1K WebP maps"
+  ],
+  "bytes": 404704
+}

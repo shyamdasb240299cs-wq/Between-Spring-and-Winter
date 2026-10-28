@@ -44,22 +44,7 @@ export function createSeasonProps(id:SeasonId,layout:SeasonLayout,models:Record<
     g.computeVertexNormals();const m=new THREE.MeshStandardMaterial({map:tex,roughness:1,side:THREE.DoubleSide});ownedMaterials.push(m);const mesh=new THREE.Mesh(g,m);mesh.name=striped?'Beach towel':'Picnic blanket';mesh.receiveShadow=mesh.castShadow=true;group.add(mesh);supports.push(mesh);return mesh;
   }
   if(id==='spring'){
-    cloth(cx,cz,3,2.2,0xbb6675,-.08);
-    // A closed woven hamper and a separate shallow fruit tray are actual Poly Haven scans.
-    // Their contact heights follow the cloth; no synthetic handle or primitive fruit remains.
-    model('picnic-basket',cx-1,cz-.45,.62,-.14,.055);
-    const tray=model('basket',cx+.08,cz-.40,.58,.12,.055);
-    const trayTop=tray?new THREE.Box3().setFromObject(tray).max.y:groundHeight(id,cx+.08,cz-.40)+.17;
-    for(const [n,p]of [[-.09,-.43],[.10,-.49],[.18,-.30]].entries()){
-      const apple=model('apple',cx+p[0],cz+p[1],.115,n*1.7);
-      if(apple){apple.position.y=trayTop+.004;tray?.attach(apple);}
-    }
-    for(const [x,z,a]of [[cx-.15,cz+.43,-.3],[cx+.78,cz+.27,.35]]){
-      const plate=model('plate',x,z,.34,a,.055);
-      const apple=model('apple',x+.012,z,.112,a+.6);
-      if(apple&&plate){apple.position.y=new THREE.Box3().setFromObject(plate).max.y+.004;plate.attach(apple);}
-    }
-    model('thermos',cx+1.02,cz-.51,.20,-.45,.055);
+    // Spring’s table and its objects are owned by the food-stall story.
     // Daisies: opaque petal meshes preserve detail at walking distance.
     const petalG=new THREE.SphereGeometry(1,5,3),flowerG=new THREE.SphereGeometry(.025,6,4),stemG=new THREE.CylinderGeometry(.004,.005,.2,4);
     const petalM=mat(0xffedf0),centreM=mat(0xeab946),stemM=mat(0x4f6c26);

@@ -1,0 +1,222 @@
+{
+  "updated": "2026-10-27",
+  "assets": [
+    {
+      "id": "modular_chainlink_fence",
+      "file": "fence.glb",
+      "name": "Modular Chainlink Fence",
+      "source": "https://polyhaven.com/a/modular_chainlink_fence",
+      "authors": {
+        "James Ray Cock": "All",
+        "Amal Kumar": "Fence Wire Material"
+      },
+      "license": "CC0-1.0",
+      "bytes": 1335916,
+      "triangles": 3054,
+      "materials": 2,
+      "bounds": {
+        "min": [
+          -0.9570261240005493,
+          0,
+          -0.024316025897860527
+        ],
+        "max": [
+          0.9570261240005493,
+          2.3700001090765,
+          0.024316025897860527
+        ]
+      },
+      "modifications": [
+        "Ground centred at y=0, original scale and PBR UVs retained.",
+        "PBR maps packed into GLB as 1K WebP at quality 90.",
+        "Only the straight double panel is exported; the original modular kit is retained in source.",
+        "The separate source wire opacity image is packed into base-colour alpha, using alpha-test MASK at 0.42."
+      ]
+    },
+    {
+      "id": "rollershutter_window_01",
+      "file": "shutter.glb",
+      "name": "Rollershutter Window 01",
+      "source": "https://polyhaven.com/a/rollershutter_window_01",
+      "authors": {
+        "MP": "All"
+      },
+      "license": "CC0-1.0",
+      "bytes": 307344,
+      "triangles": 552,
+      "materials": 1,
+      "bounds": {
+        "min": [
+          -1.050000548362732,
+          0,
+          -0.15004295407561585
+        ],
+        "max": [
+          1.050000548362732,
+          1.8507245529547163,
+          0.15004295407561585
+        ]
+      },
+      "modifications": [
+        "Ground centred at y=0, original scale and PBR UVs retained.",
+        "PBR maps packed into GLB as 1K WebP at quality 90."
+      ]
+    },
+    {
+      "id": "plastic_crate_01",
+      "file": "crate.glb",
+      "name": "Plastic Crate 01",
+      "source": "https://polyhaven.com/a/plastic_crate_01",
+      "authors": {
+        "PierreB3D": "All"
+      },
+      "license": "CC0-1.0",
+      "bytes": 799436,
+      "triangles": 2800,
+      "materials": 1,
+      "bounds": {
+        "min": [
+          -0.14900030195713043,
+          0,
+          -0.20400004088878632
+        ],
+        "max": [
+          0.14900030195713043,
+          0.2641673743724766,
+          0.20400004088878632
+        ]
+      },
+      "modifications": [
+        "Ground centred at y=0, original scale and PBR UVs retained.",
+        "PBR maps packed into GLB as 1K WebP at quality 90.",
+        "Geometry simplified with maximum normalized error 0.02 for roadside viewing; full source retained."
+      ]
+    },
+    {
+      "id": "Barrel_02",
+      "file": "barrel.glb",
+      "name": "Barrel 02",
+      "source": "https://polyhaven.com/a/Barrel_02",
+      "authors": {
+        "Jorge Camacho": "All"
+      },
+      "license": "CC0-1.0",
+      "bytes": 350528,
+      "triangles": 2688,
+      "materials": 1,
+      "bounds": {
+        "min": [
+          -0.24408778548240662,
+          0,
+          -0.24230822175741196
+        ],
+        "max": [
+          0.24408778548240662,
+          0.8799999924376607,
+          0.24230822175741196
+        ]
+      },
+      "modifications": [
+        "Ground centred at y=0, original scale and PBR UVs retained.",
+        "PBR maps packed into GLB as 1K WebP at quality 90."
+      ]
+    },
+    {
+      "id": "potted_plant_01",
+      "file": "plant.glb",
+      "name": "Potted Plant 01",
+      "source": "https://polyhaven.com/a/potted_plant_01",
+      "authors": {
+        "Rico Cilliers": "All"
+      },
+      "license": "CC0-1.0",
+      "bytes": 1305424,
+      "triangles": 5546,
+      "materials": 2,
+      "bounds": {
+        "min": [
+          -0.293308787047863,
+          0,
+          -0.3165988475084305
+        ],
+        "max": [
+          0.293308787047863,
+          1.3361176252365112,
+          0.3165988475084305
+        ]
+      },
+      "modifications": [
+        "Ground centred at y=0, original scale and PBR UVs retained.",
+        "PBR maps packed into GLB as 1K WebP at quality 90.",
+        "Geometry simplified with maximum normalized error 0.02 for roadside viewing; full source retained.",
+        "The separate source leaf opacity image is packed into base-colour alpha, using alpha-test MASK at 0.42."
+      ]
+    },
+    {
+      "id": "plastic_monobloc_chair_01",
+      "file": "chair.glb",
+      "name": "Plastic Monobloc Chair 01",
+      "source": "https://polyhaven.com/a/plastic_monobloc_chair_01",
+      "authors": {
+        "Kuutti Siitonen": "All"
+      },
+      "license": "CC0-1.0",
+      "bytes": 538980,
+      "triangles": 3000,
+      "materials": 1,
+      "bounds": {
+        "min": [
+          -0.3209305703639984,
+          0,
+          -0.31379595398902893
+        ],
+        "max": [
+          0.3209305703639984,
+          0.8798411972820759,
+          0.31379595398902893
+        ]
+      },
+      "modifications": [
+        "Ground centred at y=0, original scale and PBR UVs retained.",
+        "PBR maps packed into GLB as 1K WebP at quality 90.",
+        "Geometry simplified with maximum normalized error 0.003 for roadside viewing; full source retained."
+      ]
+    },
+    {
+      "id": "red_brick_plaster_patch_02",
+      "name": "Red Brick Plaster Patch 02",
+      "source": "https://polyhaven.com/a/red_brick_plaster_patch_02",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0-1.0",
+      "files": [
+        "masonry-color.webp",
+        "masonry-normal.webp",
+        "masonry-roughness.webp"
+      ],
+      "resolution": 1024,
+      "modifications": [
+        "Original 1K PBR maps encoded as WebP at quality 92."
+      ]
+    },
+    {
+      "id": "red_laterite_soil_stones",
+      "name": "Red Laterite Soil Stones",
+      "source": "https://polyhaven.com/a/red_laterite_soil_stones",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0-1.0",
+      "files": [
+        "laterite-color.webp",
+        "laterite-normal.webp",
+        "laterite-roughness.webp"
+      ],
+      "resolution": 1024,
+      "modifications": [
+        "Original 1K PBR maps encoded as WebP at quality 92."
+      ]
+    }
+  ]
+}

@@ -1,18 +1,17 @@
 import type {SeasonId,SeasonNavigation,SurfaceKind} from './seasons';
 import {relicPlacement,CHEST_COLLISION_RADIUS} from './season-relic-placement';
-import {SPRING_RADIUS,SPRING_POND,SPRING_LANDMARKS,springClearance,springObstacles,springPathDistance,springPondDistance} from './spring-treasure-layout';
+import {SPRING_RADIUS,SPRING_POND,SPRING_BRIDGE,SPRING_LANDMARKS,springClearance,springObstacles,springPathDistance,springPondDistance} from './spring-treasure-layout';
 import {summerGroundHeight,summerIslandDistance,summerWalkingSurface,summerClearance,summerPondDistance,summerForestBlend,summerWorldColliders,summerLandBlocked,SUMMER_GROUND_GLSL} from './summer-layout';
 
 // Area grows with radius squared: +50% woodland, +100% island land area.
 export const WALK_CENTRE={x:0,z:-3},WALK_RADIUS=22*Math.sqrt(1.5),WATER_LEVEL=0;
 export const seasonWalkRadius=(id:SeasonId)=>id==='spring'?SPRING_RADIUS:WALK_RADIUS;
-/** The wooden deck crosses the narrow inlet; ground remains below it. */
+/** A fourteen-metre timber arch spans the whole river, landing on both dry banks. */
 export function springBridgeHeight(x:number,z:number):number|null{
-  if(Math.abs(z+12)>.72||Math.abs(x-22)>2.2)return null;
-  // Match the authored straight 0.8 m ramps. A smoothstep profile becomes too steep
-  // at its centre for the navigation grid, leaving an invisible wall on the west bank.
-  const bank=groundHeight('spring',22+Math.sign(x-22)*2.2,-12),end=clamp((Math.abs(x-22)-1.4)/.8);
-  return .52+(bank-.52)*end;
+  const b=SPRING_BRIDGE;if(Math.abs(z-b.z)>b.halfWidth||Math.abs(x-b.x)>b.halfLength)return null;
+  const u=(x-b.x+b.halfLength)/(2*b.halfLength),west=groundHeight('spring',b.x-b.halfLength,b.z),east=groundHeight('spring',b.x+b.halfLength,b.z);
+  // Linear bank blend and one shallow sine arch match every authored deck plank.
+  return west+(east-west)*u+(b.crown-(west+east)*.5)*Math.sin(Math.PI*u);
 }
 export const ISLAND_SCALE=Number((1.65*Math.sqrt(2)).toFixed(6));
 export const SUMMER_WALK_LIMIT=15.7;
@@ -44,26 +43,35 @@ export function autumnLakeDistance(x:number,z:number){
 }
 /** Irregular elliptical island, surrounded by an actual seabed in every direction. */
 export function islandDistance(x:number,z:number){return summerIslandDistance(x,z)*10;}
+function springUnmodifiedGround(x:number,z:number){
+  const fine=Math.sin(x*2.4+z*.37)*Math.sin(z*2.1-x*.7)*.018,r=Math.hypot(x,z+3),a=Math.atan2(z+3,x);
+  const broad=Math.sin(z*.18)*.08+Math.sin(x*.25+z*.11)*.09;
+  const outer=smooth(14,65,r)*(2.2+Math.sin(a*3+.7)*.7+Math.sin(a*7)*.3)+smooth(55,105,r)*(6+Math.sin(a*5)*2.5);
+  const natural=broad+Math.sin(x*.47+z*.32)*.045+fine+outer;
+  const school=1-smooth(0,.6,Math.max(Math.abs(x+11)-2.25,Math.abs(z-2)-1.95));
+  const land=natural+(.045-natural)*school,pond=springPondDistance(x,z);
+  const basin=SPRING_POND.level+clamp((pond-1)*1.8,-.7,.42),influence=1-smooth(1.05,1.3,pond);
+  return land+(basin-land)*influence;
+}
+const springNorthTerrainLevel=springUnmodifiedGround(12,-76);
 export function groundHeight(id:SeasonId,x:number,z:number){
+  if(id==='spring'){
+    const land=springUnmodifiedGround(x,z),edge=Math.max((Math.abs(x-12)-5.3)/2.7,(Math.abs(z+76)-12.8)/6.2);
+    return springNorthTerrainLevel+(land-springNorthTerrainLevel)*smooth(0,1,edge);
+  }
   const fine=Math.sin(x*2.4+z*.37)*Math.sin(z*2.1-x*.7)*.018;
   if(id==='summer')return summerGroundHeight(x,z);
   const d=id==='autumn'?autumnPathDistance(x,z):pathDistance(x,z),r=Math.hypot(x,z+3),a=Math.atan2(z+3,x);
   const broad=Math.sin(z*.18)*.08+Math.sin(x*.25+z*.11)*.09;
   const outer=smooth(14,65,r)*(2.2+Math.sin(a*3+.7)*.7+Math.sin(a*7)*.3)+smooth(55,105,r)*(6+Math.sin(a*5)*2.5);
-  if(id==='spring'){
-    const natural=broad+Math.sin(x*.47+z*.32)*.045+fine+outer;
-    const school=1-smooth(0,.6,Math.max(Math.abs(x+11)-2.25,Math.abs(z-2)-1.95));
-    const land=natural+(.045-natural)*school,pond=springPondDistance(x,z);
-    const basin=SPRING_POND.level+clamp((pond-1)*1.8,-.7,.42),influence=1-smooth(1.05,1.3,pond);
-    return land+(basin-land)*influence;
-  }
   if(id==='winter')return .14+broad*.65+smooth(1.25,4,d)*(.32+Math.sin(z*.5+x*.35)*.09)+fine*.35+outer;
   const land=broad+smooth(1.3,4,d)*(.17+Math.sin(z*.25+x*.3)*.06)+fine+outer;
   const lake=autumnLakeDistance(x,z),bank=AUTUMN_LAKE_LEVEL+clamp((lake-1)*1.9,-1.4,.36),influence=1-smooth(1.13,1.43,lake);
   return land+(bank-land)*influence;
 }
 export const lakeShapeGLSL=`
-  float springPondAt(vec2 p){float main=length((p-vec2(19.3,-17.6))/vec2(4.3,3.8));float inlet=length(vec2((p.x-22.)/.85,max(0.,abs(p.y+12.8)-4.4)/.9));return min(main,inlet);}
+  float springRiverCentreAt(float z){return 22.+sin((z+12.)*.11)*.7+sin((z+12.)*.27)*.16+.014*pow(max(0.,-z-34.),2.)+.016*pow(max(0.,z-8.),2.);}
+  float springPondAt(vec2 p){float width=4.75+sin((p.y+12.)*.15)*.28;return abs(p.x-springRiverCentreAt(p.y))/width;}
   float autumnLakeAt(vec2 p){vec2 q=(p-vec2(.8,-13.))/vec2(9.8,6.5);float a=atan(q.y,q.x);return length(q)/(1.+sin(a*3.+.7)*.045+sin(a*5.-1.1)*.025);}
   float autumnPathAt(vec2 p){float route=abs(p.x-sin(p.y*.075)*.8-sin(p.y*.17)*.22);float branch=abs(p.y-(-5.9+sin(p.x*.14)*.3));return min(route,length(vec2(max(0.,abs(p.x)-12.),branch)));}
 `;
@@ -77,7 +85,7 @@ export const groundGLSL=`
     float d=season==2?autumnPathAt(p):abs(p.x-sin(p.y*.075)*.8-sin(p.y*.17)*.22),r=length(vec2(p.x,p.y+3.)),a=atan(p.y+3.,p.x);
     float broad=sin(p.y*.18)*.08+sin(p.x*.25+p.y*.11)*.09;
     float outer=smoothstep(14.,65.,r)*(2.2+sin(a*3.+.7)*.7+sin(a*7.)*.3)+smoothstep(55.,105.,r)*(6.+sin(a*5.)*2.5);
-    if(season==0){float natural=broad+sin(p.x*.47+p.y*.32)*.045+fine+outer;float school=1.-smoothstep(0.,.6,max(abs(p.x+11.)-2.25,abs(p.y-2.)-1.95));float land=mix(natural,.045,school);float pond=springPondAt(p);float basin=.30+clamp((pond-1.)*1.8,-.7,.42);return mix(land,basin,1.-smoothstep(1.05,1.3,pond));}
+    if(season==0){float natural=broad+sin(p.x*.47+p.y*.32)*.045+fine+outer;float school=1.-smoothstep(0.,.6,max(abs(p.x+11.)-2.25,abs(p.y-2.)-1.95));float land=mix(natural,.045,school);float pond=springPondAt(p);float basin=.30+clamp((pond-1.)*1.8,-.7,.42);land=mix(land,basin,1.-smoothstep(1.05,1.3,pond));float edge=max((abs(p.x-12.)-5.3)/2.7,(abs(p.y+76.)-12.8)/6.2);return mix(${springNorthTerrainLevel.toFixed(6)},land,smoothstep(0.,1.,edge));}
     if(season==3)return .14+broad*.65+smoothstep(1.25,4.,d)*(.32+sin(p.y*.5+p.x*.35)*.09)+fine*.35+outer;
     float land=broad+smoothstep(1.3,4.,d)*(.17+sin(p.y*.25+p.x*.3)*.06)+fine+outer;
     float lake=autumnLakeAt(p),bank=-.08+clamp((lake-1.)*1.9,-1.4,.36);return mix(land,bank,1.-smoothstep(1.13,1.43,lake));
@@ -104,6 +112,7 @@ export function seasonLandmarks(id:SeasonId):SeasonLandmark[]{
     const benches=id==='autumn'?[[12,-7,Math.PI],[-12,-8,Math.PI],[-7,7,.3],[7,-21.3,2.7]]:id==='winter'?[[8,4,-.6],[-12,4,.6],[8,-16,2.6],[-11,-16,-2.6]]:[[-11,4,.6],[9,5,-.5],[-10,-15,2.7],[10,-17,-2.7]];
     for(const [x,z,yaw]of benches)add('bench',x,z,2.05,yaw);
     for(const [x,z,yaw]of [[-19,-1,.8],[18,-12,-1.2]])add('bench',x,z,2.05,yaw);
+    if(id==='spring')add('bench',30,1,2.05,-Math.PI/2);
     // A large parent stone and smaller fragments share each exposed bank.
     for(const [x,z,size,yaw]of [[-19,7,2.7,.4],[-16.6,8.7,1.35,.65],[-15.2,10,1,.25],[17,-20,2.8,-.6],[19.6,-18,1.5,-.4],[20.8,-16,1,-.7],[12,14,2.2,.3],[-18,-18,2,.7]])if(id!=='autumn'||autumnLakeDistance(x,z)>1.3)add('boulder',x,z,size,yaw);
     add('log',id==='autumn'?-15:-14,id==='autumn'?-20:-8,2.5,.5);
@@ -169,13 +178,14 @@ export function createSeasonLayout(id:SeasonId):SeasonLayout{
   if(id==='autumn')obstacles.push({x:prop.x+.35,z:prop.z,radius:1.05});
   if(id==='winter')obstacles.push({x:prop.x,z:prop.z,radius:1.12},{x:prop.x,z:prop.z-1.8,radius:1.1});
   obstacles.push(...landmarks.map(({x,z,radius})=>({x,z,radius})));
-  if(id!=='summer'){const relic=relicPlacement(id,prop);obstacles.push({x:relic.chest.x,z:relic.chest.z,radius:CHEST_COLLISION_RADIUS});}
+  if(id!=='summer'&&id!=='spring'){const relic=relicPlacement(id,prop);obstacles.push({x:relic.chest.x,z:relic.chest.z,radius:CHEST_COLLISION_RADIUS});}
   if(id==='summer')for(const c of summerWorldColliders.filter(c=>c.minY<1.8&&c.maxY>.9&&c.kind==='cylinder'))obstacles.push({x:c.x,z:c.z,radius:c.radius??.15});
-  const cell=.25,width=id==='summer'?481:id==='spring'?305:233,depth=id==='summer'?561:id==='spring'?305:233,origin:[number,number]=id==='summer'?[-60,-70]:id==='spring'?[-38,-41]:[-29,-32],heights:(number|null)[]=[];
+  const cell=.25,width=id==='summer'?481:id==='spring'?305:233,depth=id==='summer'?561:id==='spring'?569:233,origin:[number,number]=id==='summer'?[-60,-70]:id==='spring'?[-38,-107]:[-29,-32],heights:(number|null)[]=[];
   for(let iz=0;iz<depth;iz++)for(let ix=0;ix<width;ix++){
     const x=origin[0]+ix*cell,z=origin[1]+iz*cell,h=id==='summer'?(summerWalkingSurface(x,z)??-100):id==='spring'?(springBridgeHeight(x,z)??groundHeight(id,x,z)):groundHeight(id,x,z);
     const bridge=id==='spring'&&springBridgeHeight(x,z)!==null;
-    const edge=id==='summer'?h<-SUMMER_WADING_DEPTH||islandDistance(x,z)>SUMMER_WALK_LIMIT:Math.hypot(x,z+3)>seasonWalkRadius(id)||id==='autumn'&&h<AUTUMN_LAKE_LEVEL-AUTUMN_WADING_DEPTH||id==='spring'&&!bridge&&springPondDistance(x,z)<1.10;
+    const northRoute=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-104;
+    const edge=id==='summer'?h<-SUMMER_WADING_DEPTH||islandDistance(x,z)>SUMMER_WALK_LIMIT:!northRoute&&Math.hypot(x,z+3)>seasonWalkRadius(id)||id==='autumn'&&h<AUTUMN_LAKE_LEVEL-AUTUMN_WADING_DEPTH||id==='spring'&&!bridge&&springPondDistance(x,z)<1.10;
     const solid=obstacles.some(o=>(x-o.x)**2+(z-o.z)**2<(o.radius+.1)**2)||id==='summer'&&summerLandBlocked(x,z);
     heights.push(edge||solid?null:h);
   }

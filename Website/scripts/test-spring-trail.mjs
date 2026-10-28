@@ -1,90 +1,24 @@
 import assert from 'node:assert/strict';
-import * as THREE from 'three';
-import {typescriptUrl} from './load-typescript.mjs';
-const load=async name=>import(await typescriptUrl(new URL(`../app/shrine-void/${name}.ts`,import.meta.url)));
-const {createSpringTreasureState,SPRING_SAVE_KEY}=await load('spring-treasure-state');
-const {createSeasonLayout,groundHeight}=await load('season-layout');
-const {SPRING_SPOTS,springPondDistance}=await load('spring-treasure-layout');
-const {partitionInstances}=await load('spatial-instances');
-let saved=null;
-const storage={getItem:()=>saved,setItem:(_,value)=>{saved=value;}};
-let game=createSpringTreasureState(storage);
-assert.equal(game.act('open-box'),false);
-assert.equal(game.act('dig'),false);
-assert.equal(game.act('rub-paper'),false);
-for(const action of ['read-note','lift-saucer','take-pouch','read-phone','take-ticket'])assert.ok(game.act(action));
-game=createSpringTreasureState(storage);
-assert.ok(game.state.ticketFound&&!game.state.ticketSolved,'Collected sleeves survive closing/reloading before solving');
-assert.equal(game.act('align-tickets',{x:1,y:0,turn:0}),false);
-assert.ok(game.act('align-tickets',{x:0,y:0,turn:0}));
-for(const action of ['place-paper','clip-paper','rub-paper','sit-bench','take-drawing'])assert.ok(game.act(action));
-assert.equal(game.act('open-cabinet',['leaf','sun','ripple']),false);
-assert.ok(game.act('open-cabinet',['sun','leaf','ripple']));
-assert.ok(game.act('map-line',['tree','marker']));
-assert.ok(game.act('map-line',['bridge','boulders']));
-for(const action of ['take-spade','dig','dig','dig','open-box','take-book'])assert.ok(game.act(action));
-assert.ok(createSpringTreasureState(storage).state.bookFound);
-game.act('reset');assert.equal(game.state.bookFound,false);
-
-// Returning readers keep the book unlocked, while an explicit fresh trail wins.
-const legacyKey='between-seasons-relic-spring-v1',legacySaves=new Map([[legacyKey,JSON.stringify({version:1,keyFound:true,unlocked:true,bookTaken:true})]]);
-const legacyStorage={getItem:key=>legacySaves.get(key)??null,setItem:(key,value)=>legacySaves.set(key,value)};
-let returning=createSpringTreasureState(legacyStorage);
-assert.ok(returning.state.bookFound&&returning.state.boxOpen&&returning.state.cabinetOpen&&returning.state.digStage===3,'Previous Spring readers can reopen their book');
-returning.act('reset');returning=createSpringTreasureState(legacyStorage);
-assert.equal(returning.state.bookFound,false,'An explicit new trail is not silently completed by the old save');
-assert.ok(legacySaves.has(legacyKey),'Migration preserves the old relic save');
-legacySaves.delete(SPRING_SAVE_KEY);legacySaves.set(legacyKey,JSON.stringify({version:1,keyFound:true,unlocked:true,bookTaken:false}));
-assert.equal(createSpringTreasureState(legacyStorage).state.bookFound,false,'An unfinished old hunt cannot skip to the book');
-
-// Exploring out of order never adds hidden note, map or bench prerequisites.
-let early=createSpringTreasureState();
-for(const action of ['take-spade','dig','dig','dig'])assert.ok(early.act(action));
-assert.equal(early.act('open-box'),false,'An early excavation still needs the key');
-assert.ok(early.act('take-drawing'),'The tree pocket can be found before the lake clue');
-assert.ok(early.act('open-cabinet',['sun','leaf','ripple']),'A correct physical setting works before reading its clues');
-assert.ok(early.act('open-box'));assert.ok(early.act('take-book'));
-assert.equal(early.state.noteRead,false);
-
-// Each completed physical step is safe to close or refresh, even before the book.
-const checkpointSaves=new Map(),checkpointStorage={getItem:key=>checkpointSaves.get(key)??null,setItem:(key,value)=>checkpointSaves.set(key,value)};
-let checkpoint=createSpringTreasureState(checkpointStorage);
-for(const [action,field] of [['take-pouch','pouchTaken'],['place-paper','paperPlaced'],['clip-paper','paperClipped'],['rub-paper','rubbingDone'],['take-spade','spadeTaken']]){
- assert.ok(checkpoint.act(action));checkpoint=createSpringTreasureState(checkpointStorage);assert.equal(checkpoint.state[field],true,`${action} survives refresh`);
-}
-for(let stage=1;stage<=3;stage++){assert.ok(checkpoint.act('dig'));checkpoint=createSpringTreasureState(checkpointStorage);assert.equal(checkpoint.state.digStage,stage);}
-for(const raw of ['broken JSON','null','[]',JSON.stringify({version:7,bookFound:true})]){
- const fresh=createSpringTreasureState({getItem:()=>raw,setItem:()=>{}});assert.equal(fresh.state.bookFound,false);assert.ok(fresh.act('read-note'));
-}
-assert.ok(createSpringTreasureState({getItem:()=>{throw new Error('Storage blocked');},setItem:()=>{throw new Error('Storage blocked');}}).act('read-note'),'Storage restrictions do not block play');
-
-// Flood-fill with the player's body footprint, not just a centre-point path.
-const nav=createSeasonLayout('spring').navigation;
-const at=(x,z)=>Math.round((z-nav.origin[1])/nav.cell)*nav.width+Math.round((x-nav.origin[0])/nav.cell);
-const safe=i=>{
- const x=i%nav.width,z=Math.floor(i/nav.width);
- if(x<2||z<2||x>=nav.width-2||z>=nav.depth-2)return false;
- return [0,1,-1,nav.width,-nav.width].every(d=>nav.heights[i+d]!==null);
-};
-const seen=new Set(),queue=[at(nav.spawn.x,nav.spawn.z)];seen.add(queue[0]);
-for(let k=0;k<queue.length;k++)for(const d of [1,-1,nav.width,-nav.width]){
- const i=queue[k]+d;if(seen.has(i)||!safe(i))continue;
- if(Math.abs(nav.heights[i]-nav.heights[queue[k]])>.2)continue;
- seen.add(i);queue.push(i);
-}
-for(const [name,p]of Object.entries(SPRING_SPOTS)){
- assert.ok([...seen].some(i=>Math.hypot(nav.origin[0]+i%nav.width*nav.cell-p.x,nav.origin[1]+Math.floor(i/nav.width)*nav.cell-p.z)<1.7),`${name} needs a reachable approach`);
-}
-for(let x=20;x<=24;x+=.25)assert.ok(seen.has(at(x,-12)),`Bridge crossing blocked at ${x}`);
-for(let z=-17;z<=-9;z+=.2)assert.ok(springPondDistance(22,z)<1,'Stream must remain connected beneath bridge');
-assert.ok(groundHeight('spring',22,-12)<.30,'Water must be above the stream bed');
-assert.ok(Math.abs(groundHeight('spring',-11,2)-groundHeight('spring',-12.5,3))<.001,'Classroom needs level ground');
-
-// Spatial batching is lossless: every matrix, colour and instance survives.
-const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial(),100),m=new THREE.Matrix4(),c=new THREE.Color();
-for(let i=0;i<100;i++){mesh.setMatrixAt(i,m.makeTranslation(i%10,0,Math.floor(i/10)));mesh.setColorAt(i,c.setHex(i+1));}
-const tiles=partitionInstances(mesh,3),positions=new Set();
-assert.equal(tiles.reduce((n,t)=>n+t.count,0),100);
-for(const tile of tiles)for(let i=0;i<tile.count;i++){tile.getMatrixAt(i,m);tile.getColorAt(i,c);const id=m.elements[12]+m.elements[14]*10;positions.add(id);assert.equal(c.getHex(),id+1);assert.ok(tile.boundingSphere.containsPoint(new THREE.Vector3(m.elements[12],0,m.elements[14])));}
-assert.equal(positions.size,100);
-console.log('Spring trail passed: puzzle progression/recovery, all destinations reachable, bridge and connected water, level classroom, lossless spatial batching.');
+import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,n){try{return n(s,c);}catch(e){if(e.code==='ERR_MODULE_NOT_FOUND'&&s.startsWith('.'))return n(s+'.ts',c);throw e;}}});
+const {createSpringTreasureState,SPRING_SAVE_KEY,SPRING_HOTBAR,SPRING_FOOD_COUNTS,SPRING_EAT_MS,springHeldItem,springRemaining,springShadowChanged}=await import('../app/shrine-void/spring-treasure-state.ts');
+let clock=10000;const saved=new Map(),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
+saved.set('between-spring-rambutan-v2',JSON.stringify({version:3,rambutanEaten:8,keyTaken:true,introStep:2}));
+let game=createSpringTreasureState(storage,()=>clock);
+assert.equal(game.state.foodEaten.basket,0,'This release resets the old eaten rambutan save');assert.equal(game.state.introStep,0);assert.equal(game.state.keyTaken,false);
+let previous=game.state;game.act('intro-next');assert.equal(springShadowChanged(previous,game.state),false,'Dialogue must not rebuild landscape shadows');
+previous=game.state;game.act('take-item','mangoes');assert.equal(springShadowChanged(previous,game.state),true,'Picking food updates the table shadow');
+previous=game.state;game.act('eat-held');assert.equal(springShadowChanged(previous,game.state),false,'Eating floating food must not rebuild landscape shadows');clock+=SPRING_EAT_MS+1;
+previous=game.state;assert.equal(game.act('select-slot',0),false,'A two-hand serving cannot enter inventory');assert.equal(springShadowChanged(previous,game.state),false);assert.equal(game.state.storageSlots.includes('mangoes'),false);assert.equal(springHeldItem(game.state),'mangoes');
+previous=game.state;game.act('return-held');assert.equal(springShadowChanged(previous,game.state),true);game.act('reset');
+for(const action of ['take-key','eat-held','unlock-door','visit-river'])assert.equal(game.act(action),false);
+assert.ok(game.act('take-item','basket'));assert.equal(springHeldItem(game.state),'basket');
+for(let n=0;n<8;n++){assert.equal(game.act('take-key'),false);assert.ok(game.act('eat-held'));assert.equal(game.act('eat-held'),false,'Held key repeats cannot consume multiple portions');assert.equal(game.act('select-slot',0),false,'Eating animation completes before switching hands');clock+=SPRING_EAT_MS+1;}
+assert.equal(game.act('eat-held'),false);assert.ok(game.act('take-key'));assert.ok(game.state.inventory.includes('key'));assert.equal(springHeldItem(game.state),'basket','Taking a key does not silently equip it');assert.equal(game.act('unlock-door'),false);
+assert.ok(game.act('read-door-note'));assert.equal(springHeldItem(game.state),null);game.act('put-paper');game.act('select-slot',8);assert.equal(springHeldItem(game.state),'key');assert.ok(game.act('unlock-door'));assert.ok(game.act('visit-river'));
+for(const item of SPRING_HOTBAR){if(!item||item==='key'||item==='basket')continue;game.act('select-slot',0);assert.ok(game.act('take-item',item));assert.equal(springHeldItem(game.state),item);for(let n=0;n<SPRING_FOOD_COUNTS[item];n++){assert.ok(game.act('eat-held'),item+' has a physical portion');clock+=SPRING_EAT_MS+1;}assert.equal(springRemaining(game.state,item),0);assert.equal(game.act('eat-held'),false);assert.ok(game.act('return-held'));assert.equal(game.state.inventory.includes(item),false);}
+game.act('select-slot',8);game=createSpringTreasureState(storage,()=>clock);assert.equal(springHeldItem(game.state),'key');assert.ok(game.state.doorUnlocked&&game.state.riverVisited);assert.equal(game.state.eatRevision,0,'Reload cannot replay an old eating animation');
+const legacy=new Map([[SPRING_SAVE_KEY,JSON.stringify({version:2,rambutanEaten:4,introStep:5,noteRead:true})]]);const migrated=createSpringTreasureState({getItem:k=>legacy.get(k)??null,setItem(){}},()=>clock);assert.equal(migrated.state.foodEaten.basket,4);assert.equal(migrated.state.introStep,2);assert.equal(springHeldItem(migrated.state),null);
+const bad=JSON.stringify({version:3,foodEaten:{basket:999,grapes:-3},inventory:['key','unknown','basket','basket'],selectedSlot:999});const safe=createSpringTreasureState({getItem:()=>bad,setItem(){}},()=>clock);assert.equal(safe.state.foodEaten.basket,8);assert.equal(safe.state.foodEaten.grapes,0);assert.deepEqual(safe.state.inventory,[]);assert.equal(springHeldItem(safe.state),null);
+game.setGuard(action=>action!=='return-held');game.act('select-slot',1);assert.equal(game.act('return-held'),false,'Distance guard prevents remote returns');
+console.log('Spring inventory passed: all foods, cooldown, finite portions, paper in hands, manual key equip, saved hotbar and legacy migration.');

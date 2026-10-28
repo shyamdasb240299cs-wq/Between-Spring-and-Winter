@@ -1,0 +1,11 @@
+{
+  "prepared": "2026-10-24",
+  "mode": "Built-in image_gen",
+  "asset": "/seasons/kit/spring-character/shyamu-poses.webp",
+  "dimensions": [2048, 683],
+  "alpha": true,
+  "poses": ["wave", "eat-shawarma", "welcome"],
+  "source": "Owner-provided portrait; source image and generated master retained in Assets and working files/spring-gameplay-polish",
+  "processing": "WebP encoding, quality 92, alpha quality 100; atlas columns are selected with CSS background-position or texture UVs. No manual painting or identity changes.",
+  "prompt": "Use case: illustration-story. Asset type: transparent character pose atlas for a personal 3D game. Reference image: exact character identity and painted illustrated style. Create one wide 3-column character atlas with three separate waist-up poses of this same young Indian man, with the identical facial structure, skin tone, voluminous wavy dark hair, subtle moustache and beard, plain white crew-neck T-shirt. All three characters must be completely separated, equal scale and uncropped, entirely within their own equally wide vertical third of the image, with clear transparent gutters. Left pose: warm small smile, raising one hand to wave hello. Middle pose: holding a realistic shawarma wrapped in paper, taking a happy bite, face clearly recognizable; this will be on a food-stall sign. Right pose: gentle pleased smile, one palm open in a welcoming 'this way' gesture. Preserve the high-quality softly shaded realistic illustration style and exact likeness of the reference. Natural anatomy and hands. Genuinely transparent background with clean alpha; no black background, no scenery, no lettering, no labels, no frames. Wide 3:1 composition, 3072 by 1024 if possible. This is one coherent pose-sheet artifact, not a mockup."
+}
