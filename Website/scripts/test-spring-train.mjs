@@ -5,11 +5,25 @@ import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
 import * as THREE from 'three';
 registerHooks({resolve(s,c,next){try{return next(s,c);}catch(e){if(e.code==='ERR_MODULE_NOT_FOUND'&&s.startsWith('.'))return next(s+'.ts',c);throw e;}}});
 const {createSpringNorthTrain,SPRING_NORTH_RAIL}=await import('../app/shrine-void/spring-north-train.ts');
+const {COACH_EXTENSION,COACH_BAYS,extendOriginalCoach}=await import('../app/shrine-void/spring-coach-layout.ts');
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS),doc=await io.read('public/seasons/kit/spring-train/indian-coach.glb');
 const root=new THREE.Group(),nodes=new Map(),materials=new Map();
 for(const n of doc.getRoot().listNodes()){const o=new THREE.Group();o.name=n.getName();o.matrix.fromArray(n.getMatrix());o.matrix.decompose(o.position,o.quaternion,o.scale);nodes.set(n,o);for(const p of n.getMesh()?.listPrimitives()??[]){const g=new THREE.BufferGeometry();for(const [sem,name]of [['POSITION','position'],['NORMAL','normal'],['TANGENT','tangent'],['TEXCOORD_0','uv'],['TEXCOORD_1','uv1'],['COLOR_0','color']]){const a=p.getAttribute(sem);if(a)g.setAttribute(name,new THREE.BufferAttribute(a.getArray(),a.getElementSize()));}const i=p.getIndices();if(i)g.setIndex(new THREE.BufferAttribute(i.getArray(),1));const source=p.getMaterial();let m=materials.get(source);if(!m){m=new THREE.MeshStandardMaterial();m.name=source?.getName()??'';materials.set(source,m);}o.add(new THREE.Mesh(g,m));}}
 for(const n of doc.getRoot().listNodes())for(const c of n.listChildren())nodes.get(n).add(nodes.get(c));
 for(const n of doc.getRoot().listScenes()[0].listChildren())root.add(nodes.get(n));
+// Verify the authored module itself, before render batching hides its hierarchy.
+const auditCoach=new THREE.Group();auditCoach.position.set(12,2.413,-76);auditCoach.scale.set(.79,.85,1);auditCoach.add(root.clone(true));auditCoach.updateMatrixWorld(true);
+const originalBounds=new THREE.Box3().setFromObject(auditCoach),generated=new Set();
+extendOriginalCoach(auditCoach.children[0],generated);auditCoach.updateMatrixWorld(true);
+const rebuiltBounds=new THREE.Box3().setFromObject(auditCoach),seatModules=[],partitions=[];
+auditCoach.traverse(o=>{if(!o.isMesh)return;if(/Seats/.test(o.material.name))seatModules.push(new THREE.Box3().setFromObject(o));if(/^Wall(?:_|$)/.test(o.parent?.name??''))partitions.push(o);});
+assert.equal(seatModules.length,9,'Four original furnished modules plus five complete copies');
+assert.equal(partitions.length,10,'Nine bays share exactly ten end/join partitions');
+assert.ok(seatModules.every(b=>Math.abs(b.max.z-b.min.z-3.37087)<.002),'Original seat dimensions survive without compression');
+assert.ok(Math.abs(rebuiltBounds.min.z-(originalBounds.min.z-COACH_EXTENSION))<.001);
+assert.equal(rebuiltBounds.max.z,originalBounds.max.z,'The original southern end stays in place');
+assert.ok(COACH_BAYS[0].z<COACH_BAYS[8].z,'Numbering begins at the opposite north end');
+generated.forEach(g=>g.dispose());
 const terrain=(x,z)=>5+Math.sin(x*.03)*.2+(-z-60)*.035,train=createSpringNorthTrain(root,terrain,false),r=SPRING_NORTH_RAIL;
 assert.equal(train.doors.filter(d=>d.kind==='entry').length,4,'All four original side doors work');
 assert.equal(train.doors.filter(d=>d.kind==='vestibule').length,2,'Both vestibule doors slide');
@@ -35,7 +49,7 @@ for(const door of entries){
   for(let i=0;i<120;i++)train.update(i/60,1/60,camera,1);
   for(let out=3.3;out>=1.45;out-=.035){const x=r.x+door.side*out,y=train.walkingHeight(x,c.z);assert.ok(y!==null);assert.equal(train.blockedAt(x,c.z),false,`Steps/doorway blocked at ${x},${c.z}`);}
 }
-for(let z=r.trainZ+6.25;z>=r.trainZ-6.25;z-=.05){assert.equal(train.blockedAt(r.x-.56,z),false,`Actual furnished aisle blocked at ${z}`);assert.equal(train.walkingHeight(r.x-.56,z),train.floorY);}
+for(let z=r.trainZ+6.25;z>=-99.5;z-=.05){assert.equal(train.blockedAt(r.x-.56,z),false,`Actual furnished aisle blocked at ${z}`);assert.equal(train.walkingHeight(r.x-.56,z),train.floorY);}
 // The railway bed's navigation height follows exactly its rendered grade and remains traversable.
 for(let z=r.startZ;z>=r.endZ;z-=.1){assert.ok(Number.isFinite(train.railHeight(z)));assert.ok(Math.abs(train.railHeight(z)-train.railHeight(z-.1))<.10);}
 assert.equal(train.walkingHeight(100,0),null);
@@ -43,10 +57,10 @@ let meshCount=0,triangles=0,invalid=0;train.group.traverse(o=>{if(o.isMesh){mesh
 assert.equal(invalid,0);assert.ok(meshCount<80,`Static model materials should share draw calls: ${meshCount}`);assert.ok(triangles<100000);
 const upholsteryBatches=[];train.group.traverse(o=>{if(o.isMesh&&!Array.isArray(o.material)&&/Seats/.test(o.material.name))upholsteryBatches.push(o);});
 assert.ok(upholsteryBatches.some(o=>!!o.geometry.getAttribute('tangent')),'Imported upholstered berths retain their normal-map tangents after batching');
-assert.ok(upholsteryBatches.some(o=>!o.geometry.getAttribute('tangent')),'Procedural side-lower berths survive separately when their attributes differ');
+assert.ok(upholsteryBatches.every(o=>!!o.geometry.getAttribute('tangent')),'Every berth retains the original upholstery geometry; no synthetic middle cushions');
 // Inspect the actual batched tread vertices, not a duplicate of placement code.
 // Each downward wheel normal at its axle centre must meet the rail running top.
-for(const bogieZ of [-7.7,7.7])for(const axleZ of [-.92,.92])for(const side of [-1,1]){
+for(const bogieZ of [-7.7-COACH_EXTENSION,7.7])for(const axleZ of [-.92,.92])for(const side of [-1,1]){
   const x=r.x+side*.88,z=r.trainZ+bogieZ+axleZ,tread=[];
   train.group.traverse(o=>{if(!o.isMesh)return;const p=o.geometry.getAttribute('position'),n=o.geometry.getAttribute('normal');if(!n)return;for(let i=0;i<p.count;i++)if(Math.abs(p.getX(i)-x)<.08&&Math.abs(p.getZ(i)-z)<.001&&n.getY(i)<-.999)tread.push(p.getY(i));});
   assert.ok(tread.length>=2,'Rendered wheel has a bottom tread on each side of its axle');
@@ -61,12 +75,12 @@ const sourceGeometry=root.children[0].getObjectByName('Train_Prefab__1__Variant_
 assert.equal(sourceGeometry.getAttribute('color'),undefined,'Repaint does not alter cached source geometry');
 const {createSeasonLayout,groundHeight}=await import('../app/shrine-void/season-layout.ts');
 const {createSeasonTravel}=await import('../app/shrine-void/season-navigation.ts');
-const actual=createSpringNorthTrain(root,(x,z)=>groundHeight('spring',x,z),false),walking=createSeasonTravel(createSeasonLayout('spring').navigation,(x,z)=>actual.blockedAt(x,z));walking.setSurface(actual.walkingHeight,true);
+const actual=createSpringNorthTrain(root,(x,z)=>groundHeight('spring',x,z),false),walking=createSeasonTravel(createSeasonLayout('spring').navigation,(x,z)=>actual.blockedAt(x,z));walking.setSurface(actual.walkingHeight,true,actual.stepAllowance);
 Object.assign(walking.state,{x:13.5,z:-28,y:walking.height(13.5,-28)+1.63});
 function walkTo(x,z){const p=walking.state;let frames=0;while(Math.hypot(x-p.x,z-p.z)>.055&&frames++<2000){const prior=[p.x,p.z];p.yaw=Math.atan2(-(x-p.x),-(z-p.z));walking.key('w',true);walking.update(1/60);camera.position.set(p.x,p.y,p.z);actual.update(frames/60,1/60,camera,1);if(frames%100===0)assert.ok(Math.hypot(p.x-prior[0],p.z-prior[1])>.001,`Player stuck approaching ${x},${z} at ${p.x},${p.z},floor=${p.y-1.63}`);}walking.key('w',false);walking.resetInput();assert.ok(frames<2000,`Walking route failed towards ${x},${z}`);}
 for(const [x,z]of [[12,-38],[12,-58.5],[17.5,-58.5],[17.5,-68.14],[15.7,-68.14]])walkTo(x,z);
 const actualEntry=actual.doors.find(d=>d.kind==='entry'&&d.side===1&&d.closed.getCenter(new THREE.Vector3()).z>r.trainZ);assert.ok(actual.interact(actualEntry.id));for(let i=0;i<100;i++)actual.update(i/60,1/60,camera,1);
-for(const [x,z]of [[12,-68.14],[11.44,-68.14],[11.44,-82.2]])walkTo(x,z);
+for(const [x,z]of [[12,-68.14],[11.44,-68.14],[11.44,-100.5]])walkTo(x,z);
 assert.ok(actual.inside(walking.state.x,walking.state.z));
 // Walk back down the same normal steps with the real body-radius controller.
 for(const [x,z]of [[11.44,-68.14],[12,-68.14],[15.7,-68.14],[17.5,-68.14]])walkTo(x,z);

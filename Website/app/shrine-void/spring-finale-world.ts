@@ -76,7 +76,8 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
   };
   chest.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(candleMaterial):candleMaterial(o.material);});
   const focusRay=mesh(group,new THREE.CylinderGeometry(.001,.008,.45,8),new THREE.MeshBasicMaterial({color:0xffecb5,transparent:true,opacity:.45,depthWrite:false}));materials.add(focusRay.material);focusRay.name='Sunlight focused through spectacles';focusRay.castShadow=false;
-  let open=0,digTime=0,focusTime=0,focusStarted=0,mealOpen=0,lastEat=0,elapsed=0,wasFocusing=false,focusPaused=false;
+  let open=0,digTime=0,focusTime=0,focusStarted=0,mealOpen=0,lastEat=0,elapsed=0,wasFocusing=false,focusPaused=false,bookLookTime=0;
+  const bookLookRay=new THREE.Raycaster();
   const near=(camera:THREE.Camera,p:{x:number;z:number},range=2.3)=>Math.hypot(camera.position.x-p.x,camera.position.z-p.z)<range;
   const nearMeal=(camera:THREE.Camera)=>near(camera,SPRING_DUMPLING_SPOT,2.1);
   const nearDig=(camera:THREE.Camera)=>near(camera,SPRING_TREASURE_SPOT,2.4);
@@ -96,7 +97,6 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
         if(!s.treasureDug&&s.hands.includes('shovel')&&hit(ray,spot))return {id:'dig',action:'dig-treasure',label:'Dig in the patch of sunlight'};
         if(s.treasureDug&&!s.treasureOpen&&hit(ray,chest))return {id:'treasure',action:'open-treasure',label:s.hands.includes('treasure-key')?'Unlock the treasure chest':'Equip the diamond key to open the chest'};
         if(focusPaused&&!s.candleFocusStarted&&s.treasureOpen&&s.finalDialogueSeen&&!s.candleLit&&s.hands.includes('candle')&&s.hands.includes('glasses')&&hit(ray,glow))return {id:'candle-focus',action:'focus-candle',label:'Focus sunlight through the spectacles'};
-        if(s.treasureOpen&&s.candleLit&&s.hands.includes('candle')&&!s.springBookTaken&&hit(ray,chest))return {id:'spring-book',action:'take-spring-book',label:'Take Part One · Spring'};
       }return null;
     },
     update(time:number,dt:number,camera:THREE.Camera,s:SpringSave,controller:SpringTreasureController,active:boolean,candleAnchor?:THREE.Vector3|null,glassesAnchor?:THREE.Vector3|null){
@@ -120,7 +120,15 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
       if(shovelHeld){frame(shovelRoot,camera,.28,-.88,-.82);shovelRoot.rotateZ(-.26);if(s.diggingStarted){digTime+=dt;shovelRoot.rotateX(-.4+Math.sin(digTime*4.3)*.6);if(digTime>=6.1)controller.act('finish-dig');}else digTime=0;}else{shovelRoot.position.set(SPRING_SHOVEL_SPOT.x,height(SPRING_SHOVEL_SPOT.x,SPRING_SHOVEL_SPOT.z),SPRING_SHOVEL_SPOT.z);shovelRoot.rotation.set(0,.5,-.15);}
       spot.visible=s.rainCleared;const digging=s.treasureDug?1:Math.min(1,digTime/6);dirt.scale.y=.1*(1-digging);clods.forEach((o,i)=>{const a=i*2.4,r=.55+digging*.28;o.position.set(Math.sin(a)*r,.02+Math.sin(a*3)*.025,Math.cos(a)*r*.8);o.scale.setScalar(digging);});
       glow.visible=!s.springBookTaken;rays.visible=!reduced&&!s.springBookTaken;chest.visible=s.treasureDug||digTime>2;chest.position.y=-.34+(s.treasureDug?.34:Math.min(.34,digTime*.056));
-      open=THREE.MathUtils.damp(open,s.treasureOpen?1:0,3.5,dt);if(chestLid)chestLid.rotation.x=-open*1.92;darkInterior.visible=!s.candleLit;book.visible=s.treasureOpen&&s.candleLit&&!s.springBookTaken;
+      const illuminating=s.candleLit&&s.hands.includes('candle')&&nearDig(camera);
+      open=THREE.MathUtils.damp(open,s.treasureOpen?1:0,3.5,dt);if(chestLid)chestLid.rotation.x=-open*1.92;darkInterior.visible=!illuminating;book.visible=s.treasureOpen&&illuminating&&!s.springBookTaken;
+      // Looking into the illuminated box starts the authored ending without
+      // another pickup click. Keep the reveal visible before taking control.
+      camera.updateMatrixWorld(true);chest.updateWorldMatrix(true,true);
+      bookLookRay.setFromCamera(new THREE.Vector2(),camera);
+      const lookingAtBook=book.visible&&s.finalDialogueSeen&&!s.questNoteOpen&&!s.bagNoteOpen&&s.endingPhase==='none'&&hit(bookLookRay,book);
+      bookLookTime=lookingAtBook?bookLookTime+dt:0;
+      if(bookLookTime>=1.4&&dt>0){controller.act('take-spring-book');bookLookTime=0;}
       const canFocus=s.treasureOpen&&s.finalDialogueSeen&&s.rainCleared&&!s.candleLit&&s.hands.includes('candle')&&s.hands.includes('glasses')&&nearDig(camera);
       if(wasFocusing&&!s.candleFocusStarted&&!s.candleLit)focusPaused=true;
       // An explicit retry at the sunlight starts a fresh hold, even if a cancel

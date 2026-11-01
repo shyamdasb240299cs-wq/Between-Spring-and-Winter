@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {paintMirrorWriting,MIRROR_WRITING_DURATION} from './spring-mirror-writing';
+import {COACH_EXTENSION,COACH_NORTH,COACH_SOUTH} from './spring-coach-layout';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {SPRING_SL_BAYS,SPRING_NORTH_RAIL,type createSpringNorthTrain} from './spring-north-train';
 import type {SpringSave} from './spring-treasure-state';
@@ -52,12 +54,31 @@ export function createSpringTrainQuest(train:Train,suitcaseModel:THREE.Object3D,
     const g=new THREE.PlaneGeometry(w*.9,h*.9),uv=g.getAttribute('uv'),i=n-1;for(let p=0;p<uv.count;p++)uv.setXY(p,((i%9)+uv.getX(p))/9,1-(Math.floor(i/9)+1-uv.getY(p))/9);
     const forward=new THREE.Vector3(0,0,.0055).applyEuler(transform.rotation);transform.position.add(forward);transform.updateMatrix();g.applyMatrix4(transform.matrix);numberParts.push(g);
   }
-  for(const berth of SPRING_TRAIN_BERTHS){const i=(berth.number-1)%8;
-    if(i<6)placard(berth.number,11.985,floor+[.58,1.14,1.70][i%3],berth.z+(i<3?.54:-.54),-Math.PI/2);
-    else placard(berth.number,10.56,floor+(i===6?.68:1.70),berth.z,Math.PI/2);
+  const partitionRay=new THREE.Raycaster();train.group.updateMatrixWorld(true);
+  function partitionPlate(n:number,x:number,y:number,bayZ:number,north:boolean){
+    const direction=north?-1:1;
+    partitionRay.set(new THREE.Vector3(x,y,bayZ),new THREE.Vector3(0,0,direction));
+    partitionRay.far=2;
+    const wall=partitionRay.intersectObject(train.group,true).find(hit=>hit.distance>.8);
+    const z=(wall?.point.z??bayZ+direction*1.60)-direction*.007;
+    placard(n,x,y,z,north?0:Math.PI);
   }
-  for(const z of [-7.86,7.86])for(const s of [-1,1])placard(73,rail.x+s*1.48,floor+1.91,rail.trainZ+z,-s*Math.PI/2,true);
-  for(const [parts,m,name] of [[plateParts,steel,'72 brushed silver berth plates'],[redParts,red,'Four red coach number plates'],[numberParts,numberMaterial,'Mushroom-revealed berth and coach numbers']] as const){const g=mergeGeometries(parts as THREE.BufferGeometry[],false)!;parts.forEach(p=>p.dispose());mesh(g,m).name=name;}
+  for(const berth of SPRING_TRAIN_BERTHS){const i=(berth.number-1)%8;
+    // Daytime seating labels sit across the partition above the backrest.
+    // The upper berth repeats its own number beside its sleeping surface.
+    if(i<6){
+      const north=i<3;
+      partitionPlate(berth.number,13.28-(i%3)*.52,floor+1.48,berth.z,north);
+      if(i%3===2)partitionPlate(berth.number,12.32,floor+2.16,berth.z,north);
+    }else{
+      // Both facing daytime seats carry their number on the same pale-blue
+      // panel. The higher number also identifies the upper sleeping berth.
+      partitionPlate(berth.number,10.77,floor+1.55,berth.z,i===6);
+      if(i===7)partitionPlate(berth.number,10.77,floor+2.05,berth.z,true);
+    }
+  }
+  for(const z of [-7.86-COACH_EXTENSION,7.86])for(const side of [-1,1])placard(73,12.03,floor+2.13,rail.trainZ+z+(side*.04),side===1?0:Math.PI,true);
+  for(const [parts,m,name] of [[plateParts,steel,'Berth plates with upper repeats'],[redParts,red,'Four red coach number plates'],[numberParts,numberMaterial,'Mushroom-revealed berth and coach numbers']] as const){const g=mergeGeometries(parts as THREE.BufferGeometry[],false)!;parts.forEach(p=>p.dispose());mesh(g,m).name=name;}
   const numbers=group.getObjectByName('Mushroom-revealed berth and coach numbers')!;
   numbers.userData.berths=SPRING_TRAIN_BERTHS.map(b=>b.number);numbers.userData.coach='S2';numbers.visible=false;numbers.castShadow=numbers.receiveShadow=false;
 
@@ -71,23 +92,29 @@ export function createSpringTrainQuest(train:Train,suitcaseModel:THREE.Object3D,
   const entryCenter=entry.closed.getCenter(new THREE.Vector3());note.position.set(entryCenter.x+.06,floor+1.19,entryCenter.z+.20);note.rotation.y=Math.PI/2;group.updateMatrixWorld(true);entry.pivot.attach(note);
 
   // This is the actual supplied outside washbasin, opposite the boarding side.
-  const basinPoint=new THREE.Vector3(11.53,floor+.80,-67.23),mirrorPoint=new THREE.Vector3(11.53,floor+1.36,-66.965);
-  const mirror=box(.36,.53,.013,chrome,mirrorPoint.x,mirrorPoint.y,mirrorPoint.z);mirror.name='Wash area mirror';
-  const mistMap=canvasTexture(512,768,c=>{const g=c.createRadialGradient(256,384,40,256,384,370);g.addColorStop(0,'rgba(226,240,239,.89)');g.addColorStop(1,'rgba(221,239,240,0)');c.fillStyle=g;c.fillRect(0,0,512,768);c.font='italic bold 116px Georgia';c.textAlign='center';c.fillStyle='rgba(49,78,77,.93)';c.fillText('S2',256,326);c.fillText('72',256,466);});
-  const mistMaterial=new THREE.MeshBasicMaterial({map:mistMap,color:0xddeeee,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});materials.add(mistMaterial);
-  const mist=mesh(new THREE.PlaneGeometry(.35,.52),mistMaterial);mist.name='Condensation clue · S2 72';mist.position.copy(mirrorPoint);mist.position.z-=.008;mist.rotation.y=Math.PI;mist.castShadow=false;
-  const tap=mesh(new THREE.CylinderGeometry(.009,.009,.10,8),chrome);tap.name='Running washbasin tap';tap.position.copy(basinPoint).add(new THREE.Vector3(0,.15,.08));tap.rotation.x=Math.PI/2;
-  const streamMaterial=new THREE.MeshBasicMaterial({color:0xc9efff,transparent:true,opacity:.43,depthWrite:false});materials.add(streamMaterial);const stream=mesh(new THREE.CylinderGeometry(.006,.012,.16,6),streamMaterial);stream.name='Tap water';stream.position.copy(basinPoint).add(new THREE.Vector3(0,.045,.03));stream.visible=false;stream.castShadow=false;
-  const washDoor=train.doors.filter(d=>d.kind==='toilet'&&d.side<0&&d.closed.getCenter(new THREE.Vector3()).z>rail.trainZ).sort((a,b)=>a.closed.min.z-b.closed.min.z)[0];
+  const basinPoint=new THREE.Vector3(11.53,floor+.80,-84.77-COACH_EXTENSION),mirrorPoint=new THREE.Vector3(11.465,floor+1.40,-84.907-COACH_EXTENSION);
+  const mirrorYaw=.9,mirrorNormal=new THREE.Vector3(Math.sin(mirrorYaw),0,Math.cos(mirrorYaw));
+  const mirror=box(.36,.48,.009,chrome,mirrorPoint.x,mirrorPoint.y,mirrorPoint.z);mirror.rotation.y=mirrorYaw;mirror.name='Wash area mirror';
+  const mistCanvas=typeof document!=='undefined'?document.createElement('canvas'):null;
+  if(mistCanvas){mistCanvas.width=512;mistCanvas.height=768;}
+  const mistMap=mistCanvas?new THREE.CanvasTexture(mistCanvas):null;if(mistMap){mistMap.colorSpace=THREE.SRGBColorSpace;textures.add(mistMap);}
+  const mistMaterial=new THREE.MeshBasicMaterial({map:mistMap,color:0xe5eeee,transparent:true,opacity:0,depthWrite:false,side:THREE.FrontSide});materials.add(mistMaterial);
+  const mist=mesh(new THREE.PlaneGeometry(.35,.47),mistMaterial);mist.name='Condensation handwriting · S1196';mist.position.copy(mirrorPoint).addScaledVector(mirrorNormal,.009);mist.rotation.y=mirrorYaw;mist.castShadow=false;
+  // The original GLB already supplies the tap. Its measured outlet is the
+  // start of the stream; adding another tube put a second nozzle in the bowl.
+  const streamMaterial=new THREE.MeshBasicMaterial({color:0xc9efff,transparent:true,opacity:.43,depthWrite:false});materials.add(streamMaterial);const stream=mesh(new THREE.CylinderGeometry(.005,.009,.18,6),streamMaterial);stream.name='Tap water';stream.position.set(11.499,train.trainBase+2.303-.09,-84.858-COACH_EXTENSION);stream.visible=false;stream.castShadow=false;
+  const washDoor=train.doors.filter(d=>d.kind==='toilet'&&d.side<0&&d.closed.getCenter(new THREE.Vector3()).z<rail.trainZ-COACH_EXTENSION).sort((a,b)=>a.closed.min.z-b.closed.min.z)[0];
 
   const suitcase=new THREE.Group();suitcase.name='Locked suitcase on side lower 23';group.add(suitcase);
-  suitcase.position.set(10.85,floor+.489,SPRING_SL_BAYS[2].z);suitcase.rotation.y=Math.PI/2;suitcase.scale.setScalar(.84);
+  suitcase.position.set(10.82,floor+.49,SPRING_SL_BAYS[2].z-1.16);suitcase.rotation.y=Math.PI/2;suitcase.scale.setScalar(.84);
   const caseAsset=suitcaseModel.clone(true);suitcase.add(caseAsset);caseAsset.traverse(o=>{if(!(o instanceof THREE.Mesh))return;o.geometry=o.geometry.clone();geometries.add(o.geometry);const clone=(m:THREE.Material)=>{const c=m.clone();materials.add(c);return c;};o.material=Array.isArray(o.material)?o.material.map(clone):clone(o.material);o.castShadow=o.receiveShadow=true;});
-  caseAsset.getObjectByName('Blue Summer book')?.removeFromParent();caseAsset.getObjectByName('Dry letter')?.removeFromParent();
-  const lid=caseAsset.getObjectByName('Case lid hinge');
-  box(.63,.009,.37,black,0,.245,0,suitcase);
-  const key=createSpringDiamondKey();suitcase.add(key.group);key.group.position.set(.15,.266,-.01);key.group.rotation.set(-Math.PI/2,0,.1);key.group.scale.setScalar(.79);
-  const letter=box(.245,.004,.28,paper,-.14,.258,-.005,suitcase);letter.name='Letter beneath the suitcase lid';
+  // GLTFLoader sanitizes authored spaces for animation binding in the browser.
+  const casePart=(name:string)=>caseAsset.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(name))??caseAsset.getObjectByName(name);
+  casePart('Blue Summer book')?.removeFromParent();casePart('Dry letter')?.removeFromParent();
+  const lid=casePart('Case lid hinge');
+  box(.63,.009,.37,black,0,.275,0,suitcase);
+  const key=createSpringDiamondKey();suitcase.add(key.group);key.group.position.set(.15,.300,-.01);key.group.rotation.set(-Math.PI/2,0,.1);key.group.scale.setScalar(.79);
+  const letter=box(.245,.004,.28,paper,-.14,.289,-.005,suitcase);letter.name='Letter beneath the suitcase lid';
   for(let i=0;i<6;i++)box(.17-(i%3)*.016,.001,.002,ink,0,.003,-.085+i*.025,letter);
   const wheels:THREE.Mesh[]=[],wheelFaces:THREE.Mesh[]=[];
   const wheelMaps=[['S','C','E','A','D'],Array.from({length:10},(_,i)=>String(i))];
@@ -111,7 +138,7 @@ export function createSpringTrainQuest(train:Train,suitcaseModel:THREE.Object3D,
   const targetBounds=new THREE.Box3(),hit=new THREE.Vector3(),washBounds=new THREE.Box3().setFromCenterAndSize(basinPoint,new THREE.Vector3(.43,.43,.46));
   function hitReach(camera:THREE.Camera,ray:THREE.Raycaster,bounds:THREE.Box3,reach=2.05){const p=ray.ray.intersectBox(bounds,hit);return p&&camera.position.distanceTo(p)<=reach?camera.position.distanceTo(p):Infinity;}
   function target(camera:THREE.Camera,ray:THREE.Raycaster,state=controller.snapshot()):SpringTrainQuestTarget|null{
-    if(!state.dreamReturned||state.adaviActive||state.dreamPhase!=='awake'||state.trainNoteOpen||state.trainCaseOpen||Math.abs(camera.position.z-rail.trainZ)>14||Math.abs(camera.position.x-rail.x)>4)return null;
+    if(!state.dreamReturned||state.adaviActive||state.dreamPhase!=='awake'||state.trainNoteOpen||state.trainCaseOpen||(camera.position.z<COACH_NORTH-2||camera.position.z>COACH_SOUTH+2)||Math.abs(camera.position.x-rail.x)>4)return null;
     group.updateMatrixWorld(true);note.updateWorldMatrix(true,true);let nearest=Infinity,result:SpringTrainQuestTarget|null=null;
     function offer(distance:number,id:string,action:string,label:string,value?:unknown){if(distance<nearest){nearest=distance;result={id,action,label,value};}}
     offer(hitReach(camera,ray,targetBounds.setFromObject(note).expandByScalar(.025)), 'train-note','read-train-note','Read the entrance letter');
@@ -150,6 +177,7 @@ export function createSpringTrainQuest(train:Train,suitcaseModel:THREE.Object3D,
     suitcase.localToWorld(lockEye.set(.055,.219,.306+distance));
     camera.position.copy(lockEye);camera.lookAt(lockLook);camera.updateMatrixWorld(true);
   }
+  let revealStarted=controller.snapshot().trainMirrorRevealed?-MIRROR_WRITING_DURATION:NaN,drawnFrame=-1;
   let washStarted=-100,wasWashed=false,lastState=controller.snapshot(),mistAlpha=0,lastTime=0;
   function update(time:number,dt:number,_camera:THREE.Camera,state=controller.snapshot()){
     lastTime=time;lastState=state;numbers.visible=state.hands.includes('mushroom-toy');
@@ -157,6 +185,9 @@ export function createSpringTrainQuest(train:Train,suitcaseModel:THREE.Object3D,
     stream.visible=state.dreamReturned&&time-washStarted<2.6;stream.scale.x=stream.scale.z=.85+Math.sin(time*42)*.15;
     if(state.handsWashed&&!state.trainMirrorRevealed&&washDoor&&washDoor.open>.2)controller.act('reveal-train-mirror');
     mistAlpha=THREE.MathUtils.damp(mistAlpha,state.trainMirrorRevealed?.94:0,1.9,Math.min(dt,.08));mistMaterial.opacity=mistAlpha;mist.visible=mistAlpha>.002;
+    if(state.trainMirrorRevealed&&Number.isNaN(revealStarted))revealStarted=time;
+    const age=Number.isNaN(revealStarted)?0:typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches?MIRROR_WRITING_DURATION:Math.max(0,time-revealStarted),frame=Math.floor(Math.min(MIRROR_WRITING_DURATION,age)*24);
+    if(mistCanvas&&frame!==drawnFrame){drawnFrame=frame;paintMirrorWriting(mistCanvas,age);if(mistMap)mistMap.needsUpdate=true;}
     const priorLid=lid?.rotation.x??0;
     if(lid){lid.rotation.x=THREE.MathUtils.damp(lid.rotation.x,state.trainLockOpen?-1.78:0,4.7,Math.min(dt,.08));if(Math.abs(lid.rotation.x-(state.trainLockOpen?-1.78:0))<.0001)lid.rotation.x=state.trainLockOpen?-1.78:0;}
     const showing=state.trainLockOpen&&(!lid||Math.abs(lid.rotation.x)>1.1);key.group.visible=showing&&!state.treasureKeyTaken;letter.visible=showing;

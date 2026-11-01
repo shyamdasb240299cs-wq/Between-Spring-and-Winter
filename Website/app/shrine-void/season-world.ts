@@ -282,7 +282,7 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
       springTrain=createSpringNorthTrain(await model(SPRING_TRAIN_MODEL),(x,z)=>groundHeight('spring',x,z),mobile);check();scene.add(springTrain.group);
       springTrainQuest=createSpringTrainQuest(springTrain,springModels.suitcase,spring);scene.add(springTrainQuest.group);
       springDiamond=createSpringDiamondKey();scene.add(springDiamond.group);
-      walking.setSurface(springTrain.walkingHeight,true);
+      walking.setSurface(springTrain.walkingHeight,true,springTrain.stepAllowance);
       if(chapter==='rail'){const p=springTrain.entrancePosition;Object.assign(travel.state,{x:p.x,y:p.y,z:p.z,yaw:Math.PI/2,pitch:-.12});}
       springSky=createSpringJourneySky();scene.add(springSky.mesh);
       springRain=createSpringRain(mobile,[terrain.group,props.group,springWorld.group],{trees:layout.trees,supports:[...props.group.children]});scene.add(springRain.group);
@@ -383,7 +383,7 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
     const outdoorVisibility=new Map<THREE.Object3D,boolean>();
     function enterForest(value:boolean){
       if(!springWorld)return;
-      springTarget=null;springWorld.setInterior(value);walking.setSurface(value?springWorld.interiorHeight:springTrain?.walkingHeight??null,!value);
+      springTarget=null;springWorld.setInterior(value);walking.setSurface(value?springWorld.interiorHeight:springTrain?.walkingHeight??null,!value,value?undefined:springTrain?.stepAllowance);
       const exit=springWorld.exitPosition;
       const entry=springWorld.spawn;Object.assign(travel.state,value?{...entry,y:(springWorld.interiorHeight(entry.x,entry.z)??0)+1.63}:{x:exit.x,z:exit.z,y:groundHeight('spring',exit.x,exit.z)+1.63,yaw:exit.yaw,pitch:-.04});
       if(value){spring?.act('visit-river');spring?.act('enter-adavi');}else spring?.act('exit-adavi');
@@ -439,7 +439,7 @@ export async function loadSeasonWorld(renderer:THREE.WebGLRenderer,id:SeasonId,s
         busEntered=false;springBus.group.visible=false;springWorld.group.add(springWorld.carried);
         for(const [child,visible] of busVisibility)child.visible=visible;busVisibility.clear();
         if(busAtmosphere){scene.background=busAtmosphere.background;scene.fog=busAtmosphere.fog;scene.environment=busAtmosphere.environment;scene.environmentIntensity=busAtmosphere.environmentIntensity;scene.backgroundIntensity=busAtmosphere.backgroundIntensity;scene.backgroundRotation.y=busAtmosphere.backgroundRotation;}
-        busAtmosphere=null;walking.setSurface(springTrain?.walkingHeight??null,true);wasBusSeated=false;wasBenchSeated=true;
+        busAtmosphere=null;walking.setSurface(springTrain?.walkingHeight??null,true,springTrain?.stepAllowance);wasBusSeated=false;wasBenchSeated=true;
         const seat=springWorld.lakeQuest.benchPosition;Object.assign(travel.state,seat);camera.position.set(seat.x,seat.y,seat.z);travel.resetInput();previousPortalX=seat.x;previousPortalZ=seat.z;
       }
       if(q.dreamReturned&&!springWorld.inside&&!weatherDarkened){weatherDarkened=true;scene.background=new THREE.Color(0x657779);scene.backgroundIntensity=.37;scene.environmentIntensity=.40;scene.fog=new THREE.FogExp2(0x7b8c8b,.012);sun!.intensity=definition.sunPower*.20;sun!.color.set(0xc3d8e0);outdoorAmbient.intensity=.95;outdoorAmbient.color.set(0xb9cbd0);outdoorAmbient.groundColor.set(0x56675e);particles!.mesh.visible=false;sunGlow.mesh.visible=false;sun!.shadow.needsUpdate=true;renderer.shadowMap.needsUpdate=true;}

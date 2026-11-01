@@ -59,9 +59,41 @@ assert.equal(globalLightCount(),0,'Lighting the wick cannot change the outdoor g
 for(const shader of candleShaders){assert.ok(shader.uniforms.springCandlePosition.value.distanceTo(flame.getWorldPosition(new THREE.Vector3()))<1e-6);assert.match(shader.fragmentShader,/viewMatrix\*vec4\(springCandlePosition,1\.\)/,'Each main/reflection camera transforms the physical wick independently');assert.equal(shader.uniforms.springCandleIntensity.value,light.userData.intensity);}
 state.hands=['glasses',null];update();assert.equal(candleShaders[0].uniforms.springCandleIntensity.value,0,'Stowing the candle turns off the local illumination using its uniform');
 assert.equal(scopedChestMaterial.customProgramCacheKey(),candleProgramKey);assert.equal(scopedChestMaterial.version,candleMaterialVersion,'Lighting and stowing never invalidate the material program');state.hands=['candle','glasses'];
+// The player lights the candle, then looks inside: pickup and the bench walk
+// follow automatically, with no interaction button and no trigger when paused.
+const revealGame=createSpringTreasureState(createSpringPreviewStorage('ending'));
+for(let hand=0;hand<2;hand++){const item=revealGame.state.hands[hand];if(item)assert.ok(revealGame.act('drop-inventory',{slot:10+hand,item,placement:{item,world:'spring',x:14.7+hand*.4,y:.3,z:-17,yaw:0}}));}
+for(const item of ['candle','glasses'])assert.ok(revealGame.act('equip-storage',revealGame.state.storageSlots.indexOf(item)));
+camera.position.set(SPRING_TREASURE_SPOT.x,2.03,SPRING_TREASURE_SPOT.z+1.25);
+world.update(2,0,camera,revealGame.state,revealGame,true);world.group.updateMatrixWorld(true);
+camera.lookAt(world.book.getWorldPosition(new THREE.Vector3()));camera.updateMatrixWorld(true);
+for(let i=0;i<30;i++)world.update(2,0,camera,revealGame.state,revealGame,true);
+assert.equal(revealGame.state.springBookTaken,false,'Paused frames cannot start the automatic ending');
+for(let i=0;i<10;i++)world.update(2,.1,camera,revealGame.state,revealGame,true);
+assert.equal(revealGame.state.springBookTaken,false,'The illuminated book is revealed before the automatic pickup');
+camera.lookAt(camera.position.clone().add(new THREE.Vector3(0,1,1)));camera.updateMatrixWorld(true);
+world.update(2,.1,camera,revealGame.state,revealGame,true);
+camera.lookAt(world.book.getWorldPosition(new THREE.Vector3()));camera.updateMatrixWorld(true);
+for(let i=0;i<10;i++)world.update(2,.1,camera,revealGame.state,revealGame,true);
+assert.equal(revealGame.state.springBookTaken,false,'Looking away resets the reveal');
+for(let i=0;i<6;i++)world.update(2,.1,camera,revealGame.state,revealGame,true);
+assert.equal(revealGame.state.endingPhase,'walking','Looking inside the lit chest automatically collects the book');
+assert.ok(revealGame.state.springBookTaken);
 state.endingPhase='walking';update();assert.equal(world.trayRoot.visible,false);assert.equal(world.shovelRoot.visible,false);
 const ending=createSpringEnding(book,texture,()=>.4,false,false),pose={x:SPRING_TREASURE_SPOT.x,y:2.03,z:SPRING_TREASURE_SPOT.z,yaw:0,pitch:0},steps=[];const advance={act:(action,next)=>{assert.equal(action,'ending-phase');steps.push(next);state.endingPhase=next;return true;}};
 for(let i=0;i<1000&&state.endingPhase!=='reading';i++)ending.update(.02,state,camera,pose,advance);
 assert.deepEqual(steps,['sitting','opening','reading']);assert.ok(Math.abs(pose.x-ending.seat.x)<1e-6&&Math.abs(pose.z-ending.seat.z)<1e-6,'The book sequence reaches the physical riverside bench');const opened=ending.group.getObjectByName('CoverHinge');assert.ok(Math.abs(opened.rotation.y)>2,'The real front cover hinges open');const petals=ending.group.children.find(o=>o instanceof THREE.Mesh&&o.geometry.isInstancedBufferGeometry);assert.ok(petals.material.uniforms.elapsed.value>6,'The gust continues across the sit-to-open transition');assert.ok(ending.group.getObjectByName('Ivory inside of the opened Spring cover'));
-state.endingPhase='reading';ending.update(.02,state,camera,pose,advance);assert.equal(ending.group.visible,false,'The 3D cinematic yields to the reader');world.dispose();ending.dispose();assert.equal(world.group.children.length,0);assert.equal(ending.group.children.length,0);assert.equal(scopedDisposed,true);assert.equal(sourceDisposed,false,'Disposal preserves cached source materials');assert.doesNotMatch(scopedChestMaterial.customProgramCacheKey(),/spring-scoped-candle/,'Cleanup restores scoped hooks');assert.equal(candleShaders[0].uniforms.springCandleIntensity.value,0);
+state.endingPhase='reading';ending.update(.02,state,camera,pose,advance);assert.equal(ending.group.visible,false,'The 3D cinematic yields to the reader');
+state.endingPhase='complete';ending.update(.02,state,camera,pose,advance);
+assert.equal(pose.y,.4+1.63,'Closing the book restores standing height for walking');assert.equal(pose.x,12.5,'The player stands on the path beside the bench');
+pose.x=10;ending.update(.02,state,camera,pose,advance);assert.equal(pose.x,10,'Free roaming is not pulled back to the bench');
+const resumedEnding=createSpringEnding(book,texture,()=>.4,false,false),resumedPose={x:0,y:2.03,z:0,yaw:0,pitch:0};
+state.endingPhase='reading';resumedEnding.update(0,state,camera,resumedPose,advance);
+assert.deepEqual(resumedPose,resumedEnding.seat,'Reloading the reader restores the physical bench pose');
+state.endingPhase='complete';resumedEnding.update(.02,state,camera,resumedPose,advance);
+assert.equal(resumedPose.x,12.5);assert.equal(resumedPose.z,-17);assert.equal(resumedPose.y,2.03,'Closing a resumed reader also restores standing height');
+resumedPose.x=10;state.endingPhase='reading';resumedEnding.update(.02,state,camera,resumedPose,advance);
+state.endingPhase='complete';resumedEnding.update(.02,state,camera,resumedPose,advance);
+assert.equal(resumedPose.x,10,'Reopening the book during free roaming preserves the current location');resumedEnding.dispose();
+world.dispose();ending.dispose();assert.equal(world.group.children.length,0);assert.equal(ending.group.children.length,0);assert.equal(scopedDisposed,true);assert.equal(sourceDisposed,false,'Disposal preserves cached source materials');assert.doesNotMatch(scopedChestMaterial.customProgramCacheKey(),/spring-scoped-candle/,'Cleanup restores scoped hooks');assert.equal(candleShaders[0].uniforms.springCandleIntensity.value,0);
 console.log('Spring finale scene passed: actual seven-bun GLB, no floating/duplicate props, visible eating, automatic candle focus with physical cancellation/retry, anchored flame and scoped PBR candlelight without global light changes, physical bench walk, hinged book, continuous blossom gust and cleanup.');

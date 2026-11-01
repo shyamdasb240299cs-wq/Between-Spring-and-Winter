@@ -10,6 +10,7 @@ export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:
   let blocked = false, stickX = 0, stickY = 0, wheel = 0, vx = 0, vz = 0;
   let interiorSurface:((x:number,z:number)=>number|null)|null=null;
   let surfaceFallback=false;
+  let surfaceStep:((x:number,z:number)=>number)|undefined;
   function height(x: number, z: number): number | null {
     if(interiorSurface){const surface=interiorSurface(x,z);if(surface!==null||!surfaceFallback)return surface;}
     const gx = (x - nav.origin[0]) / nav.cell, gz = (z - nav.origin[1]) / nav.cell;
@@ -29,11 +30,12 @@ export function createSeasonTravel(nav: SeasonNavigation,blockedAt?:(x:number,z:
     if(blockedAt?.(x,z))return null;
     // A 28 cm radius keeps the visitor's body clear of walls and edges.
     const samples = [[0, 0], [.28, 0], [-.28, 0], [0, .28], [0, -.28]].map(([dx, dz]) => height(x + dx, z + dz));
-    return samples.every(h => h !== null && h - (state.y - 1.63) <= .3 && h - (state.y - 1.63) >= -.45) ? samples[0] : null;
+    const step=surfaceStep?.(x,z)??.3;
+    return samples.every(h => h !== null && h - (state.y - 1.63) <= step && h - (state.y - 1.63) >= -Math.max(.45,step)) ? samples[0] : null;
   }
   return {
     state, height, resetInput,
-    setSurface(surface:((x:number,z:number)=>number|null)|null,fallbackToNavigation=false){interiorSurface=surface;surfaceFallback=fallbackToNavigation;resetInput();},
+    setSurface(surface:((x:number,z:number)=>number|null)|null,fallbackToNavigation=false,stepAllowance?:((x:number,z:number)=>number)){interiorSurface=surface;surfaceFallback=fallbackToNavigation;surfaceStep=stepAllowance;resetInput();},
     key(key: string, down: boolean) { const k = key.length === 1 ? key.toLowerCase() : key; if (!accepted.has(k)) return false; if (down && !blocked) keys.add(k); else keys.delete(k); return true; },
     joystick(x: number, y: number) { if (!blocked) { stickX = clamp(x, -1, 1); stickY = clamp(y, -1, 1); } },
     look(dx: number, dy: number) { if (!blocked) { lookX+=clamp(dx,-180,180)*.003;lookY+=clamp(dy,-180,180)*.0025; } },

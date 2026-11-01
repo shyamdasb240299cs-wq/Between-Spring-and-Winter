@@ -20,7 +20,7 @@ export const SPRING_JOURNEY_NOTE='This journey was so short. Next, you have to g
 export const SPRING_PAPER_MESSAGE='You are my aiteall.';
 export const SPRING_DUMPLING_COUNT=7;
 export const SPRING_DUMPLING_NOTE='My dear Aamii, your happiness means the world to me. That day I could not bring these for you. I know you will be laughing now; may that laughter stay forever. Now go to the riverside — there awaits your next task.';
-export const SPRING_TRAIN_NOTE='You were like a doll in my hands that day, and I still remember every little detail. Wash your hands before you continue. And do not be afraid to open the door: this train is standing still. Perhaps the two of us can open the lock together.';
+export const SPRING_TRAIN_NOTE='You were like a doll in my hands that day, and I still remember every little detail. Walk to the wash space at the other end of this coach. Wash your hands, then open the washroom door beside its mirror. Do not be afraid: this train is standing still. Perhaps the glass remembers our coach and our seats too.';
 export const SPRING_TRAIN_LETTER='You found it. This is the key that opens the final treasure, so keep it safe. You cannot find what is hidden beneath the earth until the rain stops. You are my Spring. To bring happiness to my Spring, I have kept something for you beneath the food stall.';
 export const SPRING_TRAIN_LOCK_LETTERS=['S','C','E','A','D'] as const;
 export const SPRING_BRIDGE_NOTE='There are five pieces of a paper hidden near this lake. Find the words and keep them with you — you may need them later. After finding the missing pieces, you may need a shovel. Look for the little patch of sunlight on the path beside the riverside bench.';
@@ -103,7 +103,7 @@ function syncHands(state:SpringSave){
 function bagPlacement(value:unknown):SpringBagPlacement|null {
   if(!value||typeof value!=='object')return null;const p=value as SpringBagPlacement;
   if(!['spring','adavi'].includes(p.world)||![p.x,p.z,p.yaw].every(Number.isFinite))return null;
-  if(p.world==='spring'?(Math.hypot(p.x,p.z)>36&&!(p.x>=5&&p.x<=20&&p.z>=-104&&p.z<=-25)):p.x<177||p.x>223||p.z< -31||p.z>26)return null;
+  if(p.world==='spring'?(Math.hypot(p.x,p.z)>36&&!(p.x>=5&&p.x<=20&&p.z>=-122&&p.z<=-25)):p.x<177||p.x>223||p.z< -31||p.z>26)return null;
   return {world:p.world,x:p.x,z:p.z,yaw:p.yaw};
 }
 export const springAdaviDialogue=(s:SpringSave)=>s.adaviActive&&(s.adaviIntroStep<ADAVI_INTRO_PAGES||s.stoneChallengeComplete&&s.adaviWinStep<ADAVI_WIN_PAGES);

@@ -27,7 +27,7 @@ export function SpringSuitcaseLock({state,onCommand}:{state:SpringSave;onCommand
       else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
     }
   }}>
-    <p className="spring-lock-instructions">The suitcase lock <span>Turn the wheels, then press the brass clasp.</span></p>
+    <p className="spring-lock-instructions">The suitcase lock <span>Use the five characters remembered in the mirror. Turn the wheels and press the brass clasp.</span></p>
     {state.trainLockWheels.map((value,index)=><div className="spring-lock-wheel" data-lock-anchor key={index}>
       <button type="button" aria-label={`Increase ${index===0?'letter':`digit ${index}`}`} onClick={()=>onCommand('turn-train-wheel',{index,delta:1})}>⌃</button>
       <output className="spring-lock-accessible" aria-live="polite">{`Wheel ${index+1}: ${index===0?SPRING_TRAIN_LOCK_LETTERS[value]:value}`}</output>

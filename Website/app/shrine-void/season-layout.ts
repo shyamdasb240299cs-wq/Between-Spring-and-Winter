@@ -180,11 +180,11 @@ export function createSeasonLayout(id:SeasonId):SeasonLayout{
   obstacles.push(...landmarks.map(({x,z,radius})=>({x,z,radius})));
   if(id!=='summer'&&id!=='spring'){const relic=relicPlacement(id,prop);obstacles.push({x:relic.chest.x,z:relic.chest.z,radius:CHEST_COLLISION_RADIUS});}
   if(id==='summer')for(const c of summerWorldColliders.filter(c=>c.minY<1.8&&c.maxY>.9&&c.kind==='cylinder'))obstacles.push({x:c.x,z:c.z,radius:c.radius??.15});
-  const cell=.25,width=id==='summer'?481:id==='spring'?305:233,depth=id==='summer'?561:id==='spring'?569:233,origin:[number,number]=id==='summer'?[-60,-70]:id==='spring'?[-38,-107]:[-29,-32],heights:(number|null)[]=[];
+  const cell=.25,width=id==='summer'?481:id==='spring'?305:233,depth=id==='summer'?561:id==='spring'?641:233,origin:[number,number]=id==='summer'?[-60,-70]:id==='spring'?[-38,-125]:[-29,-32],heights:(number|null)[]=[];
   for(let iz=0;iz<depth;iz++)for(let ix=0;ix<width;ix++){
     const x=origin[0]+ix*cell,z=origin[1]+iz*cell,h=id==='summer'?(summerWalkingSurface(x,z)??-100):id==='spring'?(springBridgeHeight(x,z)??groundHeight(id,x,z)):groundHeight(id,x,z);
     const bridge=id==='spring'&&springBridgeHeight(x,z)!==null;
-    const northRoute=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-104;
+    const northRoute=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-122;
     const edge=id==='summer'?h<-SUMMER_WADING_DEPTH||islandDistance(x,z)>SUMMER_WALK_LIMIT:!northRoute&&Math.hypot(x,z+3)>seasonWalkRadius(id)||id==='autumn'&&h<AUTUMN_LAKE_LEVEL-AUTUMN_WADING_DEPTH||id==='spring'&&!bridge&&springPondDistance(x,z)<1.10;
     const solid=obstacles.some(o=>(x-o.x)**2+(z-o.z)**2<(o.radius+.1)**2)||id==='summer'&&summerLandBlocked(x,z);
     heights.push(edge||solid?null:h);

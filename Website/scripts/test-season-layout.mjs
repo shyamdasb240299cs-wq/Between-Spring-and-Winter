@@ -35,7 +35,7 @@ for(const id of ['spring','summer','autumn','winter']){
   assert.ok(surface!==null&&Math.abs(h-surface)<1e-6,'Navigation follows terrain or an authored bridge/jetty deck');
   if(id==='summer'){assert.ok(h>=-SUMMER_WADING_DEPTH);assert.ok(islandDistance(x,z)<=15.7);}
   else{
-   const northRail=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-104;
+   const northRail=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-122;
    assert.ok(Math.hypot(x,z+3)<=radius+1e-5||northRail,'Only the authored north railway corridor extends the circular walking boundary');
    if(id==='autumn')assert.ok(h>=AUTUMN_LAKE_LEVEL-AUTUMN_WADING_DEPTH,'Wading stays in the shallow basin');
   }
@@ -54,7 +54,7 @@ for(const id of ['spring','summer','autumn','winter']){
  const start=createSeasonTravel(nav);assert.notEqual(start.height(layout.prop.x,layout.prop.z+2),null,`${id}: prop approach blocked`);
  for(let i=0;i<36;i++){
   const angle=i/36*Math.PI*2,r=id==='summer'?95:64,x=Math.cos(angle)*r,z=-3+Math.sin(angle)*r;
-  const northRail=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-104;
+  const northRail=id==='spring'&&x>=5&&x<=20&&z<=-25&&z>=-122;
   if(!northRail)assert.equal(start.height(x,z),null,'Scenery must not expand the walking area beyond the north railway corridor');
   if(id==='summer')assert.ok(groundHeight(id,x,z)<-1.34,'Deep sea must surround every side of the expanded island');
   else assert.ok(groundHeight(id,Math.cos(angle)*90,-3+Math.sin(angle)*90)>3,'Outer banks must close the horizon');

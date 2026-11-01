@@ -22,14 +22,28 @@ export function createSpringEnding(source:THREE.Object3D,cover:THREE.Texture,hei
     vertexShader:`attribute vec4 seed;uniform float elapsed,gust;varying vec2 pUv;varying float fade;void main(){pUv=uv;float life=fract(seed.x+elapsed*.10);vec3 c=vec3(13.5+(seed.y-.5)*9.+sin(elapsed*.7+seed.w*20.)*.8+life*gust*2.,1.2+(1.-life)*6.,-17.+(seed.z-.5)*8.+life*gust*.6);float a=elapsed*(1.+seed.w)+seed.x*30.;vec3 p=position*(.045+seed.w*.045);p.xy=mat2(cos(a),-sin(a),sin(a),cos(a))*p.xy;p.z+=sin(a)*p.x;fade=smoothstep(0.,.08,life)*(1.-smoothstep(.9,1.,life))*gust;gl_Position=projectionMatrix*viewMatrix*vec4(c+p,1.);}`,
     fragmentShader:`varying vec2 pUv;varying float fade;void main(){vec2 p=(pUv-.5)*vec2(2.1,1.7);float a=(1.-smoothstep(.65,.9,length(p)))*fade;if(a<.03)discard;gl_FragColor=vec4(mix(vec3(1.,.56,.71),vec3(1.,.9,.94),pUv.y),a);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}`});ownMaterials.push(material);
   const petals=new THREE.Mesh(petalGeometry,material);petals.frustumCulled=false;group.add(petals);
-  let phase='',elapsed=0,blossomTime=0,from:Pose|null=null,walkDuration=4;
+  let phase='',elapsed=0,blossomTime=0,from:Pose|null=null,walkDuration=4,seated=false;
   const ease=(v:number)=>{const t=THREE.MathUtils.clamp(v,0,1);return t*t*(3-2*t);};
   const angle=(a:number,b:number,t:number)=>a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*t;
   const seat:Pose={x:13.5,z:-17,y:height(13.5,-17)+1.15,yaw:-Math.PI/2,pitch:-.45};
   return {group,seat,
     update(dt:number,state:SpringSave,camera:THREE.Camera,pose:Pose,controller:SpringTreasureController){
       const active=['walking','sitting','opening'].includes(state.endingPhase);group.visible=active;
-      if(!active){phase=state.endingPhase;return;}
+      if(!active){
+        // A reader restored from storage skips the walk and sit animation.
+        // Restore its bench pose once so closing it resumes on the same path.
+        if(phase===''&&state.endingPhase==='reading'){
+          Object.assign(pose,seat);camera.position.set(pose.x,pose.y,pose.z);
+          camera.rotation.set(pose.pitch,pose.yaw,0,'YXZ');seated=true;
+        }
+        if(state.endingPhase==='complete'&&seated){
+          // Resume on the clear path at standing height. Keeping the cinematic
+          // seat height makes normal walking reject the 48 cm step to ground.
+          pose.x=12.5;pose.z=seat.z;pose.y=height(pose.x,pose.z)+1.63;
+          camera.position.set(pose.x,pose.y,pose.z);seated=false;
+        }
+        phase=state.endingPhase;return;
+      }
       if(phase!==state.endingPhase){phase=state.endingPhase;elapsed=0;from={...pose};if(phase==='walking')walkDuration=Math.max(3,Math.hypot(pose.x-12.5,pose.z+17)/1.65);}
       elapsed+=dt;if(phase==='walking')blossomTime=0;else blossomTime+=dt;const start=from!;
       if(phase==='walking'){
@@ -37,6 +51,7 @@ export function createSpringEnding(source:THREE.Object3D,cover:THREE.Texture,hei
         pose.x=x;pose.z=z;pose.y=height(x,z)+1.63+(reduced?0:Math.sin(elapsed*8)*.015*Math.sin(Math.PI*u));pose.yaw=angle(start.yaw,-Math.PI/2,ease(elapsed/1.5));pose.pitch=THREE.MathUtils.lerp(start.pitch,-.12,ease(elapsed));
         if(elapsed>=walkDuration)controller.act('ending-phase','sitting');
       }else if(phase==='sitting'){
+        seated=true;
         const u=ease(elapsed/2);pose.x=THREE.MathUtils.lerp(start.x,seat.x,u);pose.z=seat.z;pose.y=THREE.MathUtils.lerp(start.y,seat.y,u);pose.yaw=angle(start.yaw,seat.yaw,u);pose.pitch=THREE.MathUtils.lerp(start.pitch,seat.pitch,ease(elapsed/3));
         if(elapsed>=3.5)controller.act('ending-phase','opening');
       }else {Object.assign(pose,seat);if(elapsed>=4.5)controller.act('ending-phase','reading');}

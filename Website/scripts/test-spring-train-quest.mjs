@@ -11,7 +11,7 @@ const io=new NodeIO().registerExtensions(ALL_EXTENSIONS);
 async function readModel(path){
   const doc=await io.read(path),root=new THREE.Group(),nodes=new Map(),materials=new Map();
   for(const n of doc.getRoot().listNodes()){
-    const o=new THREE.Group();o.name=n.getName();o.matrix.fromArray(n.getMatrix());o.matrix.decompose(o.position,o.quaternion,o.scale);nodes.set(n,o);
+    const o=new THREE.Group();o.name=THREE.PropertyBinding.sanitizeNodeName(n.getName());o.matrix.fromArray(n.getMatrix());o.matrix.decompose(o.position,o.quaternion,o.scale);nodes.set(n,o);
     for(const p of n.getMesh()?.listPrimitives()??[]){const g=new THREE.BufferGeometry();for(const [sem,name]of [['POSITION','position'],['NORMAL','normal'],['TEXCOORD_0','uv']]){const a=p.getAttribute(sem);if(a)g.setAttribute(name,new THREE.BufferAttribute(a.getArray(),a.getElementSize()));}const i=p.getIndices();if(i)g.setIndex(new THREE.BufferAttribute(i.getArray(),1));const source=p.getMaterial();let m=materials.get(source);if(!m){m=new THREE.MeshStandardMaterial();m.name=source?.getName()??'';materials.set(source,m);}o.add(new THREE.Mesh(g,m));}
   }
   for(const n of doc.getRoot().listNodes())for(const c of n.listChildren())nodes.get(n).add(nodes.get(c));
@@ -23,14 +23,29 @@ const controller={snapshot:()=>state,act(action,value){actions.push([action,valu
 const quest=createSpringTrainQuest(train,caseModel,controller),scene=new THREE.Scene();scene.add(train.group,quest.group);scene.updateMatrixWorld(true);
 assert.equal(SPRING_TRAIN_BERTHS.length,72);assert.deepEqual(SPRING_TRAIN_BERTHS.map(b=>b.number),Array.from({length:72},(_,i)=>i+1));
 assert.equal(SPRING_TRAIN_BERTHS[22].type,'side-lower');assert.equal(SPRING_TRAIN_BERTHS[23].type,'side-upper');assert.equal(SPRING_TRAIN_BERTHS[71].type,'side-upper');
-assert.ok(quest.lid,'Actual GLB hinge remains independently animated');assert.ok(quest.suitcase.getObjectByName('Carry handle'));
-for(const name of ['72 brushed silver berth plates','Four red coach number plates','Combination wheel 1','Letter beneath the suitcase lid']){
+assert.ok(quest.lid,'Browser-sanitized GLB hinge remains independently animated');assert.ok(quest.suitcase.getObjectByName('Carry_handle'));
+assert.equal(quest.suitcase.getObjectByName('Blue_Summer_book'),undefined,'The imported Summer reward is removed');
+assert.equal(quest.suitcase.getObjectByName('Dry_letter'),undefined,'Only the Spring letter remains');
+const plates=quest.group.getObjectByName('Berth plates with upper repeats').geometry;
+assert.equal(plates.getAttribute('position').count,99*24,'72 berth labels plus 27 repeated upper labels');
+for(let bay=0;bay<9;bay++){
+ const p=plates.getAttribute('position'),centre=i=>{const v=new THREE.Vector3();for(let n=0;n<24;n++)v.add(new THREE.Vector3().fromBufferAttribute(p,(bay*11+i)*24+n));return v.divideScalar(24);};
+ for(const start of [0,4]){
+  assert.ok(Math.abs(centre(start).y-centre(start+2).y)<.0001,'Three daytime labels share the row above the backrest');
+  assert.ok(centre(start).x>centre(start+1).x&&centre(start+1).x>centre(start+2).x,'Numbering runs from the window toward the aisle');
+  assert.ok(centre(start+3).y>centre(start+2).y+.6,'Upper berth repeats its own label beside the sleeping surface');
+ }
+ assert.ok(Math.abs(centre(8).y-centre(9).y)<.0001,'Facing side seats have matching label heights');
+ assert.ok(centre(9).z-centre(8).z>2,'Side-seat labels occupy opposite partitions');
+ assert.ok(centre(10).y>centre(9).y+.45,'The higher side number repeats at the upper berth');
+}
+for(const name of ['Berth plates with upper repeats','Four red coach number plates','Combination wheel 1','Letter beneath the suitcase lid']){
   const m=quest.group.getObjectByName(name).material,shader={uniforms:{},fragmentShader:'#include <lights_fragment_begin>'};
   m.onBeforeCompile(shader,{});assert.ok(shader.uniforms.coachLampPosition,`${name} shares the real coach lighting at night`);
 }
 assert.equal(quest.suitcase.getObjectByName('Blue Summer book'),undefined,'Summer contents are replaced');
-assert.ok(Math.abs(quest.casePosition.z-SPRING_TRAIN_BERTHS[22].z)<.001);
-assert.equal(quest.casePosition.y,train.floorY+.489,'Suitcase bottom stands on the real .43m side-lower cushion plus .055m half thickness');
+assert.ok(Math.abs(quest.casePosition.z-(SPRING_TRAIN_BERTHS[22].z-1.16))<.001);
+assert.equal(quest.casePosition.y,train.floorY+.49,'Suitcase bottom stands on the real .43m side-lower cushion plus .055m half thickness');
 assert.ok(train.blockedAt(quest.casePosition.x,quest.casePosition.z),'Case rests on furniture outside the walking aisle');
 assert.equal(train.blockedAt(11.44,quest.casePosition.z),false,'Suitcase leaves the actual aisle clear');
 const camera=new THREE.PerspectiveCamera(60,1,.05,200),ray=new THREE.Raycaster();
@@ -41,7 +56,7 @@ state.hands=[null,null];quest.update(2,1/60,camera,state);assert.equal(quest.num
 const notePoint=new THREE.Box3().setFromObject(quest.note).getCenter(new THREE.Vector3());
 aim(notePoint.clone().add(new THREE.Vector3(.8,0,0)),notePoint);assert.equal(quest.target(camera,ray,state)?.action,'read-train-note');
 aim(notePoint.clone().add(new THREE.Vector3(3,0,0)),notePoint);assert.equal(quest.target(camera,ray,state),null,'Cannot read from beyond physical reach');
-aim(new THREE.Vector3(12.03,train.floorY+1.45,-68.13),quest.basinPoint);assert.equal(quest.target(camera,ray,state)?.action,'wash-hands','Imported wash area is reachable from the vestibule');
+aim(new THREE.Vector3(12.03,train.floorY+1.45,quest.basinPoint.z+.90),quest.basinPoint);assert.equal(quest.target(camera,ray,state)?.action,'wash-hands','Imported wash area is reachable from the vestibule');
 state.handsWashed=true;quest.update(3,1/60,camera,state);assert.equal(actions.length,0,'Washing alone does not reveal the door clue');
 assert.ok(quest.washDoor);quest.washDoor.open=.5;quest.update(4,1/60,camera,state);assert.equal(actions[0][0],'reveal-train-mirror');
 for(let i=0;i<120;i++)quest.update(4+i/60,1/60,camera,state);assert.ok(quest.mist.material.opacity>.8,'Condensation fades in after the door opens');
@@ -67,5 +82,5 @@ aim(new THREE.Vector3(11.44,train.floorY+1.35,quest.casePosition.z),keyPoint);as
 state.treasureKeyTaken=true;quest.update(10,1/60,camera,state);assert.equal(quest.key.visible,false);
 const letterPoint=new THREE.Box3().setFromObject(quest.letter).getCenter(new THREE.Vector3());aim(camera.position,letterPoint);assert.equal(quest.target(camera,ray,state)?.action,'read-train-letter');
 let bad=0,meshes=0;quest.group.traverse(o=>{if(!o.isMesh)return;meshes++;for(const value of o.geometry.getAttribute('position').array)if(!Number.isFinite(value))bad++;});assert.equal(bad,0);assert.ok(meshes<65,`Small puzzle uses bounded geometry: ${meshes}`);
-quest.dispose();assert.equal(quest.group.children.length,0);assert.equal(quest.note.parent,null);assert.ok(caseModel.getObjectByName('Blue Summer book'),'Cached asset remains unchanged');train.dispose();
+quest.dispose();assert.equal(quest.group.children.length,0);assert.equal(quest.note.parent,null);assert.ok(caseModel.getObjectByName('Blue_Summer_book'),'Cached asset remains unchanged');train.dispose();
 console.log(`Train quest passed: 72 correctly mapped berths, either-hand mushroom reveal, real hinged suitcase, reachable note/basin/key/letter, washed-door mirror gate, five rotating wheels, ${meshes} bounded meshes, isolated cached assets and cleanup.`);
