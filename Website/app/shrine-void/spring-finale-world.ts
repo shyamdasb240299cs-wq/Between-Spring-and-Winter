@@ -2,15 +2,17 @@ import * as THREE from 'three';
 import {SPRING_SPOTS} from './spring-treasure-layout';
 import {type SpringSave,type SpringTreasureController} from './spring-treasure-state';
 import {createSpringCandleLighting} from './spring-candle-lighting';
+import {createSpringKeepsakeLocker} from './spring-keepsake-locker';
 
 export const SPRING_DUMPLINGS_MODEL='/seasons/kit/spring-finale/dumplings.glb';
 export const SPRING_TREASURE_SPOT={x:11.9,z:-21};
 export const SPRING_SHOVEL_SPOT={x:15.8,z:-12.9};
 export const SPRING_DUMPLING_SPOT={x:SPRING_SPOTS.picnic.x+.85,z:SPRING_SPOTS.picnic.z-.82};
 type Target={id:string;action:string;label:string;payload?:unknown};
+type Pose={x:number;y:number;z:number;yaw:number;pitch:number};
 
 /** Physical meal and excavation. All continuous effects share the main renderer. */
-export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,chestSource:THREE.Object3D,bookSource:THREE.Object3D,cover:THREE.Texture,wood:THREE.Texture,height:(x:number,z:number)=>number,reduced:boolean){
+export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,_chestSource:THREE.Object3D,bookSource:THREE.Object3D,cover:THREE.Texture,wood:THREE.Texture,height:(x:number,z:number)=>number,reduced:boolean){
   const group=new THREE.Group();group.name='Spring finale · sunlight and buried keepsake';
   const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>(),textures=new Set<THREE.Texture>();
   const mat=(p:THREE.MeshStandardMaterialParameters)=>{const m=new THREE.MeshStandardMaterial(p);materials.add(m);return m;};
@@ -54,18 +56,16 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
   warm.onBeforeCompile=s=>{s.vertexShader='varying vec2 sunUv;\n'+s.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nsunUv=position.xy;');s.fragmentShader='varying vec2 sunUv;\n'+s.fragmentShader.replace('#include <opaque_fragment>','diffuseColor.a*=pow(max(0.,1.-length(sunUv)/1.6),2.);\n#include <opaque_fragment>');};
   const raysMaterial=new THREE.MeshBasicMaterial({color:0xffedc4,transparent:true,opacity:.035,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});materials.add(raysMaterial);
   const rays=mesh(spot,new THREE.ConeGeometry(1.6,12,32,1,true),raysMaterial,-1.2,5.8,-1.8);rays.rotation.set(.18,0,-.16);rays.castShadow=false;
-  const chest=chestSource.clone(true);chest.name='Excavated final treasure chest';chest.position.set(0,-.3,0);chest.quaternion.identity();chest.scale.setScalar(.88);spot.add(chest);
-  const chestLid=chest.getObjectByName('Hinged chest lid');
-  const darkness=new THREE.MeshBasicMaterial({color:0x030403});materials.add(darkness);const darkInterior=mesh(chest,new THREE.BoxGeometry(.85,.04,.54),darkness,0,.38);darkInterior.name='Dark chest interior';
-  const book=new THREE.Group(),bookCopy=bookSource.clone(true);book.name='Hidden Part One Spring book';bookCopy.updateMatrixWorld(true);const bookBounds=new THREE.Box3().setFromObject(bookCopy),bookSize=bookBounds.getSize(new THREE.Vector3());bookCopy.position.sub(bookBounds.getCenter(new THREE.Vector3()));book.add(bookCopy);book.scale.setScalar(.48/Math.max(bookSize.x,bookSize.y));chest.add(book);book.position.set(0,.21,0);book.rotation.x=-Math.PI/2;
-  book.traverse(o=>{if(!(o instanceof THREE.Mesh))return;if(/^(PageEdge|TopPageEdge|WovenEndband)/.test(o.name))o.visible=false;if(o.name==='CoverArt'){const m=mat({map:cover,roughness:.86,emissive:0xffffff,emissiveMap:cover,emissiveIntensity:.08});o.material=m;}});
+  const locker=createSpringKeepsakeLocker(),chest=locker.group;chest.position.set(0,-.3,0);chest.rotation.y=1.18;spot.add(chest);
+  const book=new THREE.Group(),bookCopy=bookSource.clone(true);book.name='Hidden Part One Spring book';bookCopy.updateMatrixWorld(true);const bookBounds=new THREE.Box3().setFromObject(bookCopy),bookSize=bookBounds.getSize(new THREE.Vector3());bookCopy.position.sub(bookBounds.getCenter(new THREE.Vector3()));book.add(bookCopy);book.scale.setScalar(.47/Math.max(bookSize.x,bookSize.y));locker.interior.add(book);book.position.set(-.045,.125,-.01);book.rotation.x=-Math.PI/2;
+  book.traverse(o=>{if(!(o instanceof THREE.Mesh))return;if(/^(PageEdge|TopPageEdge|WovenEndband)/.test(o.name))o.visible=false;if(o.name==='CoverArt')o.material=mat({map:cover,roughness:.86});});
   // Dirt clods rise on successive strokes rather than replacing the scene with a UI timer.
   const clods=Array.from({length:9},(_,i)=>{const o=mesh(spot,new THREE.DodecahedronGeometry(.08+(i%3)*.025,0),earth);o.name='Displaced soil '+i;return o;});
   const flameMaterial=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{clock:{value:0}},vertexShader:`varying vec2 pUv;void main(){pUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec2 pUv;uniform float clock;void main(){float y=pUv.y,x=(pUv.x-.5)+sin(y*8.-clock*9.)*.035*y;float a=(1.-smoothstep(.1,.5,length(vec2(x*(1.+y*2.),(y-.45)*.7))*1.7))*sin(y*3.14159);if(a<.02)discard;gl_FragColor=vec4(mix(vec3(1.,.28,.025),vec3(1.,.96,.65),1.-y),a);}`});materials.add(flameMaterial);
   const flame=mesh(group,new THREE.PlaneGeometry(.045,.09),flameMaterial);flame.name='Candle flame';flame.castShadow=false;
   const candleLighting=createSpringCandleLighting(),candleLight=candleLighting.source;group.add(candleLight);
-  // Cached source models remain shared by other scenes. Scope the extra direct
-  // light to private copies of this chest and its book, with one clone per material.
+  // Only the cavity and private book copies receive the wick light. The shell,
+  // door, ground, trees and held props keep their ordinary daylight shading.
   const candleMaterials=new Map<THREE.MeshStandardMaterial,THREE.MeshStandardMaterial>();
   const candleMaterial=(source:THREE.Material)=>{
     if(!(source instanceof THREE.MeshStandardMaterial))return source;
@@ -74,17 +74,24 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
     if(scoped!==source){scoped.onBeforeCompile=source.onBeforeCompile;scoped.customProgramCacheKey=source.customProgramCacheKey;materials.add(scoped);}
     candleMaterials.set(source,scoped);candleLighting.bind(scoped);return scoped;
   };
-  chest.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(candleMaterial):candleMaterial(o.material);});
+  locker.interior.traverse(o=>{if(o instanceof THREE.Mesh)o.material=Array.isArray(o.material)?o.material.map(candleMaterial):candleMaterial(o.material);});
+  candleLighting.setVolume(chest,new THREE.Vector3(-.435,.06,-.285),new THREE.Vector3(.435,.615,.315));
   const focusRay=mesh(group,new THREE.CylinderGeometry(.001,.008,.45,8),new THREE.MeshBasicMaterial({color:0xffecb5,transparent:true,opacity:.45,depthWrite:false}));materials.add(focusRay.material);focusRay.name='Sunlight focused through spectacles';focusRay.castShadow=false;
   let open=0,digTime=0,focusTime=0,focusStarted=0,mealOpen=0,lastEat=0,elapsed=0,wasFocusing=false,focusPaused=false,bookLookTime=0;
-  const bookLookRay=new THREE.Raycaster();
+  const bookLookRay=new THREE.Raycaster(),apertureRay=new THREE.Ray(),inverseLocker=new THREE.Matrix4(),aperture=new THREE.Box3(new THREE.Vector3(-.40,.09,.30),new THREE.Vector3(.40,.58,.345)),apertureHit=new THREE.Vector3();
+  const eye=new THREE.Vector3(),lookAt=new THREE.Vector3(),lookMatrix=new THREE.Matrix4(),lookRotation=new THREE.Quaternion(),wick=new THREE.Vector3(),localWick=new THREE.Vector3(),wickRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),1.18);
+  let inspectionFrom:{position:THREE.Vector3;rotation:THREE.Quaternion;wick:THREE.Vector3}|null=null,inspectionAge=0,inspectionSuppressed=false;
+  const candlePose={position:wick,rotation:wickRotation};
+  function setPose(camera:THREE.Camera,pose?:Pose){if(!pose)return;const e=new THREE.Euler().setFromQuaternion(camera.quaternion,'YXZ');Object.assign(pose,{x:camera.position.x,y:camera.position.y,z:camera.position.z,yaw:e.y,pitch:e.x});}
+  function cancelInspection(camera:THREE.Camera,pose?:Pose){if(inspectionFrom){camera.position.copy(inspectionFrom.position);camera.quaternion.copy(inspectionFrom.rotation);setPose(camera,pose);}inspectionFrom=null;inspectionAge=bookLookTime=0;inspectionSuppressed=true;}
   const near=(camera:THREE.Camera,p:{x:number;z:number},range=2.3)=>Math.hypot(camera.position.x-p.x,camera.position.z-p.z)<range;
   const nearMeal=(camera:THREE.Camera)=>near(camera,SPRING_DUMPLING_SPOT,2.1);
   const nearDig=(camera:THREE.Camera)=>near(camera,SPRING_TREASURE_SPOT,2.4);
   const nearShovel=(camera:THREE.Camera)=>near(camera,SPRING_SHOVEL_SPOT,2.4);
   const frame=(o:THREE.Object3D,camera:THREE.Camera,x:number,y:number,z:number)=>{o.position.copy(camera.position);o.quaternion.copy(camera.quaternion);o.translateX(x);o.translateY(y);o.translateZ(z);};
   const hit=(ray:THREE.Raycaster,o:THREE.Object3D)=>ray.intersectObject(o,true).some(h=>h.distance<3.3&&h.object.visible);
-  return {group,nearMeal,nearDig,nearShovel,spot,trayRoot,shovelRoot,chest,book,
+  return {group,nearMeal,nearDig,nearShovel,spot,trayRoot,shovelRoot,chest,book,locker,
+    get inspecting(){return inspectionFrom!==null;},get candlePose(){return inspectionFrom?candlePose:null;},cancelInspection,
     canAct(action:string,camera:THREE.Camera){if(['read-dumpling-note','take-dumplings','return-dumplings'].includes(action))return nearMeal(camera);if(action==='take-shovel'||action==='put-shovel')return nearShovel(camera)||action==='put-shovel'&&nearDig(camera);if(['dig-treasure','open-treasure','take-spring-book','focus-candle'].includes(action))return nearDig(camera);return true;},
     target(camera:THREE.Camera,ray:THREE.Raycaster,s:SpringSave):Target|null{
       if(s.adaviActive||s.dreamPhase!=='awake'||s.questNoteOpen||s.bagNoteOpen||s.endingPhase!=='none')return null;
@@ -95,11 +102,11 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
       if(s.paperHuntStarted&&s.paperPieces.length===5&&!s.shovelTaken&&nearShovel(camera)&&hit(ray,shovelRoot))return {id:'shovel',action:'take-shovel',label:'Take the shovel'};
       if(nearDig(camera)&&s.rainCleared){
         if(!s.treasureDug&&s.hands.includes('shovel')&&hit(ray,spot))return {id:'dig',action:'dig-treasure',label:'Dig in the patch of sunlight'};
-        if(s.treasureDug&&!s.treasureOpen&&hit(ray,chest))return {id:'treasure',action:'open-treasure',label:s.hands.includes('treasure-key')?'Unlock the treasure chest':'Equip the diamond key to open the chest'};
+        if(s.treasureDug&&!s.treasureOpen&&hit(ray,chest))return {id:'treasure',action:'open-treasure',label:s.hands.includes('treasure-key')?'Unlock the locker door':'Equip the diamond key for the locker keyhole'};
         if(focusPaused&&!s.candleFocusStarted&&s.treasureOpen&&s.finalDialogueSeen&&!s.candleLit&&s.hands.includes('candle')&&s.hands.includes('glasses')&&hit(ray,glow))return {id:'candle-focus',action:'focus-candle',label:'Focus sunlight through the spectacles'};
       }return null;
     },
-    update(time:number,dt:number,camera:THREE.Camera,s:SpringSave,controller:SpringTreasureController,active:boolean,candleAnchor?:THREE.Vector3|null,glassesAnchor?:THREE.Vector3|null){
+    update(time:number,dt:number,camera:THREE.Camera,s:SpringSave,controller:SpringTreasureController,active:boolean,candleAnchor?:THREE.Vector3|null,glassesAnchor?:THREE.Vector3|null,pose?:Pose){
       group.visible=active;if(!active)return;elapsed+=dt;
       const cinematic=['walking','sitting','opening','reading'].includes(s.endingPhase),held=s.hands.includes('dumpling-tray');
       const mealAvailable=s.trainLetterRead&&s.treasureKeyTaken&&!cinematic,storedTray=s.storageSlots.includes('dumpling-tray')||s.droppedItems.some(item=>item.item==='dumpling-tray');
@@ -120,15 +127,29 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
       if(shovelHeld){frame(shovelRoot,camera,.28,-.88,-.82);shovelRoot.rotateZ(-.26);if(s.diggingStarted){digTime+=dt;shovelRoot.rotateX(-.4+Math.sin(digTime*4.3)*.6);if(digTime>=6.1)controller.act('finish-dig');}else digTime=0;}else{shovelRoot.position.set(SPRING_SHOVEL_SPOT.x,height(SPRING_SHOVEL_SPOT.x,SPRING_SHOVEL_SPOT.z),SPRING_SHOVEL_SPOT.z);shovelRoot.rotation.set(0,.5,-.15);}
       spot.visible=s.rainCleared;const digging=s.treasureDug?1:Math.min(1,digTime/6);dirt.scale.y=.1*(1-digging);clods.forEach((o,i)=>{const a=i*2.4,r=.55+digging*.28;o.position.set(Math.sin(a)*r,.02+Math.sin(a*3)*.025,Math.cos(a)*r*.8);o.scale.setScalar(digging);});
       glow.visible=!s.springBookTaken;rays.visible=!reduced&&!s.springBookTaken;chest.visible=s.treasureDug||digTime>2;chest.position.y=-.34+(s.treasureDug?.34:Math.min(.34,digTime*.056));
-      const illuminating=s.candleLit&&s.hands.includes('candle')&&nearDig(camera);
-      open=THREE.MathUtils.damp(open,s.treasureOpen?1:0,3.5,dt);if(chestLid)chestLid.rotation.x=-open*1.92;darkInterior.visible=!illuminating;book.visible=s.treasureOpen&&illuminating&&!s.springBookTaken;
-      // Looking into the illuminated box starts the authored ending without
-      // another pickup click. Keep the reveal visible before taking control.
+      open=THREE.MathUtils.damp(open,s.treasureOpen?1:0,reduced?35:3.5,dt);locker.door.rotation.y=-open*1.8;book.visible=s.treasureOpen&&!s.springBookTaken;
+      // Looking through the front aperture starts a short, physical lean. The
+      // real candle travels through the opening before any warm light appears.
       camera.updateMatrixWorld(true);chest.updateWorldMatrix(true,true);
       bookLookRay.setFromCamera(new THREE.Vector2(),camera);
-      const lookingAtBook=book.visible&&s.finalDialogueSeen&&!s.questNoteOpen&&!s.bagNoteOpen&&s.endingPhase==='none'&&hit(bookLookRay,book);
+      inverseLocker.copy(chest.matrixWorld).invert();apertureRay.copy(bookLookRay.ray).applyMatrix4(inverseLocker);
+      const facingAperture=apertureRay.origin.z>.34&&!!apertureRay.intersectBox(aperture,apertureHit),canInspect=s.treasureOpen&&s.finalDialogueSeen&&s.candleLit&&s.hands.includes('candle')&&!s.springBookTaken&&!s.questNoteOpen&&!s.bagNoteOpen&&s.endingPhase==='none'&&nearDig(camera);
+      if(!facingAperture&&!inspectionFrom)inspectionSuppressed=false;
+      if(canInspect&&open>.94&&facingAperture&&!inspectionSuppressed&&!inspectionFrom&&dt>0){inspectionFrom={position:camera.position.clone(),rotation:camera.quaternion.clone(),wick:candleAnchor?.clone()??camera.localToWorld(new THREE.Vector3(s.hands[0]==='candle'?-.31:.31,.025,-.72))};inspectionAge=0;}
+      if(inspectionFrom&&!canInspect){if(cinematic){inspectionFrom=null;inspectionAge=0;}else cancelInspection(camera,pose);}
+      if(inspectionFrom){
+        inspectionAge+=dt;const lean=THREE.MathUtils.smoothstep(inspectionAge,0,reduced?.2:1.15),reach=THREE.MathUtils.smoothstep(inspectionAge,reduced?.1:.65,reduced?.4:2.25);
+        chest.localToWorld(eye.set(.015,.49,1.03));book.getWorldPosition(lookAt);lookMatrix.lookAt(eye,lookAt,up);lookRotation.setFromRotationMatrix(lookMatrix);
+        camera.position.lerpVectors(inspectionFrom.position,eye,lean);camera.quaternion.slerpQuaternions(inspectionFrom.rotation,lookRotation,lean);camera.updateMatrixWorld(true);setPose(camera,pose);
+        chest.localToWorld(wick.set(.285,.385,.13));wick.lerpVectors(inspectionFrom.wick,wick,reach);
+        bookLookRay.setFromCamera(new THREE.Vector2(),camera);
+      }else if(candleAnchor)wick.copy(candleAnchor);else{wick.copy(camera.position);wick.add(new THREE.Vector3(s.hands[0]==='candle'?-.31:.31,.025,-.72).applyQuaternion(camera.quaternion));}
+      localWick.copy(wick).applyMatrix4(inverseLocker);
+      const inside=!!inspectionFrom&&localWick.x>-.41&&localWick.x<.41&&localWick.y>.09&&localWick.y<.59&&localWick.z<.30&&localWick.z>-.26;
+      const illuminating=s.candleLit&&s.hands.includes('candle')&&inside;
+      const lookingAtBook=illuminating&&inspectionAge>(reduced?.45:2.35)&&book.visible&&hit(bookLookRay,book);
       bookLookTime=lookingAtBook?bookLookTime+dt:0;
-      if(bookLookTime>=1.4&&dt>0){controller.act('take-spring-book');bookLookTime=0;}
+      if(bookLookTime>=1.65&&dt>0){controller.act('take-spring-book');bookLookTime=0;}
       const canFocus=s.treasureOpen&&s.finalDialogueSeen&&s.rainCleared&&!s.candleLit&&s.hands.includes('candle')&&s.hands.includes('glasses')&&nearDig(camera);
       if(wasFocusing&&!s.candleFocusStarted&&!s.candleLit)focusPaused=true;
       // An explicit retry at the sunlight starts a fresh hold, even if a cancel
@@ -141,10 +162,11 @@ export function createSpringFinaleWorld(models:Record<string,THREE.Object3D>,che
       focusRay.visible=!!s.candleFocusStarted;frame(focusRay,camera,0,-.07,-.65);focusRay.rotation.z+=.85;
       if(focusRay.visible&&candleAnchor&&glassesAnchor){focusDirection.subVectors(glassesAnchor,candleAnchor);focusRay.position.copy(candleAnchor).add(glassesAnchor).multiplyScalar(.5);focusRay.scale.y=focusDirection.length()/.45;focusRay.quaternion.setFromUnitVectors(up,focusDirection.normalize());}
       flame.visible=s.candleLit&&s.hands.includes('candle')&&!s.springBookTaken;
-      if(flame.visible){frame(flame,camera,s.hands[0]==='candle'?-.31:.31,.025,-.72);if(candleAnchor){flame.position.copy(candleAnchor);flame.position.y+=.04;}candleLight.position.copy(flame.position);flameMaterial.uniforms.clock.value=reduced?0:time;}
-      candleLighting.update(flame.visible?.10+(reduced?0:Math.sin(time*13.7)*.006):0);
+      if(flame.visible){flame.position.copy(wick);flame.position.y+=.035;flame.quaternion.copy(camera.quaternion);candleLight.position.copy(flame.position);flameMaterial.uniforms.clock.value=reduced?0:time;flame.scale.set(1+(reduced?0:Math.sin(time*11.3)*.055),1+(reduced?0:Math.sin(time*8.7)*.08),1);}
+      const entry=THREE.MathUtils.smoothstep(.315-localWick.z,0,.17);
+      candleLighting.update(illuminating?entry*(.16+(reduced?0:Math.sin(time*13.7)*.006+Math.sin(time*7.1)*.004)):0);
       if(s.dumplingEatStarted!==lastEat){lastEat=s.dumplingEatStarted;}void elapsed;
     },
-    dispose(){candleLighting.dispose();candleMaterials.clear();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());group.removeFromParent();group.clear();}
+    dispose(){candleLighting.dispose();candleMaterials.clear();locker.dispose();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());group.removeFromParent();group.clear();}
   };
 }

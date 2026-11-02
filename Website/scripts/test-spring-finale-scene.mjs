@@ -8,6 +8,7 @@ registerHooks({resolve(s,c,next){try{return next(s,c);}catch(e){if(e.code==='ERR
 const context=new Proxy({},{get:()=>()=>{},set:()=>true});globalThis.document={createElement:()=>({getContext:()=>context})};
 const {createSpringFinaleWorld,SPRING_TREASURE_SPOT}=await import('../app/shrine-void/spring-finale-world.ts');
 const {createSpringEnding}=await import('../app/shrine-void/spring-ending.ts');
+const {createSpringBackpack}=await import('../app/shrine-void/spring-backpack.ts');
 const {createSpringTreasureState}=await import('../app/shrine-void/spring-treasure-state.ts');
 const {createSpringPreviewStorage}=await import('../app/shrine-void/spring-preview.ts');
 await MeshoptDecoder.ready;const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.decoder':MeshoptDecoder});
@@ -17,10 +18,16 @@ assert.ok(book.getObjectByName('CoverHinge'),'The actual book exposes its openin
 const chest=new THREE.Group(),hinge=new THREE.Group();hinge.name='Hinged chest lid';chest.add(new THREE.Mesh(new THREE.BoxGeometry(.98,.4,.69),new THREE.MeshStandardMaterial()),hinge);
 const texture=new THREE.Texture(),world=createSpringFinaleWorld({dumplings:meal},chest,book,texture,texture,()=>.4,false),camera=new THREE.PerspectiveCamera();camera.position.set(11.9,2.03,-21);camera.updateMatrixWorld(true);
 let scopedBookMaterial;world.book.getObjectByName('CoverArt').traverse(o=>{if(o instanceof THREE.Mesh)scopedBookMaterial=o.material;});
-const scopedChestMaterial=world.chest.children[0].material,sourceChestMaterial=chest.children[0].material;
+const scopedChestMaterial=world.locker.interior.getObjectByName('Locker dark rear wall').material,sourceChestMaterial=chest.children[0].material;
+let sourceBookMaterial;book.getObjectByName('CoverArt').traverse(o=>{if(o instanceof THREE.Mesh)sourceBookMaterial=o.material;});
 assert.notEqual(scopedChestMaterial,sourceChestMaterial,'Candle shading never mutates a shared cached chest material');
+assert.notEqual(scopedBookMaterial,sourceBookMaterial);assert.doesNotMatch(sourceBookMaterial.customProgramCacheKey(),/spring-scoped-candle/,'The cached source book is not darkened or candle-bound');
 assert.ok(scopedBookMaterial instanceof THREE.MeshStandardMaterial,'The revealed book cover receives physical candle illumination');
-const candleShaders=[scopedChestMaterial,scopedBookMaterial].map(material=>{const shader={uniforms:{},fragmentShader:'#include <lights_fragment_begin>'};material.onBeforeCompile(shader,{});assert.match(shader.fragmentShader,/RE_Direct\(candleLight/);assert.match(shader.fragmentShader,/getDistanceAttenuation\(candleDistance,springCandleRange,2\.\)/);assert.equal(shader.uniforms.springCandleRange.value,2.2);return shader;});
+assert.doesNotMatch(world.chest.getObjectByName('Locker roof').material.customProgramCacheKey(),/spring-scoped-candle/,'The exterior shell keeps normal daylight shading');
+assert.equal(world.chest.getObjectByName('Hinged chest lid'),undefined,'The old upward-opening chest is replaced');
+assert.equal(world.locker.door.getObjectByName('Solid locker door with inset keyway').geometry.parameters.shapes.holes.length,1,'The front door has a real integrated keyhole');
+const lockerNames=[];world.chest.traverse(o=>lockerNames.push(o.name));assert.ok(!lockerNames.some(name=>/padlock|hasp|hanging lock/i.test(name)),'The locker has no separate hanging lock');
+const candleShaders=[scopedChestMaterial,scopedBookMaterial].map(material=>{const shader={uniforms:{},vertexShader:'#include <project_vertex>',fragmentShader:'#include <lights_fragment_begin>\n#include <lights_fragment_end>\n#include <fog_fragment>'};material.onBeforeCompile(shader,{});assert.match(shader.fragmentShader,/RE_Direct\(candleLight/);assert.match(shader.fragmentShader,/getDistanceAttenuation\(candleDistance,springCandleRange,2\.\)/);assert.match(shader.fragmentShader,/reflectedLight\.indirectDiffuse=vec3\(0\.\)/,'Sun and sky cannot reveal the cavity');assert.match(shader.fragmentShader,/insideLocker/);assert.match(shader.vertexShader,/springLockerWorldToLocal\*modelMatrix/);assert.doesNotMatch(shader.fragmentShader,/#include <fog_fragment>/,'Outdoor fog cannot brighten the recess');assert.equal(shader.uniforms.springCandleRange.value,1.25);assert.equal(shader.uniforms.springLockerVolumeEnabled.value,1);return shader;});
 assert.equal(candleShaders[0].uniforms.springCandleIntensity,candleShaders[1].uniforms.springCandleIntensity,'Chest and book share one moving wick source');
 assert.doesNotMatch(sourceChestMaterial.customProgramCacheKey(),/spring-scoped-candle/);
 const candleProgramKey=scopedChestMaterial.customProgramCacheKey(),candleMaterialVersion=scopedChestMaterial.version;
@@ -54,33 +61,46 @@ try{
   for(let i=0;i<15;i++)step();assert.equal(focusGame.state.candleLit,true,'A fresh four-second hold lights the candle without moving or re-equipping');
   assert.equal(focusGame.state.candleFocusStarted,0);assert.equal(world.target(camera,sunlightRay,focusGame.state),null,'A lit candle has no focus retry');
 }finally{Date.now=realNow;}
-state.hands=['candle','glasses'];state.rainCleared=state.treasureDug=state.treasureOpen=state.finalDialogueSeen=true;state.candleLit=true;const wick=new THREE.Vector3(11.8,1.87,-21.6),lens=new THREE.Vector3(12,2.12,-21.7);state.candleFocusStarted=1;world.update(1,0,camera,state,controller,true,wick,lens);world.group.updateMatrixWorld(true);const flame=world.group.getObjectByName('Candle flame'),light=world.group.getObjectByName('Warm candlelight inside the keepsake chest');assert.ok(flame.position.distanceTo(wick.clone().add(new THREE.Vector3(0,.04,0)))<1e-6);assert.equal(light.visible,true);assert.ok(light.userData.intensity>.094&&light.userData.intensity<.106);assert.ok(world.book.visible,'A lit candle reveals the actual book in the chest');
+state.hands=['candle','glasses'];state.rainCleared=state.treasureDug=state.treasureOpen=state.finalDialogueSeen=true;state.candleLit=true;const wick=new THREE.Vector3(11.8,1.87,-21.6),lens=new THREE.Vector3(12,2.12,-21.7);state.candleFocusStarted=1;world.update(1,0,camera,state,controller,true,wick,lens);world.group.updateMatrixWorld(true);const flame=world.group.getObjectByName('Candle flame'),light=world.group.getObjectByName('Warm candlelight inside the keepsake chest');assert.ok(flame.position.distanceTo(wick.clone().add(new THREE.Vector3(0,.035,0)))<1e-6);assert.equal(light.visible,false,'A lit candle outside the locker emits no cavity light');assert.equal(light.userData.intensity,0);
+assert.ok(world.book.visible,'The physical book stays inside the dark cavity before illumination');
 assert.equal(globalLightCount(),0,'Lighting the wick cannot change the outdoor global-light shader counts');
-for(const shader of candleShaders){assert.ok(shader.uniforms.springCandlePosition.value.distanceTo(flame.getWorldPosition(new THREE.Vector3()))<1e-6);assert.match(shader.fragmentShader,/viewMatrix\*vec4\(springCandlePosition,1\.\)/,'Each main/reflection camera transforms the physical wick independently');assert.equal(shader.uniforms.springCandleIntensity.value,light.userData.intensity);}
+for(let i=0;i<20;i++)world.update(1,.1,camera,state,controller,true,wick,lens);
+assert.ok(world.locker.door.rotation.y< -1.7,'The front locker door swings sideways on its side hinge');assert.equal(world.locker.door.rotation.x,0,'There is no upward chest lid motion');
 state.hands=['glasses',null];update();assert.equal(candleShaders[0].uniforms.springCandleIntensity.value,0,'Stowing the candle turns off the local illumination using its uniform');
-assert.equal(scopedChestMaterial.customProgramCacheKey(),candleProgramKey);assert.equal(scopedChestMaterial.version,candleMaterialVersion,'Lighting and stowing never invalidate the material program');state.hands=['candle','glasses'];
-// The player lights the candle, then looks inside: pickup and the bench walk
-// follow automatically, with no interaction button and no trigger when paused.
+assert.equal(scopedChestMaterial.customProgramCacheKey(),candleProgramKey);assert.equal(scopedChestMaterial.version,candleMaterialVersion,'Lighting and stowing never invalidate the material program');
+// A deliberate look through the front aperture leans the camera and carries the
+// actual candle into the recess before the book is revealed and collected.
 const revealGame=createSpringTreasureState(createSpringPreviewStorage('ending'));
 for(let hand=0;hand<2;hand++){const item=revealGame.state.hands[hand];if(item)assert.ok(revealGame.act('drop-inventory',{slot:10+hand,item,placement:{item,world:'spring',x:14.7+hand*.4,y:.3,z:-17,yaw:0}}));}
 for(const item of ['candle','glasses'])assert.ok(revealGame.act('equip-storage',revealGame.state.storageSlots.indexOf(item)));
-camera.position.set(SPRING_TREASURE_SPOT.x,2.03,SPRING_TREASURE_SPOT.z+1.25);
-world.update(2,0,camera,revealGame.state,revealGame,true);world.group.updateMatrixWorld(true);
-camera.lookAt(world.book.getWorldPosition(new THREE.Vector3()));camera.updateMatrixWorld(true);
-for(let i=0;i<30;i++)world.update(2,0,camera,revealGame.state,revealGame,true);
-assert.equal(revealGame.state.springBookTaken,false,'Paused frames cannot start the automatic ending');
-for(let i=0;i<10;i++)world.update(2,.1,camera,revealGame.state,revealGame,true);
-assert.equal(revealGame.state.springBookTaken,false,'The illuminated book is revealed before the automatic pickup');
-camera.lookAt(camera.position.clone().add(new THREE.Vector3(0,1,1)));camera.updateMatrixWorld(true);
-world.update(2,.1,camera,revealGame.state,revealGame,true);
-camera.lookAt(world.book.getWorldPosition(new THREE.Vector3()));camera.updateMatrixWorld(true);
-for(let i=0;i<10;i++)world.update(2,.1,camera,revealGame.state,revealGame,true);
-assert.equal(revealGame.state.springBookTaken,false,'Looking away resets the reveal');
-for(let i=0;i<6;i++)world.update(2,.1,camera,revealGame.state,revealGame,true);
-assert.equal(revealGame.state.endingPhase,'walking','Looking inside the lit chest automatically collects the book');
-assert.ok(revealGame.state.springBookTaken);
+world.group.updateMatrixWorld(true);
+const approach=world.chest.localToWorld(new THREE.Vector3(0,.49,1.03)),apertureTarget=world.chest.localToWorld(new THREE.Vector3(0,.30,.30));
+camera.position.copy(approach);camera.lookAt(apertureTarget);camera.updateMatrixWorld(true);
+const originalPosition=camera.position.clone(),originalRotation=camera.quaternion.clone(),inspectionPose={x:camera.position.x,y:camera.position.y,z:camera.position.z,yaw:0,pitch:0};
+let sceneTime=3;const inspectStep=(dt=.1)=>{sceneTime+=dt;world.update(sceneTime,dt,camera,revealGame.state,revealGame,true,wick,lens,inspectionPose);world.group.updateMatrixWorld(true);};
+for(let i=0;i<30;i++)inspectStep(0);
+assert.equal(world.inspecting,false,'Paused frames cannot start the inspection');assert.equal(revealGame.state.springBookTaken,false);
+inspectStep();assert.equal(world.inspecting,true);assert.ok(world.candlePose,'The carried candle receives the authored reach pose');
+for(let i=0;i<11;i++)inspectStep();assert.equal(light.userData.intensity,0,'Light stays off until the wick crosses the opening');
+world.cancelInspection(camera,inspectionPose);
+assert.equal(world.inspecting,false);assert.equal(world.candlePose,null);assert.ok(camera.position.distanceTo(originalPosition)<1e-6);assert.ok(camera.quaternion.angleTo(originalRotation)<1e-6,'Cancel restores the pre-inspection camera pose');
+for(let i=0;i<35;i++)inspectStep();assert.equal(world.inspecting,false,'Cancel suppresses another automatic lean while still facing the opening');assert.equal(revealGame.state.springBookTaken,false);assert.equal(light.userData.intensity,0);
+camera.lookAt(camera.position.clone().add(new THREE.Vector3(0,1,1)));camera.updateMatrixWorld(true);inspectStep();
+camera.lookAt(apertureTarget);camera.updateMatrixWorld(true);inspectStep();assert.equal(world.inspecting,true,'Looking away permits a deliberate retry');
+const initialCandle=world.candlePose.position.clone();
+for(let i=0;i<24;i++)inspectStep();
+assert.ok(world.candlePose.position.distanceTo(initialCandle)>.2,'The actual held candle moves into the locker');
+const internalWick=world.chest.worldToLocal(world.candlePose.position.clone());assert.ok(internalWick.x>-.41&&internalWick.x<.41&&internalWick.y>.09&&internalWick.y<.59&&internalWick.z>-.26&&internalWick.z<.30,'The light source is physically inside the cavity');
+assert.equal(light.visible,true);assert.ok(light.userData.intensity>.14&&light.userData.intensity<.18);assert.equal(revealGame.state.springBookTaken,false,'The warm book reveal precedes automatic pickup');
+const heldRevealPose=world.candlePose.position.clone();for(let i=0;i<30;i++)inspectStep(0);assert.equal(revealGame.state.springBookTaken,false,'Paused inspection frames cannot complete automatic pickup');assert.ok(world.candlePose.position.distanceTo(heldRevealPose)<1e-6);
+for(const shader of candleShaders){assert.ok(shader.uniforms.springCandlePosition.value.distanceTo(flame.getWorldPosition(new THREE.Vector3()))<1e-6);assert.match(shader.fragmentShader,/viewMatrix\*vec4\(springCandlePosition,1\.\)/,'Each main/reflection camera transforms the physical wick independently');assert.equal(shader.uniforms.springCandleIntensity.value,light.userData.intensity);const localPosition=flame.getWorldPosition(new THREE.Vector3()).applyMatrix4(shader.uniforms.springLockerWorldToLocal.value);assert.ok(localPosition.z<.315&&localPosition.y<.615,'The shared volume follows the rotated world locker');}
+for(let i=0;i<30&&!revealGame.state.springBookTaken;i++)inspectStep();
+assert.equal(revealGame.state.endingPhase,'walking','Looking inside the candlelit locker automatically collects the book');assert.ok(revealGame.state.springBookTaken);
+inspectStep();assert.equal(world.inspecting,false,'The bench cinematic takes over from the locker inspection');assert.equal(light.userData.intensity,0);
+assert.equal(scopedChestMaterial.customProgramCacheKey(),candleProgramKey);assert.equal(scopedChestMaterial.version,candleMaterialVersion,'Entering and leaving the locker never recompiles the cavity material');
 state.endingPhase='walking';update();assert.equal(world.trayRoot.visible,false);assert.equal(world.shovelRoot.visible,false);
-const ending=createSpringEnding(book,texture,()=>.4,false,false),pose={x:SPRING_TREASURE_SPOT.x,y:2.03,z:SPRING_TREASURE_SPOT.z,yaw:0,pitch:0},steps=[];const advance={act:(action,next)=>{assert.equal(action,'ending-phase');steps.push(next);state.endingPhase=next;return true;}};
+const ending=createSpringEnding(book,texture,()=>.4,false,false),pose={x:SPRING_TREASURE_SPOT.x,y:.89,z:SPRING_TREASURE_SPOT.z,yaw:0,pitch:0},steps=[];const advance={act:(action,next)=>{assert.equal(action,'ending-phase');steps.push(next);state.endingPhase=next;return true;}};
+ending.update(.02,state,camera,pose,advance);assert.ok(pose.y>.89&&pose.y<1.1,'Leaving the locker rises smoothly from the inspection pose');
 for(let i=0;i<1000&&state.endingPhase!=='reading';i++)ending.update(.02,state,camera,pose,advance);
 assert.deepEqual(steps,['sitting','opening','reading']);assert.ok(Math.abs(pose.x-ending.seat.x)<1e-6&&Math.abs(pose.z-ending.seat.z)<1e-6,'The book sequence reaches the physical riverside bench');const opened=ending.group.getObjectByName('CoverHinge');assert.ok(Math.abs(opened.rotation.y)>2,'The real front cover hinges open');const petals=ending.group.children.find(o=>o instanceof THREE.Mesh&&o.geometry.isInstancedBufferGeometry);assert.ok(petals.material.uniforms.elapsed.value>6,'The gust continues across the sit-to-open transition');assert.ok(ending.group.getObjectByName('Ivory inside of the opened Spring cover'));
 state.endingPhase='reading';ending.update(.02,state,camera,pose,advance);assert.equal(ending.group.visible,false,'The 3D cinematic yields to the reader');
@@ -95,5 +115,10 @@ assert.equal(resumedPose.x,12.5);assert.equal(resumedPose.z,-17);assert.equal(re
 resumedPose.x=10;state.endingPhase='reading';resumedEnding.update(.02,state,camera,resumedPose,advance);
 state.endingPhase='complete';resumedEnding.update(.02,state,camera,resumedPose,advance);
 assert.equal(resumedPose.x,10,'Reopening the book during free roaming preserves the current location');resumedEnding.dispose();
+const candleModel=await model('public/seasons/kit/spring-personal/candle.glb'),carried=createSpringBackpack({candle:candleModel},texture,texture,false,()=>.4),carriedParent=new THREE.Group();
+carriedParent.position.set(2,.2,-3);carriedParent.rotation.y=.32;carriedParent.add(carried.group);state.hands=['candle',null];carried.update(.02,state,camera,'spring');
+const desiredWick=new THREE.Vector3(11.9,.79,-20.9),upright=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),1.18);carried.placeCandleWick(desiredWick,upright);
+assert.ok(carried.candleFlamePosition().distanceTo(desiredWick)<1e-6,'The imported candle wick reaches the same physical light source under transformed parents');
+assert.ok(carried.group.getObjectByName('Held backpack keepsake').getWorldQuaternion(new THREE.Quaternion()).angleTo(upright)<1e-6,'The candle stays upright while the camera leans');carried.dispose();
 world.dispose();ending.dispose();assert.equal(world.group.children.length,0);assert.equal(ending.group.children.length,0);assert.equal(scopedDisposed,true);assert.equal(sourceDisposed,false,'Disposal preserves cached source materials');assert.doesNotMatch(scopedChestMaterial.customProgramCacheKey(),/spring-scoped-candle/,'Cleanup restores scoped hooks');assert.equal(candleShaders[0].uniforms.springCandleIntensity.value,0);
-console.log('Spring finale scene passed: actual seven-bun GLB, no floating/duplicate props, visible eating, automatic candle focus with physical cancellation/retry, anchored flame and scoped PBR candlelight without global light changes, physical bench walk, hinged book, continuous blossom gust and cleanup.');
+console.log('Spring finale scene passed: seven-bun meal, integrated-keyhole front locker, dark cavity, confined physical candlelight, cancelable lean/reach and automatic book reveal, paused-frame guards, source isolation, bench walk, reader return and cleanup.');

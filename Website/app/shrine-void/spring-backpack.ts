@@ -79,6 +79,12 @@ export function createSpringBackpack(models:Record<string,THREE.Object3D>,cloth:
     const place=placement(state);return !state.bagHeld&&!state.storageSlots?.includes('backpack')&&place.world===currentWorld&&Math.hypot(camera.position.x-place.x,camera.position.z-place.z)<2.4;
   }
   return {group,bag,
+    placeCandleWick(position:THREE.Vector3,rotation:THREE.Quaternion){
+      const frame=heldFrames.find(frame=>frame.visible&&frame.children[1].visible),anchor=frame?.getObjectByName('Candle wick flame anchor');if(!frame||!anchor)return;
+      const parentRotation=frame.parent!.getWorldQuaternion(new THREE.Quaternion()).invert();frame.quaternion.copy(parentRotation).multiply(rotation);
+      frame.updateWorldMatrix(true,true);const current=anchor.getWorldPosition(new THREE.Vector3()),origin=frame.getWorldPosition(new THREE.Vector3());
+      frame.position.copy(frame.parent!.worldToLocal(origin.add(position).sub(current)));frame.updateWorldMatrix(false,true);
+    },
     candleFlamePosition(target=new THREE.Vector3()){const frame=heldFrames.find(frame=>frame.visible&&frame.children[1].visible);const anchor=frame?.getObjectByName('Candle wick flame anchor');if(!anchor)return null;anchor.updateWorldMatrix(true,false);return anchor.getWorldPosition(target);},
     get ready(){return reveal>1.15;},
     near,

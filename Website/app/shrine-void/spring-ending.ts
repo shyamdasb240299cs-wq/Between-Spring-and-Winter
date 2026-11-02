@@ -48,7 +48,7 @@ export function createSpringEnding(source:THREE.Object3D,cover:THREE.Texture,hei
       elapsed+=dt;if(phase==='walking')blossomTime=0;else blossomTime+=dt;const start=from!;
       if(phase==='walking'){
         const u=ease(elapsed/walkDuration),x=THREE.MathUtils.lerp(start.x,12.5,u),z=THREE.MathUtils.lerp(start.z,-17,u);
-        pose.x=x;pose.z=z;pose.y=height(x,z)+1.63+(reduced?0:Math.sin(elapsed*8)*.015*Math.sin(Math.PI*u));pose.yaw=angle(start.yaw,-Math.PI/2,ease(elapsed/1.5));pose.pitch=THREE.MathUtils.lerp(start.pitch,-.12,ease(elapsed));
+        pose.x=x;pose.z=z;pose.y=THREE.MathUtils.lerp(start.y,height(x,z)+1.63,ease(elapsed/(reduced?.15:.9)))+(reduced?0:Math.sin(elapsed*8)*.015*Math.sin(Math.PI*u));pose.yaw=angle(start.yaw,-Math.PI/2,ease(elapsed/1.5));pose.pitch=THREE.MathUtils.lerp(start.pitch,-.12,ease(elapsed));
         if(elapsed>=walkDuration)controller.act('ending-phase','sitting');
       }else if(phase==='sitting'){
         seated=true;

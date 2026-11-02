@@ -18,9 +18,9 @@ function questProgress(s:SpringSave):[string,string,string]{
   if(!s.paperHuntStarted)return ['A brighter Spring','Return to the bridge','A new note waits on the bridge railing.'];
   if(s.paperPieces.length<5)return ['The riverside keepsake',`${s.paperPieces.length} of 5 pieces found`,'Search close to the riverbanks, beneath leaves and beside the old stones.'];
   if(!s.treasureDug)return ['Five pieces. One message.',s.shovelTaken?'Follow the sunlight':'A tool beside the bridge',s.shovelTaken?'Look for a brighter patch of earth near the riverside bench.':'The note mentioned a shovel. Look beside the bridge.'];
-  if(!s.treasureOpen)return ['A gift beneath the earth','The diamond key','Hold the diamond key and open the unearthed chest.'];
+  if(!s.treasureOpen)return ['A gift beneath the earth','The diamond key','Hold the diamond key and unlock the keyhole in the locker door.'];
   if(!s.candleLit)return ['One final task','A little light','Hold the candle and spectacles, one in each hand, and approach the sunlight.'];
-  if(!s.springBookTaken)return ['A gift in the candlelight','Part One · Spring','Hold the lit candle and look inside the chest.'];
+  if(!s.springBookTaken)return ['A gift in the candlelight','Part One · Spring','Hold the lit candle and look into the open locker.'];
   return ['Spring','A memory to keep','The book is yours.'];
 }
 
